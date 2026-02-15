@@ -49,6 +49,13 @@
 
       --header-h: 48px;
       --sidebar-w: 230px;
+
+      /* Chart Color Tokens (사업부 고정 색상) */
+      --color-seat: #364FC7;
+      --color-pt:   #4CC9F0;
+      --color-ec:   #6954FE;
+      --color-tc:   #F04438;
+      --color-cc:   #F79009;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -272,7 +279,7 @@
     }
     .kpi-card {
       background: #fff; border: 1px solid var(--border-light); border-radius: 12px;
-      padding: 20px 22px; transition: box-shadow 0.2s;
+      padding: 20px 22px; transition: box-shadow 0.2s; cursor: pointer;
     }
     .kpi-card:hover { box-shadow: var(--shadow-md); }
     .kpi-card__label { font-size: 12px; font-weight: 500; color: var(--gray-500); margin-bottom: 8px; }
@@ -312,12 +319,12 @@
     }
     .chart-card__title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
     .chart-card__body { position: relative; }
-    .chart-card__body canvas { max-height: 260px; }
+    .chart-card__body canvas { max-height: 260px; cursor: pointer; }
 
     /* Top 5 Table */
     .top5-card {
       background: #fff; border: 1px solid var(--border-light); border-radius: 12px;
-      padding: 18px 20px;
+      padding: 18px 20px; margin-bottom: 16px;
     }
     .top5-card__title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
     .top5-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -333,10 +340,43 @@
     .top5-table tr:hover td { background: #F8F7FF; }
     .top5-table .text-right { text-align: right; }
     .top5-table .text-center { text-align: center; }
+
+    /* Rank Icons */
+    .rank-medal { font-size: 15px; }
+    .rank-num { font-weight: 700; color: var(--gray-400); }
+
+    /* Top 1 Row Highlight */
+    .top5-table tr.rank-gold td { background: #FFFBEB; }
+    .top5-table tr.rank-gold:hover td { background: #FFF7D6; }
+
+    /* Achievement Rate Conditional */
+    .achv-danger { color: #F04438; font-weight: 600; }
+    .achv-success { color: #12B76A; font-weight: 600; }
+
+    /* Badge */
     .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .badge--seat { background: #F3F2FF; color: #6954FE; }
-    .badge--pt { background: #FFF6ED; color: #F79009; }
+    .badge--seat { background: #EDF2FF; color: #364FC7; }
+    .badge--pt { background: #E3FAFC; color: #0C8599; }
     .empty-msg { text-align: center; padding: 40px 0; color: var(--gray-400); font-size: 13px; }
+
+    /* Error Toast */
+    .dash-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #F04438; color: #fff; padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .dash-toast.is-visible { opacity: 1; pointer-events: auto; }
+
+    /* Copyright Footer */
+    .dash-footer {
+      text-align: center; padding: 16px 0 4px;
+      font-size: 11px; color: var(--gray-400);
+      border-top: 1px solid var(--border-light);
+      margin-top: auto;
+    }
   </style>
 </head>
 <body>
@@ -463,15 +503,15 @@
 
       <!-- KPI Cards -->
       <div class="kpi-row">
-        <div class="kpi-card kpi-card--purple">
+        <div class="kpi-card kpi-card--purple" onclick="quickOpen('ec','viewer.html?view=es-project-list','견적 프로젝트 관리')">
           <div class="kpi-card__label">총 프로젝트 수</div>
           <div class="kpi-card__value" id="kpiTotalPjt">-<small>건</small></div>
         </div>
-        <div class="kpi-card kpi-card--green">
+        <div class="kpi-card kpi-card--green" onclick="quickOpen('cc','viewer.html?view=es-achievement-eval-list','달성도 평가')">
           <div class="kpi-card__label">평균 달성률</div>
           <div class="kpi-card__value" id="kpiAvgAchv">-<small>%</small></div>
         </div>
-        <div class="kpi-card kpi-card--red">
+        <div class="kpi-card kpi-card--red" onclick="quickOpen('cc','viewer.html?view=es-achievement-eval-list','달성도 평가')">
           <div class="kpi-card__label">위험 프로젝트 (달성률 &lt; 80%)</div>
           <div class="kpi-card__value" id="kpiRiskPjt">-<small>건</small></div>
         </div>
@@ -505,13 +545,13 @@
       <!-- Charts -->
       <div class="chart-row">
         <div class="chart-card">
-          <div class="chart-card__title">사업부별 원가 비중</div>
+          <div class="chart-card__title">사업부별 견적원가 비중</div>
           <div class="chart-card__body">
             <canvas id="chartPie"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <div class="chart-card__title">사업부별 EC / TC / CC 원가 비교</div>
+          <div class="chart-card__title">사업부별 견적원가 / 목표원가 / 현상원가 비교</div>
           <div class="chart-card__body">
             <canvas id="chartBar"></canvas>
           </div>
@@ -527,10 +567,10 @@
               <th style="width:40px" class="text-center">#</th>
               <th>프로젝트명</th>
               <th style="width:80px" class="text-center">사업부</th>
-              <th style="width:120px" class="text-right">견적원가</th>
-              <th style="width:120px" class="text-right">현상원가</th>
-              <th style="width:120px" class="text-right">절감액</th>
-              <th style="width:80px" class="text-right">달성률</th>
+              <th style="width:130px" class="text-right">견적원가</th>
+              <th style="width:130px" class="text-right">현상원가</th>
+              <th style="width:130px" class="text-right">절감액</th>
+              <th style="width:90px" class="text-right">달성률</th>
             </tr>
           </thead>
           <tbody id="top5Body">
@@ -539,8 +579,16 @@
         </table>
       </div>
 
+      <!-- Copyright Footer -->
+      <div class="dash-footer">
+        &copy; 2026 YHJY As-You-Cost. All rights reserved.
+      </div>
+
     </div>
   </main>
+
+  <!-- Error Toast -->
+  <div class="dash-toast" id="dashToast"></div>
 
   <!-- ════════════════════════════════════════════
        JAVASCRIPT
@@ -701,26 +749,70 @@
     var pieChart = null;
     var barChart = null;
 
+    /* ── 사업부 고정 색상 맵 ── */
+    var BIZ_UNIT_COLORS = {
+      'SEAT': '#364FC7',
+      'PT':   '#4CC9F0'
+    };
+    var BIZ_UNIT_COLORS_LIGHT = {
+      'SEAT': '#EDF2FF',
+      'PT':   '#E3FAFC'
+    };
+    var DEFAULT_CHART_COLORS = ['#364FC7', '#4CC9F0', '#12B76A', '#F79009', '#F04438'];
+
+    /* ── 숫자 포맷: 원본 (테이블용) ── */
     function formatNumber(n) {
       if (n == null) return '0';
       return Number(n).toLocaleString('ko-KR');
     }
 
+    /* ── 숫자 포맷: 가독성 단위 변환 (차트/KPI용) ── */
+    function formatAmountShort(n) {
+      if (n == null) return '0';
+      var num = Number(n);
+      if (num === 0) return '0';
+      var abs = Math.abs(num);
+      if (abs >= 100000000) {
+        return (num / 100000000).toFixed(1).replace(/\.0$/, '') + '억';
+      }
+      if (abs >= 10000) {
+        return Math.round(num / 10000).toLocaleString('ko-KR') + '만';
+      }
+      return num.toLocaleString('ko-KR');
+    }
+
+    /* ── 사업부별 색상 반환 ── */
+    function getBizUnitColor(bizUnit) {
+      return BIZ_UNIT_COLORS[bizUnit] || DEFAULT_CHART_COLORS[Object.keys(BIZ_UNIT_COLORS).length % DEFAULT_CHART_COLORS.length];
+    }
+
+    /* ── 에러 토스트 ── */
+    function showToast(message) {
+      var toast = document.getElementById('dashToast');
+      toast.textContent = message;
+      toast.classList.add('is-visible');
+      setTimeout(function() { toast.classList.remove('is-visible'); }, 3000);
+    }
+
+    /* ── 대시보드 데이터 로드 ── */
     function loadDashboard() {
       fetch('/bp/dashboard/findDashboardStat.do', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
       })
-      .then(function(res) { return res.json(); })
+      .then(function(res) {
+        if (!res.ok) throw new Error('서버 응답 오류');
+        return res.json();
+      })
       .then(function(data) {
         renderKpi(data.kpi);
         renderPieChart(data.costByBizUnit);
         renderBarChart(data.costComparison);
         renderTop5(data.top5Reduction);
       })
-      .catch(function(err) {
-        console.error('Dashboard load failed:', err);
+      .catch(function() {
+        showToast('데이터를 불러오는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
       });
     }
 
@@ -728,23 +820,30 @@
     function renderKpi(kpi) {
       if (!kpi) return;
       document.getElementById('kpiTotalPjt').innerHTML = (kpi.totalPjtCnt || 0) + '<small>건</small>';
-      document.getElementById('kpiAvgAchv').innerHTML  = (kpi.avgAchvRate || 0) + '<small>%</small>';
-      document.getElementById('kpiRiskPjt').innerHTML   = (kpi.riskPjtCnt || 0) + '<small>건</small>';
+      var achvRate = Number(kpi.avgAchvRate || 0);
+      var achvColor = achvRate < 80 ? 'color:#F04438' : '';
+      document.getElementById('kpiAvgAchv').innerHTML = '<span style="' + achvColor + '">' + achvRate.toFixed(1) + '</span><small>%</small>';
+      document.getElementById('kpiRiskPjt').innerHTML = (kpi.riskPjtCnt || 0) + '<small>건</small>';
     }
 
-    /* ── Pie/Doughnut Chart ── */
+    /* ── Pie/Doughnut Chart (사업부별 견적원가 비중) ── */
     function renderPieChart(costByBizUnit) {
       var canvas = document.getElementById('chartPie');
-      if (pieChart) { pieChart.destroy(); }
+      if (pieChart) { pieChart.destroy(); pieChart = null; }
 
       if (!costByBizUnit || costByBizUnit.length === 0) {
-        canvas.parentElement.innerHTML = '<div class="empty-msg">데이터가 존재하지 않습니다</div>';
+        canvas.style.display = 'none';
+        canvas.parentElement.insertAdjacentHTML('beforeend', '<div class="empty-msg" id="pieEmpty">데이터가 존재하지 않습니다</div>');
         return;
       }
+      // 이전 empty 메시지 제거
+      var oldMsg = document.getElementById('pieEmpty');
+      if (oldMsg) oldMsg.remove();
+      canvas.style.display = '';
 
       var labels = costByBizUnit.map(function(r) { return r.bizUnit; });
       var values = costByBizUnit.map(function(r) { return Number(r.totalCost); });
-      var colors = ['#6954FE', '#F79009', '#12B76A', '#F04438'];
+      var colors = labels.map(function(l) { return getBizUnitColor(l); });
 
       pieChart = new Chart(canvas, {
         type: 'doughnut',
@@ -752,7 +851,7 @@
           labels: labels,
           datasets: [{
             data: values,
-            backgroundColor: colors.slice(0, labels.length),
+            backgroundColor: colors,
             borderWidth: 2,
             borderColor: '#fff'
           }]
@@ -760,14 +859,27 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: function(evt, elements) {
+            if (elements.length > 0) {
+              quickOpen('ec', 'viewer.html?view=es-project-list', '견적 프로젝트 관리');
+            }
+          },
           plugins: {
-            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12, family: 'Pretendard Variable' } } },
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 16,
+                font: { size: 12, family: 'Pretendard Variable' },
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            },
             tooltip: {
               callbacks: {
                 label: function(ctx) {
                   var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
                   var pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
-                  return ctx.label + ': ' + formatNumber(ctx.parsed) + '원 (' + pct + '%)';
+                  return ctx.label + ': ' + formatAmountShort(ctx.parsed) + '원 (' + pct + '%)';
                 }
               }
             }
@@ -776,15 +888,19 @@
       });
     }
 
-    /* ── Grouped Bar Chart ── */
+    /* ── Grouped Bar Chart (사업부별 견적/목표/현상 비교) ── */
     function renderBarChart(costComparison) {
       var canvas = document.getElementById('chartBar');
-      if (barChart) { barChart.destroy(); }
+      if (barChart) { barChart.destroy(); barChart = null; }
 
       if (!costComparison || costComparison.length === 0) {
-        canvas.parentElement.innerHTML = '<div class="empty-msg">데이터가 존재하지 않습니다</div>';
+        canvas.style.display = 'none';
+        canvas.parentElement.insertAdjacentHTML('beforeend', '<div class="empty-msg" id="barEmpty">데이터가 존재하지 않습니다</div>');
         return;
       }
+      var oldMsg = document.getElementById('barEmpty');
+      if (oldMsg) oldMsg.remove();
+      canvas.style.display = '';
 
       var labels = costComparison.map(function(r) { return r.bizUnit; });
       var ecData = costComparison.map(function(r) { return Number(r.ecCost); });
@@ -804,12 +920,28 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: function(evt, elements) {
+            if (elements.length > 0) {
+              var dsIndex = elements[0].datasetIndex;
+              if (dsIndex === 0) quickOpen('ec', 'viewer.html?view=es-project-list', '견적 프로젝트 관리');
+              else if (dsIndex === 1) quickOpen('tc', 'viewer.html?view=es-target-cost-project-list', '목표원가 프로젝트 등록');
+              else quickOpen('cc', 'viewer.html?view=es-current-cost-project-list', '현상원가 프로젝트 등록');
+            }
+          },
           plugins: {
-            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12, family: 'Pretendard Variable' } } },
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 16,
+                font: { size: 12, family: 'Pretendard Variable' },
+                usePointStyle: true,
+                pointStyle: 'rectRounded'
+              }
+            },
             tooltip: {
               callbacks: {
                 label: function(ctx) {
-                  return ctx.dataset.label + ': ' + formatNumber(ctx.parsed.y) + '원';
+                  return ctx.dataset.label + ': ' + formatAmountShort(ctx.parsed.y) + '원';
                 }
               }
             }
@@ -818,7 +950,7 @@
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(val) { return formatNumber(val); },
+                callback: function(val) { return formatAmountShort(val); },
                 font: { size: 11 }
               },
               grid: { color: '#F0F1F5' }
@@ -844,14 +976,28 @@
       var html = '';
       top5.forEach(function(row, idx) {
         var badgeClass = (row.bizUnit === 'SEAT') ? 'badge--seat' : 'badge--pt';
-        html += '<tr>'
-          + '<td class="text-center">' + (idx + 1) + '</td>'
-          + '<td>' + (row.pjtNm || '') + '</td>'
+        var isGold = (idx === 0);
+        var rowClass = isGold ? ' class="rank-gold"' : '';
+
+        // 순위 아이콘
+        var rankHtml;
+        if (idx === 0) rankHtml = '<span class="rank-medal">&#127942;</span>';       // 트로피
+        else if (idx === 1) rankHtml = '<span class="rank-medal">&#129352;</span>';   // 2nd medal
+        else if (idx === 2) rankHtml = '<span class="rank-medal">&#129353;</span>';   // 3rd medal
+        else rankHtml = '<span class="rank-num">' + (idx + 1) + '</span>';
+
+        // 달성률 조건부 서식
+        var achvRate = Number(row.achvRate || 0);
+        var achvClass = achvRate < 100 ? 'achv-danger' : 'achv-success';
+
+        html += '<tr' + rowClass + '>'
+          + '<td class="text-center">' + rankHtml + '</td>'
+          + '<td style="font-weight:' + (isGold ? '600' : '400') + '">' + (row.pjtNm || '') + '</td>'
           + '<td class="text-center"><span class="badge ' + badgeClass + '">' + (row.bizUnit || '') + '</span></td>'
-          + '<td class="text-right">' + formatNumber(row.ecTotalCost) + '</td>'
-          + '<td class="text-right">' + formatNumber(row.curTotalCost) + '</td>'
-          + '<td class="text-right" style="font-weight:600; color:#12B76A;">' + formatNumber(row.saveActAmt) + '</td>'
-          + '<td class="text-right">' + (row.achvRate || 0) + '%</td>'
+          + '<td class="text-right">' + formatAmountShort(row.ecTotalCost) + '</td>'
+          + '<td class="text-right">' + formatAmountShort(row.curTotalCost) + '</td>'
+          + '<td class="text-right" style="font-weight:600; color:#12B76A;">' + formatAmountShort(row.saveActAmt) + '</td>'
+          + '<td class="text-right"><span class="' + achvClass + '">' + achvRate.toFixed(1) + '%</span></td>'
           + '</tr>';
       });
       tbody.innerHTML = html;
