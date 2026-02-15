@@ -365,14 +365,25 @@
   ScGrid.prototype.exportToExcel = function (opts) {
     var fileName = (opts && opts.fileName) || 'export.xlsx';
     if (typeof XLSX !== 'undefined') {
-      var wsData = [this._columns.map(function (c) { return c.header; })];
-      for (var r = 0; r < this._data.length; r++) {
-        var row = [];
-        for (var c = 0; c < this._columns.length; c++) {
-          row.push(this._data[r][this._columns[c].field] || '');
+      var cols = this._columns;
+      var wsData = [cols.map(function (c) { return c.header; })];
+
+      /* 트리 그리드: children 재귀 탐색하여 전체 행 수집 */
+      var isTree = this._isTree;
+      function collectRows(list) {
+        for (var r = 0; r < list.length; r++) {
+          var row = [];
+          for (var c = 0; c < cols.length; c++) {
+            row.push(list[r][cols[c].field] == null ? '' : list[r][cols[c].field]);
+          }
+          wsData.push(row);
+          if (isTree && list[r].children && list[r].children.length > 0) {
+            collectRows(list[r].children);
+          }
         }
-        wsData.push(row);
       }
+      collectRows(this._data);
+
       var wb = XLSX.utils.book_new();
       var ws = XLSX.utils.aoa_to_sheet(wsData);
       XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
