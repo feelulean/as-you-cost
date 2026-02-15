@@ -85,7 +85,8 @@
                                 header-text="프로젝트 코드"
                                 width="130"
                                 editable="false"
-                                text-align="center">
+                                text-align="center"
+                                on-item-click="onPjtCdClick">
                 </sc-data-column>
 
                 <sc-data-column data-field="pjtNm"
@@ -332,6 +333,18 @@
             onDeleteListResponse: function() {
                 UT.alert('MSG_COM_00005'); // 삭제되었습니다.
                 this.onFindList();
+            },
+
+            /**
+             * 프로젝트 코드 클릭 → 견적원가 BOM 상세 이동
+             */
+            onPjtCdClick: function(e) {
+                var row = e.detail.row;
+                if (!row.pjtCd) return;
+                UT.navigateTo('es-ec-bom-list', {
+                    pjtCd: row.pjtCd,
+                    pjtNm: row.pjtNm
+                });
             }
         });
     </script>

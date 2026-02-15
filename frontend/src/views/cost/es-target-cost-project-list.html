@@ -84,7 +84,8 @@
                                 header-text="프로젝트 코드"
                                 width="120"
                                 editable="false"
-                                text-align="center">
+                                text-align="center"
+                                on-item-click="onPjtCdClick">
                 </sc-data-column>
 
                 <sc-data-column data-field="pjtNm"
@@ -136,7 +137,8 @@
                                     header-text="견적코드"
                                     width="120"
                                     editable="false"
-                                    text-align="center">
+                                    text-align="center"
+                                    on-item-click="onEcPjtCdClick">
                     </sc-data-column>
 
                     <sc-image-column data-field="btnSelectEc"
@@ -346,6 +348,30 @@
                             grid.setCellData(rowIndex, 'ecPjtCd', result.ecPjtCd);
                         }
                     }
+                });
+            },
+
+            /**
+             * 프로젝트 코드 클릭 → 목표원가 가이드 상세 이동
+             */
+            onPjtCdClick: function(e) {
+                var row = e.detail.row;
+                if (!row.pjtCd) return;
+                UT.navigateTo('es-target-cost-guide-list', {
+                    pjtCd: row.pjtCd,
+                    pjtNm: row.pjtNm
+                });
+            },
+
+            /**
+             * 견적코드 클릭 → 견적원가 BOM 상세 이동
+             */
+            onEcPjtCdClick: function(e) {
+                var row = e.detail.row;
+                if (!row.ecPjtCd) return;
+                UT.navigateTo('es-ec-bom-list', {
+                    pjtCd: row.ecPjtCd,
+                    pjtNm: row.pjtNm
                 });
             }
         });

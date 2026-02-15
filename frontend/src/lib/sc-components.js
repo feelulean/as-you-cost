@@ -116,7 +116,8 @@
         editable: this._editable && c.getAttribute('editable') !== 'false',
         type: c.getAttribute('data-type') || 'text',
         format: c.getAttribute('format-type') || c.getAttribute('format') || '',
-        tag: c.tagName.toLowerCase()
+        tag: c.tagName.toLowerCase(),
+        onItemClick: c.getAttribute('on-item-click') || ''
       });
     }
   };
@@ -238,7 +239,32 @@
         if (col.tag === 'sc-checkbox-column') {
           val = (String(val) === 'Y') ? 'Y' : 'N';
         }
-        td.textContent = val;
+        /* 컬럼 레벨 on-item-click: 코드/일련번호를 클릭 가능한 링크로 렌더링 */
+        if (col.onItemClick && (col.tag === 'sc-image-column' || val)) {
+          (function (colDef, cellVal, rowData, rowIdx) {
+            var link = document.createElement('a');
+            link.href = 'javascript:void(0)';
+            if (colDef.tag === 'sc-image-column') {
+              link.textContent = colDef.header || '조회';
+              link.style.cssText = 'color:#6954FE; cursor:pointer; font-size:11px;';
+            } else {
+              link.textContent = cellVal;
+              link.style.cssText = 'color:#6954FE; text-decoration:none; cursor:pointer; font-weight:500;';
+              link.addEventListener('mouseenter', function () { link.style.textDecoration = 'underline'; });
+              link.addEventListener('mouseleave', function () { link.style.textDecoration = 'none'; });
+            }
+            link.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var host = findHost(me);
+              if (host && typeof host[colDef.onItemClick] === 'function') {
+                host[colDef.onItemClick]({ detail: { row: rowData, rowIndex: rowIdx, dataField: colDef.field } });
+              }
+            });
+            td.appendChild(link);
+          })(col, val, row, idx);
+        } else {
+          td.textContent = val;
+        }
       }
       tr.appendChild(td);
     }
@@ -324,7 +350,12 @@
           var col = this._columns[c];
           var displayVal = val;
           if (col.format === 'amt' || col.format === '#,###') displayVal = formatNumber(val);
-          td.textContent = displayVal == null ? '' : displayVal;
+          var link = td.querySelector('a');
+          if (link) {
+            link.textContent = displayVal == null ? '' : displayVal;
+          } else {
+            td.textContent = displayVal == null ? '' : displayVal;
+          }
         }
         break;
       }
