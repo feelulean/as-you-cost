@@ -1,0 +1,377 @@
+<dom-module id="es-achievement-eval-list">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/cc/achv/findListAchievementEval.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="createEvalAjax"
+                 url="/bp/cost/cc/achv/createAchievementEval.do"
+                 body="{{createParam}}"
+                 on-response="onCreateEvalResponse">
+        </sc-ajax>
+
+        <sc-ajax id="saveListAjax"
+                 url="/bp/cost/cc/achv/saveListAchievementEval.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/cost/cc/achv/deleteListAchievementEval.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteListResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역
+             ============================================================ -->
+        <sc-search-container on-search="onFindList" auth-code="V">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/>
+                    <col/>
+                    <col style="width:120px"/>
+                    <col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.curPjtCd}}"
+                                       on-enter="onFindList"
+                                       placeholder="현상원가 코드">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="사업부"></sc-label></th>
+                    <td>
+                        <sc-combobox-field value="{{searchParam.bizUnit}}"
+                                          items="{{codes.bizUnitList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          placeholder="전체">
+                        </sc-combobox-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th><sc-label text="고객사"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.custNm}}">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="달성여부"></sc-label></th>
+                    <td>
+                        <sc-combobox-field value="{{searchParam.achvYn}}"
+                                          items="{{codes.achvYnList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          placeholder="전체">
+                        </sc-combobox-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             데이터 그리드
+             ============================================================ -->
+        <sc-grid id="gridPanel"
+                 data-provider="{{resultList}}"
+                 editable="true"
+                 selection-mode="radio"
+                 class="flex"
+                 on-cell-value-changed="_onCellValueChanged">
+
+            <sc-toolbar>
+                <sc-button text="조회"         on-click="onFindList"    auth-code="V"></sc-button>
+                <sc-button text="평가 생성"    on-click="onCreateEval"  auth-code="S"></sc-button>
+                <span class="vt-seperator"></span>
+                <sc-button text="삭제"         on-click="onDeleteList"  auth-code="S"></sc-button>
+                <sc-button text="저장"         on-click="onSaveList"    auth-code="S"></sc-button>
+            </sc-toolbar>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="curPjtCd"
+                                header-text="현상원가 코드"
+                                width="130"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="pjtNm"
+                                header-text="프로젝트명"
+                                width="200"
+                                editable="false"
+                                text-align="left">
+                </sc-data-column>
+
+                <sc-data-column data-field="bizUnit"
+                                header-text="사업부"
+                                width="80"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="custNm"
+                                header-text="고객사"
+                                width="120"
+                                editable="false">
+                </sc-data-column>
+
+                <sc-data-column data-field="ecTotalCost"
+                                header-text="견적원가"
+                                width="120"
+                                editable="false"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="tgtTotalCost"
+                                header-text="목표원가"
+                                width="120"
+                                editable="false"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="curTotalCost"
+                                header-text="현상원가(실적)"
+                                width="130"
+                                editable="true"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="saveTgtAmt"
+                                header-text="절감목표"
+                                width="120"
+                                editable="false"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="saveActAmt"
+                                header-text="절감액"
+                                width="120"
+                                editable="false"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="achvRate"
+                                header-text="달성도(%)"
+                                width="100"
+                                editable="false"
+                                text-align="right"
+                                data-type="number">
+                </sc-data-column>
+
+                <sc-data-column data-field="achvYn"
+                                header-text="달성여부"
+                                width="80"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="evalDt"
+                                header-text="평가일"
+                                width="100"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="rmk"
+                                header-text="비고"
+                                width="200"
+                                editable="true">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'es-achievement-eval-list',
+
+            properties: {
+                // 조회 파라미터
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 그리드 데이터
+                resultList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                // 평가 생성 파라미터
+                createParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 저장/삭제 파라미터
+                saveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 공통코드
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            bizUnitList: [
+                                { label: 'PT',   data: 'PT' },
+                                { label: 'SEAT', data: 'SEAT' }
+                            ],
+                            achvYnList: [
+                                { label: '달성(Y)', data: 'Y' },
+                                { label: '미달(N)', data: 'N' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ==============================================================
+               조회
+               ============================================================== */
+
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            onFindListResponse: function(e) {
+                this.set('resultList', e.detail.response);
+            },
+
+            /* ==============================================================
+               평가 생성 — EC/TC 조인하여 기초 데이터 구성
+               ============================================================== */
+
+            /**
+             * 평가 생성 버튼 클릭
+             * - 서버에서 EC(견적원가), TC(목표원가) 테이블을 조인하여
+             *   현상원가 프로젝트별 초기 달성도 평가 데이터를 생성한다.
+             */
+            onCreateEval: function() {
+                var me = this;
+                UT.confirm('현상원가 프로젝트 기준으로 달성도 평가 데이터를 생성하시겠습니까?\n(기존 데이터가 없는 프로젝트만 대상)', function() {
+                    me.set('createParam', {});
+                    me.$.createEvalAjax.generateRequest();
+                });
+            },
+
+            onCreateEvalResponse: function(e) {
+                var result = e.detail.response;
+                var cnt = result.createdCount || 0;
+                UT.alert(cnt + '건의 달성도 평가 데이터가 생성되었습니다.');
+                this.onFindList();
+            },
+
+            /* ==============================================================
+               셀 값 변경 → 절감액/달성도/달성여부 자동 산출
+               ============================================================== */
+
+            /**
+             * 현상원가(curTotalCost) 수정 시 자동 계산:
+             *   절감목표 = 견적원가 - 목표원가
+             *   절감액   = 견적원가 - 현상원가(실적)
+             *   달성도   = (절감액 / 절감목표) × 100
+             *   달성여부 = 달성도 ≥ 100 → 'Y', 그 외 → 'N'
+             */
+            _onCellValueChanged: function(e) {
+                var field = e.detail.dataField;
+
+                if (field === 'curTotalCost') {
+                    var grid     = this.$.gridPanel;
+                    var rowIndex = e.detail.rowIndex;
+
+                    var ecCost  = Number(grid.getCellData(rowIndex, 'ecTotalCost'))  || 0;
+                    var tgtCost = Number(grid.getCellData(rowIndex, 'tgtTotalCost')) || 0;
+                    var curCost = Number(grid.getCellData(rowIndex, 'curTotalCost')) || 0;
+
+                    // 절감목표 = 견적원가 - 목표원가
+                    var saveTgt = ecCost - tgtCost;
+                    grid.setCellData(rowIndex, 'saveTgtAmt', saveTgt);
+
+                    // 절감액 = 견적원가 - 현상원가(실적)
+                    var saveAct = ecCost - curCost;
+                    grid.setCellData(rowIndex, 'saveActAmt', saveAct);
+
+                    // 달성도(%) = 절감액 / 절감목표 × 100
+                    var achvRate = 0;
+                    if (saveTgt !== 0) {
+                        achvRate = Math.round(saveAct / saveTgt * 10000) / 100;
+                    }
+                    grid.setCellData(rowIndex, 'achvRate', achvRate);
+
+                    // 달성여부: 100% 이상이면 Y
+                    var achvYn = achvRate >= 100 ? 'Y' : 'N';
+                    grid.setCellData(rowIndex, 'achvYn', achvYn);
+                }
+            },
+
+            /* ==============================================================
+               저장
+               ============================================================== */
+
+            onSaveList: function() {
+                var grid = this.$.gridPanel;
+                var modifiedRows = grid.getModifiedRows();
+
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveParam', { saveList: modifiedRows });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+
+            onSaveListResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindList();
+            },
+
+            /* ==============================================================
+               삭제
+               ============================================================== */
+
+            onDeleteList: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteParam', { deleteList: selectedRows });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+
+            onDeleteListResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindList();
+            }
+        });
+    </script>
+</dom-module>

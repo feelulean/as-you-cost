@@ -3,40 +3,40 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--
-    목표원가 프로젝트 관리 Mapper
-    테이블: PCM_TGT_PJT_MSTR (목표원가 프로젝트 마스터)
+    견적원가 프로젝트 관리 Mapper
+    테이블: PCM_EC_PJT_MSTR (견적원가 프로젝트 마스터)
 -->
-<mapper namespace="smartcost.app.bp.cost.targetcost.TargetCostRepository">
+<mapper namespace="smartcost.app.bp.cost.estimatecost.EstimateCostRepository">
 
     <!-- ============================================================
          목록 조회
          ============================================================ -->
-    <select id="findListTargetCostPjt" parameterType="map" resultType="map">
+    <select id="findListEstimateCostPjt" parameterType="map" resultType="map">
         SELECT  A.TEN_ID        AS "tenId"
-              , A.TGT_PJT_CD   AS "pjtCd"
+              , A.EC_PJT_CD     AS "pjtCd"
               , A.PJT_NM       AS "pjtNm"
               , A.BIZ_UNIT     AS "bizUnit"
               , A.CUST_NM      AS "custNm"
               , A.CAR_TYPE     AS "carType"
               , A.OEM_NM       AS "oemNm"
               , A.PROD_GRP     AS "prodGrp"
-              , A.EC_PJT_CD    AS "ecPjtCd"
+              , A.PROD_QTY     AS "prodQty"
+              , A.SOP_DT       AS "sopDt"
               , A.STS          AS "sts"
               , CASE A.STS
-                    WHEN 'T' THEN '대상선정'
-                    WHEN 'P' THEN '계획수립'
-                    WHEN 'A' THEN '배부확정'
-                    WHEN 'E' THEN '평가중'
-                    WHEN 'R' THEN '재배부'
+                    WHEN 'T' THEN '작성중'
+                    WHEN 'P' THEN '진행중'
+                    WHEN 'A' THEN '확정'
+                    WHEN 'R' THEN '탈락'
                     WHEN 'C' THEN '완료'
                     ELSE ''
                 END            AS "stsNm"
               , TO_CHAR(A.REG_DTTM, 'YYYY-MM-DD') AS "regDttm"
               , A.RMK          AS "rmk"
-          FROM  PCM_TGT_PJT_MSTR A
+          FROM  PCM_EC_PJT_MSTR A
          WHERE  A.TEN_ID = #{g.tenant}
         <if test="p.pjtCd != null and p.pjtCd != ''">
-           AND  A.TGT_PJT_CD LIKE '%' || #{p.pjtCd} || '%'
+           AND  A.EC_PJT_CD LIKE '%' || #{p.pjtCd} || '%'
         </if>
         <if test="p.bizUnit != null and p.bizUnit != ''">
            AND  A.BIZ_UNIT = #{p.bizUnit}
@@ -52,30 +52,31 @@
 
     <!-- ============================================================
          프로젝트 코드 자동 채번
-         형식: TC + 연도(4) + 일련번호(4)  예) TC20260001
+         형식: EC + 연도(4) + 일련번호(4)  예) EC20260001
          ============================================================ -->
-    <select id="findNewTargetCostPjtCd" resultType="string">
-        SELECT  'TC' || TO_CHAR(CURRENT_DATE, 'YYYY')
-                     || LPAD((COALESCE(MAX(CAST(SUBSTRING(A.TGT_PJT_CD FROM 7) AS INTEGER)), 0) + 1)::TEXT, 4, '0')
-          FROM  PCM_TGT_PJT_MSTR A
+    <select id="findNewEstimateCostPjtCd" resultType="string">
+        SELECT  'EC' || TO_CHAR(CURRENT_DATE, 'YYYY')
+                     || LPAD((COALESCE(MAX(CAST(SUBSTRING(A.EC_PJT_CD FROM 7) AS INTEGER)), 0) + 1)::TEXT, 4, '0')
+          FROM  PCM_EC_PJT_MSTR A
          WHERE  A.TEN_ID = #{g.tenant}
-           AND  A.TGT_PJT_CD LIKE 'TC' || TO_CHAR(CURRENT_DATE, 'YYYY') || '%'
+           AND  A.EC_PJT_CD LIKE 'EC' || TO_CHAR(CURRENT_DATE, 'YYYY') || '%'
     </select>
 
     <!-- ============================================================
          신규 등록
          ============================================================ -->
-    <insert id="insertTargetCostPjt" parameterType="map">
-        INSERT INTO PCM_TGT_PJT_MSTR (
+    <insert id="insertEstimateCostPjt" parameterType="map">
+        INSERT INTO PCM_EC_PJT_MSTR (
             TEN_ID
-          , TGT_PJT_CD
+          , EC_PJT_CD
           , PJT_NM
           , BIZ_UNIT
           , CUST_NM
           , CAR_TYPE
           , OEM_NM
           , PROD_GRP
-          , EC_PJT_CD
+          , PROD_QTY
+          , SOP_DT
           , RMK
           , STS
           , REGR_ID
@@ -91,7 +92,8 @@
           , #{p.carType}
           , #{p.oemNm}
           , #{p.prodGrp}
-          , #{p.ecPjtCd}
+          , #{p.prodQty}
+          , #{p.sopDt}
           , #{p.rmk}
           , #{p.sts}
           , #{g.username}
@@ -104,29 +106,30 @@
     <!-- ============================================================
          수정
          ============================================================ -->
-    <update id="updateTargetCostPjt" parameterType="map">
-        UPDATE  PCM_TGT_PJT_MSTR
+    <update id="updateEstimateCostPjt" parameterType="map">
+        UPDATE  PCM_EC_PJT_MSTR
            SET  PJT_NM    = #{p.pjtNm}
               , BIZ_UNIT  = #{p.bizUnit}
               , CUST_NM   = #{p.custNm}
               , CAR_TYPE  = #{p.carType}
               , OEM_NM    = #{p.oemNm}
               , PROD_GRP  = #{p.prodGrp}
-              , EC_PJT_CD = #{p.ecPjtCd}
+              , PROD_QTY  = #{p.prodQty}
+              , SOP_DT    = #{p.sopDt}
               , RMK       = #{p.rmk}
               , MODR_ID   = #{g.username}
               , MOD_DTTM  = #{g.now}
          WHERE  TEN_ID     = #{g.tenant}
-           AND  TGT_PJT_CD = #{p.pjtCd}
+           AND  EC_PJT_CD  = #{p.pjtCd}
     </update>
 
     <!-- ============================================================
          삭제
          ============================================================ -->
-    <delete id="deleteTargetCostPjt" parameterType="map">
-        DELETE FROM PCM_TGT_PJT_MSTR
+    <delete id="deleteEstimateCostPjt" parameterType="map">
+        DELETE FROM PCM_EC_PJT_MSTR
          WHERE  TEN_ID     = #{g.tenant}
-           AND  TGT_PJT_CD = #{p.pjtCd}
+           AND  EC_PJT_CD  = #{p.pjtCd}
     </delete>
 
 </mapper>

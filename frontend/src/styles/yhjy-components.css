@@ -1,12 +1,13 @@
 /* ============================================================
-   EMRO SMARTsuite 10 — Component Styles
-   sc-* (SMARTsuite Component) 커스텀 엘리먼트 스타일
+   YHJY As-You-Cost — Component Styles
+   sc-* (As-You-Cost Component) 커스텀 엘리먼트 스타일
+   Caidentia(EMRO) 디자인 기준 적용
    ============================================================ */
 
 /* ================================================================
    1. GLOBAL SHELL — MDI Header & Tab Bar
    ================================================================ */
-.emro-shell {
+.yhjy-shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -14,7 +15,7 @@
 }
 
 /* ── Top Header Bar ── */
-.emro-header {
+.yhjy-header {
   display: flex;
   align-items: center;
   height: 48px;
@@ -26,7 +27,7 @@
   z-index: 100;
 }
 
-.emro-header__logo {
+.yhjy-header__logo {
   font-size: var(--font-size-xl);
   font-weight: 700;
   letter-spacing: -0.5px;
@@ -34,46 +35,46 @@
   white-space: nowrap;
 }
 
-.emro-header__logo span {
-  color: var(--secondary-300);
+.yhjy-header__logo span {
+  color: var(--color_primary_300);
   font-weight: 400;
 }
 
-.emro-header__nav {
+.yhjy-header__nav {
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
   margin-left: auto;
 }
 
-.emro-header__nav-item {
+.yhjy-header__nav-item {
   font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   transition: color var(--transition-fast);
 }
 
-.emro-header__nav-item:hover {
+.yhjy-header__nav-item:hover {
   color: #ffffff;
 }
 
 /* ── MDI Tab Bar ── */
-.emro-tab-bar {
+.yhjy-tab-bar {
   display: flex;
   align-items: flex-end;
   height: 36px;
-  background: #2c3270;
+  background: #3D4462;
   padding: 0 var(--spacing-sm);
   flex-shrink: 0;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-.emro-tab-bar::-webkit-scrollbar {
+.yhjy-tab-bar::-webkit-scrollbar {
   height: 0;
 }
 
-.emro-tab {
+.yhjy-tab {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -90,18 +91,18 @@
   position: relative;
 }
 
-.emro-tab:hover {
+.yhjy-tab:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.emro-tab.is-active {
+.yhjy-tab.is-active {
   color: var(--text-primary);
   background: var(--bg-base);
   font-weight: 500;
 }
 
-.emro-tab__close {
+.yhjy-tab__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -114,12 +115,12 @@
   transition: opacity var(--transition-fast);
 }
 
-.emro-tab:hover .emro-tab__close,
-.emro-tab.is-active .emro-tab__close {
+.yhjy-tab:hover .yhjy-tab__close,
+.yhjy-tab.is-active .yhjy-tab__close {
   opacity: 0.6;
 }
 
-.emro-tab__close:hover {
+.yhjy-tab__close:hover {
   opacity: 1 !important;
   background: rgba(0, 0, 0, 0.1);
 }
@@ -128,7 +129,7 @@
 /* ================================================================
    2. CONTENT AREA — Page Layout
    ================================================================ */
-.emro-content {
+.yhjy-content {
   flex: 1;
   overflow: hidden;
   display: flex;
@@ -137,7 +138,7 @@
 }
 
 /* ── Page Container ── */
-.emro-page {
+.yhjy-page {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -147,7 +148,7 @@
 }
 
 /* ── Page Title Bar ── */
-.emro-page__title-bar {
+.yhjy-page__title-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -155,35 +156,35 @@
   flex-shrink: 0;
 }
 
-.emro-page__title {
+.yhjy-page__title {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-size: var(--font-size-lg);
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.emro-page__title::before {
+.yhjy-page__title::before {
   content: '';
   display: inline-block;
   width: 3px;
   height: 16px;
-  background: var(--primary-700);
+  background: var(--color_primary_500);
   border-radius: 1px;
 }
 
-.emro-page__breadcrumb {
+.yhjy-page__breadcrumb {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
 
-.emro-page__breadcrumb span::after {
+.yhjy-page__breadcrumb span::after {
   content: ' > ';
   color: var(--gray-400);
 }
 
-.emro-page__breadcrumb span:last-child::after {
+.yhjy-page__breadcrumb span:last-child::after {
   content: '';
 }
 
@@ -196,8 +197,9 @@ sc-search-container,
   display: block;
   background: var(--bg-content);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-xl);
+  padding: 15px 16px;
+  margin-bottom: 10px;
   flex-shrink: 0;
 }
 
@@ -223,7 +225,7 @@ sc-search-container,
 }
 
 .sc-search-container__toggle::before {
-  content: '▼';
+  content: '\25BC';
   font-size: 8px;
   transition: transform var(--transition-fast);
 }
@@ -280,15 +282,32 @@ sc-search-container,
 /* ================================================================
    4. sc-input / sc-select / sc-datepicker — 입력 필드
    ================================================================ */
+sc-text-field,
+sc-combobox-field,
+sc-number-field,
+sc-datepicker,
 sc-input,
 sc-select,
-sc-datepicker,
 .sc-input,
 .sc-select,
 .sc-datepicker {
   display: block;
   width: 100%;
-  height: 30px;
+  min-width: 0;
+  position: relative;
+  height: 28px;
+}
+
+sc-text-field input,
+sc-number-field input,
+sc-datepicker input,
+sc-combobox-field select,
+.sc-input,
+.sc-select,
+.sc-datepicker {
+  display: block;
+  width: 100%;
+  height: 28px;
   padding: 0 var(--spacing-sm);
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
@@ -298,61 +317,37 @@ sc-datepicker,
   border-radius: var(--radius-sm);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
 }
 
+sc-text-field input:focus,
+sc-number-field input:focus,
+sc-datepicker input:focus,
+sc-combobox-field select:focus,
 .sc-input:focus,
 .sc-select:focus,
 .sc-datepicker:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(57, 73, 171, 0.15);
+  box-shadow: 0 0 0 2px rgba(105, 84, 254, 0.15);
 }
 
+sc-text-field input:read-only,
+sc-number-field input:read-only,
 .sc-input:disabled,
 .sc-select:disabled {
   background: var(--gray-50);
   color: var(--text-disabled);
-  cursor: not-allowed;
 }
 
+sc-text-field input::placeholder,
+sc-number-field input::placeholder,
 .sc-input::placeholder {
   color: var(--gray-400);
 }
 
-/* Date Range */
-.sc-date-range {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sc-date-range__separator {
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-/* Textarea */
-.sc-textarea {
-  height: auto;
-  min-height: 60px;
-  padding: var(--spacing-sm);
-  resize: vertical;
-  line-height: 1.5;
-}
-
-/* Checkbox / Radio */
-.sc-checkbox,
-.sc-radio {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
 
 /* ================================================================
-   5. sc-button — 버튼
+   5. sc-button — 버튼 (Caidentia 기준)
    ================================================================ */
 sc-button,
 .sc-button {
@@ -364,36 +359,56 @@ sc-button,
   padding: 0 12px;
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
-  font-weight: 500;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--transition-fast);
   outline: none;
 }
 
+sc-button button {
+  height: 28px;
+  padding: 0 12px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color_primary_500);
+  background: var(--bg-content);
+  border: 1px solid var(--color_primary_500);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+sc-button button:hover {
+  background: var(--color_primary_50);
+  color: var(--color_primary_600);
+}
+
+sc-button button:active {
+  background: var(--color_primary_100);
+}
+
 /* Primary */
 .sc-button--primary {
-  background: var(--primary-700);
+  background: var(--color_primary_500);
   color: var(--text-inverse);
-  border-color: var(--primary-700);
+  border: 1px solid var(--color_primary_500);
 }
 
 .sc-button--primary:hover {
-  background: var(--primary-600);
-  border-color: var(--primary-600);
+  background: var(--color_primary_600);
+  border-color: var(--color_primary_600);
 }
 
-.sc-button--primary:active {
-  background: var(--primary-800);
-}
-
-/* Default (Secondary) */
+/* Default */
 .sc-button--default {
   background: var(--bg-content);
   color: var(--text-primary);
-  border-color: var(--border-color);
+  border: 1px solid var(--border-color);
 }
 
 .sc-button--default:hover {
@@ -401,27 +416,26 @@ sc-button,
   border-color: var(--gray-400);
 }
 
+/* Action (Navy) */
+.sc-button--action {
+  background: var(--color-navy);
+  color: var(--text-inverse);
+  border: 1px solid var(--color-navy);
+}
+
+.sc-button--action:hover {
+  background: #111322;
+}
+
 /* Danger */
 .sc-button--danger {
   background: var(--bg-content);
   color: var(--color-danger);
-  border-color: var(--color-danger);
+  border: 1px solid var(--color-danger);
 }
 
 .sc-button--danger:hover {
-  background: #fff5f5;
-}
-
-/* Icon Button */
-.sc-button--icon {
-  width: 28px;
-  padding: 0;
-}
-
-/* Button Icon */
-.sc-button__icon {
-  font-size: 14px;
-  line-height: 1;
+  background: #FFF5F5;
 }
 
 /* Button Group */
@@ -433,30 +447,32 @@ sc-button,
 
 
 /* ================================================================
-   6. sc-grid — 데이터 그리드
+   6. sc-grid — 데이터 그리드 (Caidentia 기준)
    ================================================================ */
 sc-grid,
 .sc-grid {
   display: flex;
   flex-direction: column;
+  position: relative;
   background: var(--bg-content);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   flex: 1;
-  min-height: 0;
+  min-height: 200px;
+  margin-bottom: 10px;
 }
 
 /* ── Grid Toolbar ── */
+sc-toolbar,
 .sc-grid__toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-bottom: 1px solid var(--border-light);
-  background: var(--gray-50);
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) 0;
+  background: var(--bg-content);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .sc-grid__toolbar-left {
@@ -472,9 +488,9 @@ sc-grid,
 }
 
 .sc-grid__title {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 400;
+  color: #000;
 }
 
 .sc-grid__count {
@@ -483,15 +499,19 @@ sc-grid,
 }
 
 .sc-grid__count strong {
-  color: var(--primary-700);
+  color: var(--color_primary_500);
   font-weight: 600;
 }
 
 /* ── Grid Wrapper ── */
-.sc-grid__wrapper {
+.sc-grid__wrapper,
+.sc-grid-wrap {
   flex: 1;
   overflow: auto;
   min-height: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-content);
 }
 
 /* ── Grid Table ── */
@@ -502,55 +522,49 @@ sc-grid,
 }
 
 /* Header */
-.sc-grid__table thead th {
+.sc-grid__table thead th,
+.sc-grid-wrap table thead th {
   position: sticky;
   top: 0;
   z-index: 10;
   height: var(--grid-header-height);
   padding: 0 var(--spacing-sm);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--color-gray_600);
   text-align: center;
-  background: var(--bg-grid-header);
-  border-bottom: 2px solid var(--gray-300);
+  background: var(--color-gray_100);
+  border-bottom: 1px solid var(--border-light);
   border-right: 1px solid var(--border-light);
   white-space: nowrap;
   user-select: none;
 }
 
-.sc-grid__table thead th:last-child {
+.sc-grid__table thead th:last-child,
+.sc-grid-wrap table thead th:last-child {
   border-right: none;
 }
 
-.sc-grid__table thead th.is-sortable {
-  cursor: pointer;
-}
-
-.sc-grid__table thead th.is-sortable:hover {
-  background: var(--gray-200);
-}
-
 /* Body */
-.sc-grid__table tbody tr {
+.sc-grid__table tbody tr,
+.sc-grid-wrap table tbody tr {
   height: var(--grid-row-height);
   border-bottom: 1px solid var(--border-light);
   transition: background var(--transition-fast);
 }
 
-.sc-grid__table tbody tr:hover {
-  background: var(--secondary-50);
+.sc-grid__table tbody tr:hover,
+.sc-grid-wrap table tbody tr:hover {
+  background: rgba(105, 84, 254, 0.04);
 }
 
-.sc-grid__table tbody tr.is-selected {
-  background: var(--secondary-100);
+.sc-grid__table tbody tr.is-selected,
+.sc-grid-wrap table tbody tr[style*="e8eaf6"] {
+  background: rgba(105, 84, 254, 0.08) !important;
 }
 
-.sc-grid__table tbody tr.is-selected:hover {
-  background: var(--secondary-200);
-}
-
-.sc-grid__table tbody td {
+.sc-grid__table tbody td,
+.sc-grid-wrap table tbody td {
   padding: 0 var(--spacing-sm);
   font-size: var(--font-size-sm);
   color: var(--text-primary);
@@ -560,8 +574,28 @@ sc-grid,
   white-space: nowrap;
 }
 
-.sc-grid__table tbody td:last-child {
+.sc-grid__table tbody td:last-child,
+.sc-grid-wrap table tbody td:last-child {
   border-right: none;
+}
+
+/* Grid inline edit input */
+.sc-grid-wrap table tbody td input {
+  width: 100%;
+  height: 26px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0 6px;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.sc-grid-wrap table tbody td input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px rgba(105, 84, 254, 0.15);
 }
 
 /* Cell Alignment */
@@ -569,20 +603,19 @@ sc-grid,
 .cell-right  { text-align: right; }
 .cell-left   { text-align: left; }
 
-/* Cell Types */
 .cell-number {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .cell-link {
-  color: var(--primary-500);
+  color: var(--color_primary_500);
   cursor: pointer;
   text-decoration: underline;
 }
 
 .cell-link:hover {
-  color: var(--primary-700);
+  color: var(--color_primary_600);
 }
 
 /* ── Grid Footer ── */
@@ -603,14 +636,94 @@ sc-grid,
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--text-primary);
-  background: #fafafa;
+  background: var(--gray-50);
   border-top: 2px solid var(--gray-300);
   border-right: 1px solid var(--border-light);
 }
 
+/* ── Grid Empty Message ── */
+.sc-grid-wrap > div[style*="text-align:center"] {
+  color: var(--text-secondary) !important;
+  font-size: var(--font-size-md) !important;
+}
+
 
 /* ================================================================
-   7. sc-tab — 탭 컴포넌트
+   7. sc-label — 라벨
+   ================================================================ */
+sc-label,
+.sc-label {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray_600);
+}
+
+sc-label span[style*="color"] {
+  color: #DD0000 !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* ================================================================
+   8. sc-panel — 패널
+   ================================================================ */
+sc-panel,
+.sc-panel {
+  display: block;
+  width: 100%;
+  position: relative;
+  border: 0;
+  margin-bottom: 10px;
+}
+
+sc-panel > div:first-child {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+
+/* ================================================================
+   9. tb-form — 테이블 폼 (Caidentia 기준)
+   ================================================================ */
+.tb-form {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.tb-form th {
+  height: 28px;
+  padding: 4px 5px 4px 10px;
+  text-align: right;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-gray_600);
+  background: var(--color-gray_100);
+  border: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.tb-form td {
+  height: 28px;
+  padding: 4px 6px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-content);
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+}
+
+
+/* ================================================================
+   10. sc-tab — 탭 컴포넌트
    ================================================================ */
 .sc-tab-group {
   display: flex;
@@ -646,12 +759,12 @@ sc-grid,
 }
 
 .sc-tab-header:hover {
-  color: var(--primary-500);
+  color: var(--color_primary_500);
 }
 
 .sc-tab-header.is-active {
-  color: var(--primary-700);
-  border-bottom-color: var(--primary-700);
+  color: var(--color_primary_600);
+  border-bottom-color: var(--color_primary_600);
   font-weight: 600;
 }
 
@@ -667,7 +780,7 @@ sc-grid,
 
 
 /* ================================================================
-   8. SPLIT LAYOUT — Master / Detail
+   11. SPLIT LAYOUT — Master / Detail
    ================================================================ */
 .sc-split-layout {
   display: flex;
@@ -693,7 +806,6 @@ sc-grid,
   min-height: 0;
 }
 
-/* ── Splitter ── */
 .sc-split-layout__divider {
   width: 4px;
   background: var(--gray-200);
@@ -704,18 +816,17 @@ sc-grid,
 }
 
 .sc-split-layout__divider:hover {
-  background: var(--primary-400);
+  background: var(--color_primary_400);
 }
 
 
 /* ================================================================
-   9. DETAIL FORM — 상세 정보 폼
+   12. DETAIL FORM — 상세 정보 폼
    ================================================================ */
 .sc-form-panel {
   background: var(--bg-content);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -768,15 +879,9 @@ sc-grid,
   color: var(--color-danger);
 }
 
-/* Form 2-column layout */
-.sc-form-table .form-row-2col th:nth-of-type(2),
-.sc-form-table .form-row-2col td:nth-of-type(2) {
-  border-left: 1px solid var(--border-light);
-}
-
 
 /* ================================================================
-   10. STATUS BADGE
+   13. STATUS BADGE
    ================================================================ */
 .sc-badge {
   display: inline-flex;
@@ -789,15 +894,28 @@ sc-grid,
   white-space: nowrap;
 }
 
-.sc-badge--draft     { background: var(--gray-100);      color: var(--gray-600); }
-.sc-badge--progress  { background: var(--secondary-50);  color: #1565c0; }
-.sc-badge--submitted { background: #fff3e0;              color: #e65100; }
-.sc-badge--approved  { background: #e8f5e9;              color: #2e7d32; }
-.sc-badge--rejected  { background: #ffebee;              color: #c62828; }
+.sc-badge--draft     { background: var(--gray-100);   color: var(--gray-600); }
+.sc-badge--progress  { background: #EBF5FF;           color: #1565c0; }
+.sc-badge--submitted { background: #FFF3E0;           color: #e65100; }
+.sc-badge--approved  { background: #E8F5E9;           color: #2e7d32; }
+.sc-badge--rejected  { background: #FFEBEE;           color: #c62828; }
 
 
 /* ================================================================
-   11. UTILITY CLASSES
+   14. vt-seperator — 세로 구분선
+   ================================================================ */
+.vt-seperator {
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  background: var(--gray-200);
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+
+/* ================================================================
+   15. UTILITY CLASSES
    ================================================================ */
 .u-flex      { display: flex; }
 .u-flex-col  { flex-direction: column; }
@@ -812,3 +930,4 @@ sc-grid,
 .u-nowrap    { white-space: nowrap; }
 .u-ellipsis  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .u-hidden    { display: none !important; }
+.flex        { display: flex; flex-direction: column; flex: 1; min-height: 0; }

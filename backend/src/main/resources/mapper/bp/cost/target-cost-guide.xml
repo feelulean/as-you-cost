@@ -6,29 +6,29 @@
     목표원가 부문별 Guide Mapper
     테이블: PCM_TGT_GUIDE (목표원가 부문별 Guide)
 -->
-<mapper namespace="smartsuite.app.bp.cost.targetcost.TargetCostGuideRepository">
+<mapper namespace="smartcost.app.bp.cost.targetcost.TargetCostGuideRepository">
 
     <!-- ============================================================
          부문별 Guide 목록 조회
          ============================================================ -->
     <select id="findListTargetCostGuide" parameterType="map" resultType="map">
-        SELECT  A.TEN_ID              AS tenId
-              , A.TGT_PJT_CD         AS tgtPjtCd
-              , A.GUIDE_SEQ           AS guideSeq
-              , A.COST_ITEM_CD       AS costItemCd
-              , A.COST_ITEM_NM       AS costItemNm
-              , A.DEPT_CD            AS deptCd
-              , A.DEPT_NM            AS deptNm
-              , A.EC_COST_TOT_AMT    AS ecCostTotAmt
-              , A.EC_COST_UNIT_AMT   AS ecCostUnitAmt
-              , A.GUIDE_TGT_TOT_AMT  AS guideTgtTotAmt
-              , A.GUIDE_TGT_UNIT_AMT AS guideTgtUnitAmt
-              , A.CFT_TGT_TOT_AMT    AS cftTgtTotAmt
-              , A.CFT_TGT_UNIT_AMT   AS cftTgtUnitAmt
-              , A.SAVE_RATE          AS saveRate
-              , A.PROD_QTY           AS prodQty
-              , A.STS                AS sts
-              , A.RMK                AS rmk
+        SELECT  A.TEN_ID              AS "tenId"
+              , A.TGT_PJT_CD         AS "tgtPjtCd"
+              , A.GUIDE_SEQ           AS "guideSeq"
+              , A.COST_ITEM_CD       AS "costItemCd"
+              , A.COST_ITEM_NM       AS "costItemNm"
+              , A.DEPT_CD            AS "deptCd"
+              , A.DEPT_NM            AS "deptNm"
+              , A.EC_COST_TOT_AMT    AS "ecCostTotAmt"
+              , A.EC_COST_UNIT_AMT   AS "ecCostUnitAmt"
+              , A.GUIDE_TGT_TOT_AMT  AS "guideTgtTotAmt"
+              , A.GUIDE_TGT_UNIT_AMT AS "guideTgtUnitAmt"
+              , A.CFT_TGT_TOT_AMT    AS "cftTgtTotAmt"
+              , A.CFT_TGT_UNIT_AMT   AS "cftTgtUnitAmt"
+              , A.SAVE_RATE          AS "saveRate"
+              , A.PROD_QTY           AS "prodQty"
+              , A.STS                AS "sts"
+              , A.RMK                AS "rmk"
           FROM  PCM_TGT_GUIDE A
          WHERE  A.TEN_ID     = #{g.tenant}
            AND  A.TGT_PJT_CD = #{p.tgtPjtCd}
@@ -40,12 +40,13 @@
          (판가, 목표수익률, 수량, 연계 견적코드)
          ============================================================ -->
     <select id="findTargetCostPjtInfo" parameterType="map" resultType="map">
-        SELECT  M.TGT_PJT_CD                       AS tgtPjtCd
-              , M.PJT_NM                            AS pjtNm
-              , M.EC_PJT_CD                         AS ecPjtCd
-              , M.PROD_QTY                          AS prodQty
-              , COALESCE(P.SELL_PRICE_TOT_AMT, 0)    AS sellPriceTotAmt
-              , COALESCE(P.TGT_PROFIT_RATE, 0)      AS tgtProfitRate
+        SELECT  M.TGT_PJT_CD                       AS "tgtPjtCd"
+              , M.PJT_NM                            AS "pjtNm"
+              , M.EC_PJT_CD                         AS "ecPjtCd"
+              , M.STS                               AS "sts"
+              , M.PROD_QTY                          AS "prodQty"
+              , COALESCE(P.SELL_PRICE_TOT_AMT, 0)    AS "sellPriceTotAmt"
+              , COALESCE(P.TGT_PROFIT_RATE, 0)      AS "tgtProfitRate"
           FROM  PCM_TGT_PJT_MSTR  M
           LEFT  JOIN PCM_TGT_PROFIT P
             ON  P.TEN_ID     = M.TEN_ID
@@ -59,11 +60,11 @@
          (연계된 견적코드 기준으로 원가항목별 합계)
          ============================================================ -->
     <select id="findListEstimateCostByPjt" parameterType="map" resultType="map">
-        SELECT  E.COST_ITEM_CD   AS costItemCd
-              , E.COST_ITEM_NM   AS costItemNm
-              , E.DEPT_CD        AS deptCd
-              , E.DEPT_NM        AS deptNm
-              , SUM(E.COST_AMT)  AS costTotAmt
+        SELECT  E.COST_ITEM_CD   AS "costItemCd"
+              , E.COST_ITEM_NM   AS "costItemNm"
+              , E.DEPT_CD        AS "deptCd"
+              , E.DEPT_NM        AS "deptNm"
+              , SUM(E.COST_AMT)  AS "costTotAmt"
           FROM  PCM_EC_COST_DTL  E
          WHERE  E.TEN_ID   = #{g.tenant}
            AND  E.EC_PJT_CD = #{p.ecPjtCd}

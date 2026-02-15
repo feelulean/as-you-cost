@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    YHJY As-You-Cost — 통합 통계 대시보드 Mapper
+    연계: PCM_EC_PJT_MSTR, PCM_EC_PROFIT, PCM_TGT_PJT_MSTR,
+          PCM_CUR_PJT_MSTR, PCM_CUR_ACHV_EVAL
+-->
+<mapper namespace="smartcost.app.bp.dashboard.DashboardRepository">
+
+    <!-- ============================================================
+         KPI 요약 통계
+         - 총 프로젝트 수, 평균 달성률, 위험 프로젝트 수(달성률 < 80%)
+         ============================================================ -->
+    <select id="findDashboardKpi" parameterType="map" resultType="map">
+        SELECT  (SELECT COUNT(*)
+                   FROM PCM_EC_PJT_MSTR
+                  WHERE TEN_ID = #{g.tenant})                       AS "totalPjtCnt"
+
+              , COALESCE(
+                  (SELECT ROUND(AVG(ACHV_RATE), 1)
+                     FROM PCM_CUR_ACHV_EVAL
+                    WHERE TEN_ID = #{g.tenant}), 0)                 AS "avgAchvRate"
+
+              , (SELECT COUNT(*)
+                   FROM PCM_CUR_ACHV_EVAL
+                  WHERE TEN_ID = #{g.tenant}
+                    AND ACHV_RATE &lt; 80)                          AS "riskPjtCnt"
+    </select>
+
+    <!-- ============================================================
+         사업부별 원가 비중 (Pie/Doughnut Chart)
+         - SEAT vs PT 총 견적원가 비교
+         ============================================================ -->
+    <select id="findDashboardCostByBizUnit" parameterType="map" resultType="map">
+        SELECT  E.BIZ_UNIT                           AS "bizUnit"
+              , COALESCE(SUM(P.TOTAL_ESTM_COST), 0)  AS "totalCost"
+          FROM  PCM_EC_PJT_MSTR E
+          LEFT  JOIN PCM_EC_PROFIT P
+            ON  P.TEN_ID    = E.TEN_ID
+           AND  P.EC_PJT_CD = E.EC_PJT_CD
+         WHERE  E.TEN_ID = #{g.tenant}
+         GROUP  BY E.BIZ_UNIT
+         ORDER  BY E.BIZ_UNIT
+    </select>
+
+    <!-- ============================================================
+         사업부별 EC/TC/CC 원가 비교 (Grouped Bar Chart)
+         - EC: 견적원가(TOTAL_ESTM_COST)
+         - TC: 목표원가(달성도 평가의 TGT_TOTAL_COST)
+         - CC: 현상원가(달성도 평가의 CUR_TOTAL_COST)
+         ============================================================ -->
+    <select id="findDashboardCostComparison" parameterType="map" resultType="map">
+        SELECT  E.BIZ_UNIT                              AS "bizUnit"
+              , COALESCE(SUM(P.TOTAL_ESTM_COST), 0)     AS "ecCost"
+              , COALESCE(SUM(A.TGT_TOTAL_COST), 0)      AS "tcCost"
+              , COALESCE(SUM(A.CUR_TOTAL_COST), 0)      AS "ccCost"
+          FROM  PCM_EC_PJT_MSTR E
+          LEFT  JOIN PCM_EC_PROFIT P
+            ON  P.TEN_ID    = E.TEN_ID
+           AND  P.EC_PJT_CD = E.EC_PJT_CD
+          LEFT  JOIN PCM_CUR_PJT_MSTR C
+            ON  C.TEN_ID    = E.TEN_ID
+           AND  C.EC_PJT_CD = E.EC_PJT_CD
+          LEFT  JOIN PCM_CUR_ACHV_EVAL A
+            ON  A.TEN_ID     = E.TEN_ID
+           AND  A.CUR_PJT_CD = C.CC_PJT_CD
+         WHERE  E.TEN_ID = #{g.tenant}
+         GROUP  BY E.BIZ_UNIT
+         ORDER  BY E.BIZ_UNIT
+    </select>
+
+    <!-- ============================================================
+         원가 절감 Top 5 프로젝트
+         - 실적 절감액(SAVE_ACT_AMT) 기준 상위 5건
+         ============================================================ -->
+    <select id="findDashboardTop5Reduction" parameterType="map" resultType="map">
+        SELECT  A.PJT_NM          AS "pjtNm"
+              , A.BIZ_UNIT        AS "bizUnit"
+              , A.EC_TOTAL_COST   AS "ecTotalCost"
+              , A.CUR_TOTAL_COST  AS "curTotalCost"
+              , A.SAVE_ACT_AMT    AS "saveActAmt"
+              , A.ACHV_RATE       AS "achvRate"
+          FROM  PCM_CUR_ACHV_EVAL A
+         WHERE  A.TEN_ID = #{g.tenant}
+           AND  A.SAVE_ACT_AMT > 0
+         ORDER  BY A.SAVE_ACT_AMT DESC
+         LIMIT  5
+    </select>
+
+</mapper>

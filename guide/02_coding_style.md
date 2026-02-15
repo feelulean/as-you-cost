@@ -10,7 +10,7 @@
 
 ## 2. 명명 규칙 (Naming Rule)
 [cite_start]기본적으로 Camel 표기법을 사용하며, 특수기호 사용이나 의미가 불명확한 약어 사용을 엄격히 금지합니다[cite: 94, 96, 437].
-* [cite_start]**패키지명:** 모두 소문자로 작성합니다 (예: `smartsuite.app.bp.pro.pr`)[cite: 102, 114].
+* [cite_start]**패키지명:** 모두 소문자로 작성합니다 (예: `smartcost.app.bp.pro.pr`)[cite: 102, 114].
 * [cite_start]**클래스명:** `UpperCamelCase`를 적용합니다[cite: 434].
 * [cite_start]**메소드명 및 변수명:** `lowerCamelCase`를 적용합니다[cite: 178, 435].
     * [cite_start]메소드는 '동사 + 명사' 구조로 작성합니다[cite: 169].

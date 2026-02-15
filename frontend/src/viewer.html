@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>As-You-Cost Viewer</title>
+  <!-- Pretendard (Caidentia 기준) + Noto Sans KR 폴백 -->
+  <link rel="stylesheet" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/yhjy-base.css">
+  <link rel="stylesheet" href="/styles/yhjy-components.css">
+
+  <!-- SheetJS (Excel) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+  <!-- 1. Polymer Shim (코어) — 반드시 먼저 로드 -->
+  <script src="/lib/polymer-shim.js"></script>
+  <!-- 2. SC 컴포넌트 스텁 -->
+  <script src="/lib/sc-components.js"></script>
+  <!-- 3. UT 유틸리티 -->
+  <script src="/lib/yhjy-util.js"></script>
+
+  <style>
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-base, #F8F9FC);
+      padding: 12px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #component-host {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="component-host"></div>
+
+  <script>
+    (function () {
+      /* URL 쿼리에서 view 이름 추출 */
+      var search = window.location.search || '';
+      var match = search.match(/[?&]view=([^&]+)/);
+      var viewId = match ? decodeURIComponent(match[1]) : '';
+
+      if (!viewId) {
+        document.getElementById('component-host').innerHTML =
+          '<div style="padding:40px;text-align:center;color:#667085;">view 파라미터가 없습니다.</div>';
+        return;
+      }
+
+      /* HTML 파일 경로 결정 */
+      var htmlPath = '/views/cost/' + viewId + '.html';
+
+      /* 뷰 HTML을 fetch 로 로드 */
+      fetch(htmlPath)
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.text();
+        })
+        .then(function (html) {
+          /* 파싱: dom-module + script 추출 */
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(html, 'text/html');
+
+          /* dom-module 을 현재 document 에 등록 */
+          var domModules = doc.querySelectorAll('dom-module');
+          for (var i = 0; i < domModules.length; i++) {
+            var imported = document.importNode(domModules[i], true);
+            document.body.appendChild(imported);
+            Polymer._registerDomModule(imported);
+          }
+
+          /* script 태그를 순차 실행 (Polymer() 호출 → customElements.define) */
+          var scripts = doc.querySelectorAll('script');
+          for (var j = 0; j < scripts.length; j++) {
+            var s = document.createElement('script');
+            s.textContent = scripts[j].textContent;
+            document.body.appendChild(s);
+          }
+
+          /* 컴포넌트 등록 완료 대기 후 인스턴스 생성 */
+          customElements.whenDefined(viewId).then(function () {
+            var el = document.createElement(viewId);
+            document.getElementById('component-host').appendChild(el);
+            document.title = viewId + ' — As-You-Cost';
+          });
+        })
+        .catch(function (err) {
+          console.error('[viewer] 뷰 로드 실패:', viewId, err);
+          document.getElementById('component-host').innerHTML =
+            '<div style="padding:40px;text-align:center;color:#F04438;">' +
+            '화면 로드 실패: ' + viewId + '<br><small>' + err.message + '</small></div>';
+        });
+    })();
+  </script>
+
+</body>
+</html>

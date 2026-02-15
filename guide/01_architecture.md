@@ -1,6 +1,6 @@
 # [As-you-Cost 1.x] 아키텍처 및 시스템 표준 가이드
 
-본 문서는 As-you-Cost 1.x (SMARTsuite 10.x 기반) 어플리케이션 구축을 위한 소프트웨어 아키텍처 정의서입니다. 웹기반 SCM 및 구매관리 솔루션, 특히 사전원가 예측 관리 시스템을 구현하는 AI(Claude) 및 개발자는 본 아키텍처 스타일과 제약사항을 반드시 준수해야 합니다.
+본 문서는 As-You-Cost 1.x 어플리케이션 구축을 위한 소프트웨어 아키텍처 정의서입니다. 웹기반 SCM 및 구매관리 솔루션, 특히 사전원가 예측 관리 시스템을 구현하는 AI(Claude) 및 개발자는 본 아키텍처 스타일과 제약사항을 반드시 준수해야 합니다.
 
 ## 1. 핵심 기술 스택 (Tech Stack)
 * **UI Framework:** Polymer 1.6 (Google Web Component Framework 기반 커스텀 태그 사용)
@@ -44,8 +44,8 @@ MyBatis SQL Mapper 사용 시 시스템 공통 전처리 파라미터를 반드�
 
 ## 6. 패키지 구조 (Package Structure)
 업무 성격에 따라 패키지를 엄격히 분리합니다. 
-* 내부 사용자(Buyer) 업무: `smartsuite.app.bp.*`
-* 외부 사용자(Supplier) 업무: `smartsuite.app.sp.*`
+* 내부 사용자(Buyer) 업무: `smartcost.app.bp.*`
+* 외부 사용자(Supplier) 업무: `smartcost.app.sp.*`
 * *현재 구축 중인 SCM 및 사전원가 관리 솔루션은 내부 사용자 중심 업무이므로 `bp` 하위에 패키지를 구성할 것.*
 
 ## 7. 시스템 제약 및 보안 사항

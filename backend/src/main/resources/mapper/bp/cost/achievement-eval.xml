@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    YHJY As-You-Cost — 현상원가 달성도 평가 Mapper
+    테이블: PCM_CUR_ACHV_EVAL (달성도 평가)
+    연계:   PCM_CUR_PJT_MSTR, PCM_EC_PROFIT, PCM_TGT_PJT_MSTR, PCM_TGT_GUIDE
+-->
+<mapper namespace="smartcost.app.bp.cost.currentcost.AchievementEvalRepository">
+
+    <!-- ============================================================
+         달성도 평가 목록 조회
+         ============================================================ -->
+    <select id="findListAchievementEval" parameterType="map" resultType="map">
+        SELECT  A.TEN_ID            AS "tenId"
+              , A.CUR_PJT_CD       AS "curPjtCd"
+              , A.EC_PJT_CD        AS "ecPjtCd"
+              , A.TGT_PJT_CD       AS "tgtPjtCd"
+              , A.PJT_NM           AS "pjtNm"
+              , A.BIZ_UNIT         AS "bizUnit"
+              , A.CUST_NM          AS "custNm"
+              , A.CAR_TYPE         AS "carType"
+              , A.EC_TOTAL_COST    AS "ecTotalCost"
+              , A.TGT_TOTAL_COST   AS "tgtTotalCost"
+              , A.CUR_TOTAL_COST   AS "curTotalCost"
+              , A.SAVE_TGT_AMT    AS "saveTgtAmt"
+              , A.SAVE_ACT_AMT    AS "saveActAmt"
+              , A.ACHV_RATE        AS "achvRate"
+              , A.ACHV_YN          AS "achvYn"
+              , A.EVAL_DT          AS "evalDt"
+              , A.RMK              AS "rmk"
+              , TO_CHAR(A.REG_DTTM, 'YYYY-MM-DD') AS "regDttm"
+          FROM  PCM_CUR_ACHV_EVAL A
+         WHERE  A.TEN_ID = #{g.tenant}
+        <if test="p.curPjtCd != null and p.curPjtCd != ''">
+           AND  A.CUR_PJT_CD LIKE '%' || #{p.curPjtCd} || '%'
+        </if>
+        <if test="p.bizUnit != null and p.bizUnit != ''">
+           AND  A.BIZ_UNIT = #{p.bizUnit}
+        </if>
+        <if test="p.custNm != null and p.custNm != ''">
+           AND  A.CUST_NM LIKE '%' || #{p.custNm} || '%'
+        </if>
+        <if test="p.achvYn != null and p.achvYn != ''">
+           AND  A.ACHV_YN = #{p.achvYn}
+        </if>
+         ORDER BY A.CUR_PJT_CD
+    </select>
+
+    <!-- ============================================================
+         달성도 평가 기초 데이터 조회
+         — EC(견적원가), TC(목표원가) 다중 테이블 조인
+         — 현상원가 프로젝트 중 아직 평가 데이터가 없는 건만 대상
+         ============================================================ -->
+    <select id="findListAchievementEvalBase" parameterType="map" resultType="map">
+        SELECT  CC.CC_PJT_CD                                 AS "curPjtCd"
+              , CC.EC_PJT_CD                                 AS "ecPjtCd"
+              , TC.TGT_PJT_CD                                AS "tgtPjtCd"
+              , CC.PJT_NM                                    AS "pjtNm"
+              , CC.BIZ_UNIT                                  AS "bizUnit"
+              , CC.CUST_NM                                   AS "custNm"
+              , CC.CAR_TYPE                                  AS "carType"
+              , COALESCE(EP.TOTAL_ESTM_COST, 0)              AS "ecTotalCost"
+              , COALESCE(TG_SUM.TGT_COST_SUM, 0)            AS "tgtTotalCost"
+          FROM  PCM_CUR_PJT_MSTR CC
+          -- ■ 견적원가 수익성 → 총견적원가
+          LEFT  JOIN PCM_EC_PROFIT EP
+            ON  EP.TEN_ID     = CC.TEN_ID
+           AND  EP.EC_PJT_CD  = CC.EC_PJT_CD
+          -- ■ 목표원가 프로젝트 (EC ↔ TC 연계)
+          LEFT  JOIN PCM_TGT_PJT_MSTR TC
+            ON  TC.TEN_ID     = CC.TEN_ID
+           AND  TC.EC_PJT_CD  = CC.EC_PJT_CD
+          -- ■ 목표원가 Guide 합계 (부문별 목표 총액의 합)
+          LEFT  JOIN (
+                SELECT  TEN_ID
+                      , TGT_PJT_CD
+                      , SUM(GUIDE_TGT_TOT_AMT) AS TGT_COST_SUM
+                  FROM  PCM_TGT_GUIDE
+                 GROUP BY TEN_ID, TGT_PJT_CD
+               ) TG_SUM
+            ON  TG_SUM.TEN_ID     = TC.TEN_ID
+           AND  TG_SUM.TGT_PJT_CD = TC.TGT_PJT_CD
+         WHERE  CC.TEN_ID = #{g.tenant}
+           -- 이미 평가 데이터가 존재하는 프로젝트는 제외
+           AND  NOT EXISTS (
+                SELECT  1
+                  FROM  PCM_CUR_ACHV_EVAL AE
+                 WHERE  AE.TEN_ID     = CC.TEN_ID
+                   AND  AE.CUR_PJT_CD = CC.CC_PJT_CD
+               )
+         ORDER BY CC.CC_PJT_CD
+    </select>
+
+    <!-- ============================================================
+         신규 등록 (평가 생성)
+         ============================================================ -->
+    <insert id="insertAchievementEval" parameterType="map">
+        INSERT INTO PCM_CUR_ACHV_EVAL (
+            TEN_ID
+          , CUR_PJT_CD
+          , EC_PJT_CD
+          , TGT_PJT_CD
+          , PJT_NM
+          , BIZ_UNIT
+          , CUST_NM
+          , CAR_TYPE
+          , EC_TOTAL_COST
+          , TGT_TOTAL_COST
+          , CUR_TOTAL_COST
+          , SAVE_TGT_AMT
+          , SAVE_ACT_AMT
+          , ACHV_RATE
+          , ACHV_YN
+          , EVAL_DT
+          , RMK
+          , STS
+          , REGR_ID
+          , REG_DTTM
+          , MODR_ID
+          , MOD_DTTM
+        ) VALUES (
+            #{g.tenant}
+          , #{p.curPjtCd}
+          , #{p.ecPjtCd}
+          , #{p.tgtPjtCd}
+          , #{p.pjtNm}
+          , #{p.bizUnit}
+          , #{p.custNm}
+          , #{p.carType}
+          , #{p.ecTotalCost}
+          , #{p.tgtTotalCost}
+          , #{p.curTotalCost}
+          , #{p.saveTgtAmt}
+          , #{p.saveActAmt}
+          , #{p.achvRate}
+          , #{p.achvYn}
+          , #{p.evalDt}
+          , #{p.rmk}
+          , 'T'
+          , #{g.username}
+          , #{g.now}
+          , #{g.username}
+          , #{g.now}
+        )
+    </insert>
+
+    <!-- ============================================================
+         수정 (현상원가 실적 입력, 달성도 갱신)
+         ============================================================ -->
+    <update id="updateAchievementEval" parameterType="map">
+        UPDATE  PCM_CUR_ACHV_EVAL
+           SET  CUR_TOTAL_COST  = #{p.curTotalCost}
+              , SAVE_TGT_AMT   = #{p.saveTgtAmt}
+              , SAVE_ACT_AMT   = #{p.saveActAmt}
+              , ACHV_RATE       = #{p.achvRate}
+              , ACHV_YN         = #{p.achvYn}
+              , EVAL_DT         = #{p.evalDt}
+              , RMK             = #{p.rmk}
+              , MODR_ID         = #{g.username}
+              , MOD_DTTM        = #{g.now}
+         WHERE  TEN_ID     = #{g.tenant}
+           AND  CUR_PJT_CD = #{p.curPjtCd}
+    </update>
+
+    <!-- ============================================================
+         삭제
+         ============================================================ -->
+    <delete id="deleteAchievementEval" parameterType="map">
+        DELETE FROM PCM_CUR_ACHV_EVAL
+         WHERE  TEN_ID     = #{g.tenant}
+           AND  CUR_PJT_CD = #{p.curPjtCd}
+    </delete>
+
+    <!-- ============================================================
+         존재 여부 확인 (UPSERT 판단용)
+         ============================================================ -->
+    <select id="countAchievementEval" parameterType="map" resultType="int">
+        SELECT  COUNT(1)
+          FROM  PCM_CUR_ACHV_EVAL
+         WHERE  TEN_ID     = #{g.tenant}
+           AND  CUR_PJT_CD = #{p.curPjtCd}
+    </select>
+
+</mapper>

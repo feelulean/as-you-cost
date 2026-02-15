@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>As-You-Cost</title>
+  <!-- Pretendard (Caidentia 기준) + Noto Sans KR 폴백 -->
+  <link rel="stylesheet" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      /* Primary: Purple (Caidentia 기준) */
+      --primary-900: #3A1BC8;
+      --primary-800: #4424E0;
+      --primary-700: #532DF6;
+      --primary-600: #6954FE;
+      --primary-500: #8E85FF;
+      --primary-400: #B4B1FF;
+      /* Secondary: Navy */
+      --secondary-500: #30374F;
+      --secondary-400: #475467;
+      --secondary-300: #667085;
+      --secondary-100: #D0D5DD;
+      /* Gray Scale (Caidentia 기준) */
+      --gray-900: #111322;
+      --gray-800: #30374F;
+      --gray-700: #475467;
+      --gray-600: #565E73;
+      --gray-500: #667085;
+      --gray-400: #8A94A6;
+      --gray-300: #B3B9C6;
+      --gray-200: #D0D5DD;
+      --gray-100: #F0F1F5;
+      --gray-50:  #F8F9FC;
+      --bg-base:    #F8F9FC;
+      --bg-content: #ffffff;
+      --text-primary:   #30374F;
+      --text-secondary: #667085;
+      --text-inverse:   #ffffff;
+      --border-color:  #D0D5DD;
+      --border-light:  #EAECF0;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 2px 4px rgba(0,0,0,0.08);
+      --font-family: 'Pretendard Variable', 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+      --header-h: 48px;
+      --sidebar-w: 230px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: var(--font-family); font-size: 13px; color: var(--text-primary); overflow: hidden; }
+
+    /* ============================================================
+       1. TOP HEADER
+       ============================================================ */
+    .top-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--gray-800);
+      display: flex; align-items: center;
+      padding: 0 20px;
+      z-index: 200;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Logo */
+    .top-header__logo {
+      font-size: 17px; font-weight: 700; color: #fff;
+      letter-spacing: -0.5px; white-space: nowrap;
+      margin-right: 32px; cursor: pointer;
+    }
+    .top-header__logo span { font-weight: 300; color: var(--primary-500); font-size: 12px; margin-left: 6px; }
+
+    /* GNB (Top Menu) */
+    .gnb { display: flex; gap: 2px; height: 100%; }
+
+    .gnb__item {
+      display: flex; align-items: center;
+      height: 100%; padding: 0 18px;
+      font-family: var(--font-family);
+      font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.65);
+      cursor: pointer; position: relative;
+      transition: color 0.15s, background 0.15s;
+      white-space: nowrap; border: none; background: none;
+    }
+    .gnb__item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .gnb__item.is-active {
+      color: #fff; font-weight: 600;
+      background: rgba(255,255,255,0.1);
+    }
+    .gnb__item.is-active::after {
+      content: ''; position: absolute; bottom: 0; left: 12px; right: 12px;
+      height: 3px; background: var(--primary-600); border-radius: 3px 3px 0 0;
+    }
+
+    /* Right area */
+    .top-header__right {
+      margin-left: auto; display: flex; align-items: center; gap: 16px;
+    }
+    .top-header__user {
+      font-size: 12px; color: rgba(255,255,255,0.7);
+    }
+    .top-header__user strong { color: rgba(255,255,255,0.95); font-weight: 500; }
+    .top-header__btn {
+      padding: 4px 12px; font-size: 11px; font-family: var(--font-family);
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 3px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .top-header__btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* ============================================================
+       2. LEFT SIDEBAR
+       ============================================================ */
+    .sidebar {
+      position: fixed; top: var(--header-h); left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: #fff;
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto; overflow-x: hidden;
+      z-index: 100;
+      transition: width 0.25s;
+    }
+
+    /* Sidebar Title */
+    .sidebar__title {
+      padding: 16px 18px 10px;
+      font-size: 11px; font-weight: 700;
+      color: var(--primary-700);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    /* Menu Group */
+    .lnb-group { border-bottom: 1px solid var(--border-light); }
+    .lnb-group__header {
+      display: flex; align-items: center;
+      padding: 11px 18px;
+      font-size: 13px; font-weight: 600; color: var(--text-primary);
+      cursor: pointer; transition: background 0.12s;
+      background: none; border: none; width: 100%; text-align: left;
+      font-family: var(--font-family);
+    }
+    .lnb-group__header:hover { background: var(--gray-50); }
+
+    .lnb-group__icon {
+      width: 22px; height: 22px; border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; margin-right: 10px; flex-shrink: 0;
+    }
+    .lnb-group__icon--ec   { background: #F3F2FF; color: #6954FE; }
+    .lnb-group__icon--tc   { background: #FFF1F3; color: #F04438; }
+    .lnb-group__icon--cc   { background: #FFF6ED; color: #F79009; }
+    .lnb-group__icon--sys  { background: #F0F1F5; color: #565E73; }
+
+    .lnb-group__arrow {
+      margin-left: auto; font-size: 10px; color: var(--gray-400);
+      transition: transform 0.2s;
+    }
+    .lnb-group.is-open .lnb-group__arrow { transform: rotate(90deg); }
+
+    /* Sub Menu Items */
+    .lnb-items { display: none; padding: 2px 0 8px; }
+    .lnb-group.is-open .lnb-items { display: block; }
+
+    .lnb-item {
+      display: flex; align-items: center;
+      padding: 8px 18px 8px 50px;
+      font-size: 12px; color: var(--text-secondary);
+      cursor: pointer; transition: all 0.12s;
+      text-decoration: none; position: relative;
+    }
+    .lnb-item::before {
+      content: ''; position: absolute; left: 34px; top: 50%;
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--gray-300); transform: translateY(-50%);
+      transition: background 0.12s;
+    }
+    .lnb-item:hover {
+      color: var(--primary-700); background: #F3F2FF;
+    }
+    .lnb-item:hover::before { background: var(--primary-600); }
+    .lnb-item.is-active {
+      color: var(--primary-700); font-weight: 600; background: #E8E8FF;
+    }
+    .lnb-item.is-active::before {
+      background: var(--primary-700); width: 6px; height: 6px;
+    }
+
+    /* ============================================================
+       3. MAIN CONTENT AREA
+       ============================================================ */
+    .main-area {
+      position: fixed;
+      top: var(--header-h); left: var(--sidebar-w);
+      right: 0; bottom: 0;
+      background: var(--bg-base);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* MDI Tab Bar */
+    .mdi-tab-bar {
+      display: flex; align-items: flex-end;
+      height: 34px; min-height: 34px; background: #3D4462;
+      padding: 0 8px; overflow-x: auto; overflow-y: hidden; flex-shrink: 0;
+    }
+    .mdi-tab-bar::-webkit-scrollbar { height: 0; }
+
+    .mdi-tab {
+      display: flex; align-items: center; gap: 6px;
+      height: 28px; padding: 0 14px;
+      font-size: 12px; font-family: var(--font-family);
+      color: rgba(255,255,255,0.55);
+      background: transparent; border: none; border-radius: 4px 4px 0 0;
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.12s; position: relative;
+    }
+    .mdi-tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .mdi-tab.is-active {
+      color: var(--text-primary); background: var(--bg-base); font-weight: 500;
+    }
+    .mdi-tab__close {
+      font-size: 14px; line-height: 1; opacity: 0; transition: opacity 0.12s;
+      width: 14px; height: 14px; display: inline-flex; align-items: center;
+      justify-content: center; border-radius: 50%;
+    }
+    .mdi-tab:hover .mdi-tab__close,
+    .mdi-tab.is-active .mdi-tab__close { opacity: 0.6; }
+    .mdi-tab__close:hover { opacity: 1 !important; background: rgba(0,0,0,0.1); }
+
+    /* Content Frame */
+    .content-frame {
+      width: 100%; flex: 1; min-height: 0;
+      border: none; background: var(--bg-base);
+    }
+
+    /* ============================================================
+       4. DASHBOARD (Welcome Screen)
+       ============================================================ */
+    .welcome {
+      display: flex; flex-direction: column;
+      flex: 1; min-height: 0;
+      padding: 24px 28px;
+      overflow-y: auto;
+    }
+
+    /* Dashboard Header */
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .dash-header__title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .dash-header__title small { font-weight: 400; color: var(--gray-400); font-size: 12px; margin-left: 8px; }
+    .dash-header__refresh {
+      padding: 6px 14px; font-size: 12px; font-family: var(--font-family);
+      background: var(--primary-700); color: #fff; border: none; border-radius: 6px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .dash-header__refresh:hover { background: var(--primary-900); }
+
+    /* KPI Cards Row */
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: #fff; border: 1px solid var(--border-light); border-radius: 12px;
+      padding: 20px 22px; transition: box-shadow 0.2s;
+    }
+    .kpi-card:hover { box-shadow: var(--shadow-md); }
+    .kpi-card__label { font-size: 12px; font-weight: 500; color: var(--gray-500); margin-bottom: 8px; }
+    .kpi-card__value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+    .kpi-card__value small { font-size: 14px; font-weight: 400; color: var(--gray-400); margin-left: 2px; }
+    .kpi-card--purple .kpi-card__value { color: var(--primary-700); }
+    .kpi-card--green .kpi-card__value { color: #12B76A; }
+    .kpi-card--red .kpi-card__value { color: #F04438; }
+
+    /* Quick Access Cards */
+    .quick-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 20px;
+    }
+    .quick-card {
+      padding: 16px 18px; background: #fff; border: 1px solid var(--border-light);
+      border-radius: 10px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .quick-card:hover { box-shadow: var(--shadow-md); border-color: var(--primary-600); transform: translateY(-1px); }
+    .quick-card__icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .quick-card__text { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .quick-card__desc { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+    /* Chart Row */
+    .chart-row {
+      display: grid; grid-template-columns: 1fr 1.6fr;
+      gap: 16px; margin-bottom: 20px;
+    }
+    .chart-card {
+      background: #fff; border: 1px solid var(--border-light); border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .chart-card__title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px; }
+    .chart-card__body { position: relative; }
+    .chart-card__body canvas { max-height: 260px; }
+
+    /* Top 5 Table */
+    .top5-card {
+      background: #fff; border: 1px solid var(--border-light); border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .top5-card__title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+    .top5-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .top5-table th {
+      padding: 8px 10px; text-align: left; font-weight: 600;
+      color: var(--gray-500); border-bottom: 2px solid var(--border-color);
+      background: var(--gray-50);
+    }
+    .top5-table td {
+      padding: 9px 10px; border-bottom: 1px solid var(--border-light);
+      color: var(--text-primary);
+    }
+    .top5-table tr:hover td { background: #F8F7FF; }
+    .top5-table .text-right { text-align: right; }
+    .top5-table .text-center { text-align: center; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .badge--seat { background: #F3F2FF; color: #6954FE; }
+    .badge--pt { background: #FFF6ED; color: #F79009; }
+    .empty-msg { text-align: center; padding: 40px 0; color: var(--gray-400); font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════
+       1. TOP HEADER (GNB)
+       ════════════════════════════════════════════ -->
+  <header class="top-header">
+    <div class="top-header__logo" onclick="showWelcome()">
+      As-You-Cost <span>v1.0</span>
+    </div>
+
+    <nav class="gnb" id="gnb">
+      <button class="gnb__item is-active" data-menu="ec">견적원가 관리</button>
+      <button class="gnb__item" data-menu="tc">목표원가 관리</button>
+      <button class="gnb__item" data-menu="cc">현상원가 관리</button>
+      <button class="gnb__item" data-menu="sys">시스템 관리</button>
+    </nav>
+
+    <div class="top-header__right">
+      <span class="top-header__user"><strong id="userDisplay">testuser</strong> (T001)</span>
+      <button class="top-header__btn" onclick="handleLogout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════
+       2. LEFT SIDEBAR (LNB)
+       ════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- ── 견적원가 관리 ── -->
+    <div class="lnb-group is-open" data-group="ec">
+      <button class="lnb-group__header" onclick="toggleGroup(this)">
+        <span class="lnb-group__icon lnb-group__icon--ec">EC</span>
+        견적원가 관리
+        <span class="lnb-group__arrow">&#9654;</span>
+      </button>
+      <div class="lnb-items">
+        <a class="lnb-item" data-url="viewer.html?view=es-project-list" data-title="견적 프로젝트 관리" onclick="openTab(this)">
+          견적 프로젝트 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-ec-bom-list" data-title="견적BOM 및 단가 관리" onclick="openTab(this)">
+          견적BOM 및 단가 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-ec-profit-mgt" data-title="견적기준가 및 수익성 분석" onclick="openTab(this)">
+          견적기준가 및 수익성 분석
+        </a>
+      </div>
+    </div>
+
+    <!-- ── 목표원가 관리 ── -->
+    <div class="lnb-group" data-group="tc">
+      <button class="lnb-group__header" onclick="toggleGroup(this)">
+        <span class="lnb-group__icon lnb-group__icon--tc">TC</span>
+        목표원가 관리
+        <span class="lnb-group__arrow">&#9654;</span>
+      </button>
+      <div class="lnb-items">
+        <a class="lnb-item" data-url="viewer.html?view=es-target-cost-project-list" data-title="목표원가 프로젝트 등록" onclick="openTab(this)">
+          목표원가 프로젝트 등록
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-target-cost-guide-list" data-title="부문별 목표 Guide 산출" onclick="openTab(this)">
+          부문별 목표 Guide 산출
+        </a>
+      </div>
+    </div>
+
+    <!-- ── 현상원가 관리 ── -->
+    <div class="lnb-group" data-group="cc">
+      <button class="lnb-group__header" onclick="toggleGroup(this)">
+        <span class="lnb-group__icon lnb-group__icon--cc">CC</span>
+        현상원가 관리
+        <span class="lnb-group__arrow">&#9654;</span>
+      </button>
+      <div class="lnb-items">
+        <a class="lnb-item" data-url="viewer.html?view=es-current-cost-project-list" data-title="현상원가 프로젝트 등록" onclick="openTab(this)">
+          현상원가 프로젝트 등록
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-achievement-eval-list" data-title="달성도 평가" onclick="openTab(this)">
+          달성도 평가
+        </a>
+      </div>
+    </div>
+
+    <!-- ── 시스템 관리 ── -->
+    <div class="lnb-group" data-group="sys">
+      <button class="lnb-group__header" onclick="toggleGroup(this)">
+        <span class="lnb-group__icon lnb-group__icon--sys">SYS</span>
+        시스템 관리
+        <span class="lnb-group__arrow">&#9654;</span>
+      </button>
+      <div class="lnb-items">
+        <a class="lnb-item" data-url="/test.html" data-title="API Test Console" onclick="openTab(this)">
+          API Test Console
+        </a>
+        <a class="lnb-item" data-url="views/cost/pre-cost-register.html" data-title="UI Demo (사전원가 등록)" onclick="openTab(this)">
+          UI Demo (사전원가 등록)
+        </a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ════════════════════════════════════════════
+       3. MAIN CONTENT AREA
+       ════════════════════════════════════════════ -->
+  <main class="main-area" id="mainArea">
+    <!-- MDI Tab Bar -->
+    <div class="mdi-tab-bar" id="mdiTabBar"></div>
+
+    <!-- Content Frame (iframe) -->
+    <iframe class="content-frame" id="contentFrame" src="about:blank"></iframe>
+
+    <!-- Welcome / Dashboard -->
+    <div class="welcome" id="welcomeScreen">
+
+      <!-- Dashboard Header -->
+      <div class="dash-header">
+        <div class="dash-header__title">
+          Dashboard <small>As-You-Cost 통합 통계</small>
+        </div>
+        <button class="dash-header__refresh" onclick="loadDashboard()">새로고침</button>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-row">
+        <div class="kpi-card kpi-card--purple">
+          <div class="kpi-card__label">총 프로젝트 수</div>
+          <div class="kpi-card__value" id="kpiTotalPjt">-<small>건</small></div>
+        </div>
+        <div class="kpi-card kpi-card--green">
+          <div class="kpi-card__label">평균 달성률</div>
+          <div class="kpi-card__value" id="kpiAvgAchv">-<small>%</small></div>
+        </div>
+        <div class="kpi-card kpi-card--red">
+          <div class="kpi-card__label">위험 프로젝트 (달성률 &lt; 80%)</div>
+          <div class="kpi-card__value" id="kpiRiskPjt">-<small>건</small></div>
+        </div>
+      </div>
+
+      <!-- Quick Access -->
+      <div class="quick-row">
+        <div class="quick-card" onclick="quickOpen('ec','viewer.html?view=es-project-list','견적 프로젝트 관리')">
+          <div class="quick-card__icon lnb-group__icon--ec">EC</div>
+          <div>
+            <div class="quick-card__text">견적원가</div>
+            <div class="quick-card__desc">프로젝트 / BOM / 수익성</div>
+          </div>
+        </div>
+        <div class="quick-card" onclick="quickOpen('tc','viewer.html?view=es-target-cost-project-list','목표원가 프로젝트 등록')">
+          <div class="quick-card__icon lnb-group__icon--tc">TC</div>
+          <div>
+            <div class="quick-card__text">목표원가</div>
+            <div class="quick-card__desc">프로젝트 / Guide 산출</div>
+          </div>
+        </div>
+        <div class="quick-card" onclick="quickOpen('cc','viewer.html?view=es-current-cost-project-list','현상원가 프로젝트 등록')">
+          <div class="quick-card__icon lnb-group__icon--cc">CC</div>
+          <div>
+            <div class="quick-card__text">현상원가</div>
+            <div class="quick-card__desc">프로젝트 / 달성도</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-card__title">사업부별 원가 비중</div>
+          <div class="chart-card__body">
+            <canvas id="chartPie"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__title">사업부별 EC / TC / CC 원가 비교</div>
+          <div class="chart-card__body">
+            <canvas id="chartBar"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 5 -->
+      <div class="top5-card">
+        <div class="top5-card__title">원가 절감 Top 5 프로젝트</div>
+        <table class="top5-table">
+          <thead>
+            <tr>
+              <th style="width:40px" class="text-center">#</th>
+              <th>프로젝트명</th>
+              <th style="width:80px" class="text-center">사업부</th>
+              <th style="width:120px" class="text-right">견적원가</th>
+              <th style="width:120px" class="text-right">현상원가</th>
+              <th style="width:120px" class="text-right">절감액</th>
+              <th style="width:80px" class="text-right">달성률</th>
+            </tr>
+          </thead>
+          <tbody id="top5Body">
+            <tr><td colspan="7" class="empty-msg">데이터를 불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ════════════════════════════════════════════
+       JAVASCRIPT
+       ════════════════════════════════════════════ -->
+  <script>
+    /* ── 로그인 체크 ── */
+    var loginUser = sessionStorage.getItem('loginUser');
+    if (!loginUser) { window.location.href = '/'; }
+    else { document.getElementById('userDisplay').textContent = loginUser; }
+
+    function handleLogout() {
+      sessionStorage.removeItem('loginUser');
+      window.location.href = '/';
+    }
+
+    /* ── 탭 데이터 ── */
+    var tabs = [];       // [{id, url, title}]
+    var activeTabId = null;
+
+    /* ── GNB (Top Menu) 클릭 ── */
+    document.querySelectorAll('.gnb__item').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.gnb__item').forEach(function(b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+
+        var menu = btn.getAttribute('data-menu');
+        // 해당 그룹만 열기
+        document.querySelectorAll('.lnb-group').forEach(function(g) {
+          if (g.getAttribute('data-group') === menu) {
+            g.classList.add('is-open');
+          } else {
+            g.classList.remove('is-open');
+          }
+        });
+      });
+    });
+
+    /* ── LNB Group 토글 ── */
+    function toggleGroup(header) {
+      header.parentElement.classList.toggle('is-open');
+    }
+
+    /* ── MDI Tab 열기 ── */
+    function openTab(elOrViewId, titleOverride) {
+      var url, title;
+      if (typeof elOrViewId === 'string') {
+        /* UT.navigateTo 등에서 viewId 문자열로 호출 */
+        url   = 'viewer.html?view=' + elOrViewId;
+        title = titleOverride || elOrViewId;
+      } else {
+        var el = elOrViewId;
+        url   = el.getAttribute('data-url');
+        title = el.getAttribute('data-title');
+      }
+
+      // LNB active
+      document.querySelectorAll('.lnb-item').forEach(function(i) { i.classList.remove('is-active'); });
+      if (typeof elOrViewId !== 'string' && elOrViewId.classList) {
+        elOrViewId.classList.add('is-active');
+      }
+
+      // 이미 열린 탭이면 활성화만
+      var existing = tabs.find(function(t) { return t.url === url; });
+      if (existing) {
+        activateTab(existing.id);
+        return;
+      }
+
+      // 새 탭 생성
+      var tabId = 'tab_' + Date.now();
+      tabs.push({ id: tabId, url: url, title: title });
+      renderTabs();
+      activateTab(tabId);
+    }
+
+    /* ── 탭 렌더링 ── */
+    function renderTabs() {
+      var bar = document.getElementById('mdiTabBar');
+      bar.innerHTML = '';
+      tabs.forEach(function(t) {
+        var btn = document.createElement('button');
+        btn.className = 'mdi-tab' + (t.id === activeTabId ? ' is-active' : '');
+        btn.innerHTML = t.title + ' <span class="mdi-tab__close" onclick="event.stopPropagation(); closeTab(\'' + t.id + '\')">&times;</span>';
+        btn.onclick = function() { activateTab(t.id); };
+        bar.appendChild(btn);
+      });
+    }
+
+    /* ── 탭 활성화 ── */
+    function activateTab(tabId) {
+      activeTabId = tabId;
+      var tab = tabs.find(function(t) { return t.id === tabId; });
+      if (!tab) return;
+
+      // Welcome 숨기기
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.getElementById('contentFrame').style.display = 'block';
+
+      // iframe src 변경
+      document.getElementById('contentFrame').src = tab.url;
+
+      // 탭 바 갱신
+      renderTabs();
+
+      // LNB 하이라이트 동기화
+      document.querySelectorAll('.lnb-item').forEach(function(i) {
+        i.classList.toggle('is-active', i.getAttribute('data-url') === tab.url);
+      });
+    }
+
+    /* ── 탭 닫기 ── */
+    function closeTab(tabId) {
+      var idx = tabs.findIndex(function(t) { return t.id === tabId; });
+      if (idx === -1) return;
+
+      tabs.splice(idx, 1);
+
+      if (activeTabId === tabId) {
+        if (tabs.length > 0) {
+          var nextIdx = Math.min(idx, tabs.length - 1);
+          activateTab(tabs[nextIdx].id);
+        } else {
+          activeTabId = null;
+          showWelcome();
+        }
+      }
+      renderTabs();
+    }
+
+    /* ── Welcome 화면 표시 ── */
+    function showWelcome() {
+      document.getElementById('welcomeScreen').style.display = 'flex';
+      document.getElementById('contentFrame').style.display = 'none';
+      activeTabId = null;
+      document.querySelectorAll('.lnb-item').forEach(function(i) { i.classList.remove('is-active'); });
+      renderTabs();
+      loadDashboard();
+    }
+
+    /* ── Quick Open (Welcome 카드) ── */
+    function quickOpen(menuKey, url, title) {
+      // GNB 활성화
+      document.querySelectorAll('.gnb__item').forEach(function(b) {
+        b.classList.toggle('is-active', b.getAttribute('data-menu') === menuKey);
+      });
+      // LNB 열기
+      document.querySelectorAll('.lnb-group').forEach(function(g) {
+        g.classList.toggle('is-open', g.getAttribute('data-group') === menuKey);
+      });
+      // 해당 LNB item 찾아서 openTab
+      var item = document.querySelector('.lnb-item[data-url="' + url + '"]');
+      if (item) openTab(item);
+    }
+
+    /* ════════════════════════════════════════════
+       DASHBOARD
+       ════════════════════════════════════════════ */
+    var pieChart = null;
+    var barChart = null;
+
+    function formatNumber(n) {
+      if (n == null) return '0';
+      return Number(n).toLocaleString('ko-KR');
+    }
+
+    function loadDashboard() {
+      fetch('/bp/dashboard/findDashboardStat.do', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        renderKpi(data.kpi);
+        renderPieChart(data.costByBizUnit);
+        renderBarChart(data.costComparison);
+        renderTop5(data.top5Reduction);
+      })
+      .catch(function(err) {
+        console.error('Dashboard load failed:', err);
+      });
+    }
+
+    /* ── KPI 카드 렌더링 ── */
+    function renderKpi(kpi) {
+      if (!kpi) return;
+      document.getElementById('kpiTotalPjt').innerHTML = (kpi.totalPjtCnt || 0) + '<small>건</small>';
+      document.getElementById('kpiAvgAchv').innerHTML  = (kpi.avgAchvRate || 0) + '<small>%</small>';
+      document.getElementById('kpiRiskPjt').innerHTML   = (kpi.riskPjtCnt || 0) + '<small>건</small>';
+    }
+
+    /* ── Pie/Doughnut Chart ── */
+    function renderPieChart(costByBizUnit) {
+      var canvas = document.getElementById('chartPie');
+      if (pieChart) { pieChart.destroy(); }
+
+      if (!costByBizUnit || costByBizUnit.length === 0) {
+        canvas.parentElement.innerHTML = '<div class="empty-msg">데이터가 존재하지 않습니다</div>';
+        return;
+      }
+
+      var labels = costByBizUnit.map(function(r) { return r.bizUnit; });
+      var values = costByBizUnit.map(function(r) { return Number(r.totalCost); });
+      var colors = ['#6954FE', '#F79009', '#12B76A', '#F04438'];
+
+      pieChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12, family: 'Pretendard Variable' } } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                  var pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                  return ctx.label + ': ' + formatNumber(ctx.parsed) + '원 (' + pct + '%)';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    /* ── Grouped Bar Chart ── */
+    function renderBarChart(costComparison) {
+      var canvas = document.getElementById('chartBar');
+      if (barChart) { barChart.destroy(); }
+
+      if (!costComparison || costComparison.length === 0) {
+        canvas.parentElement.innerHTML = '<div class="empty-msg">데이터가 존재하지 않습니다</div>';
+        return;
+      }
+
+      var labels = costComparison.map(function(r) { return r.bizUnit; });
+      var ecData = costComparison.map(function(r) { return Number(r.ecCost); });
+      var tcData = costComparison.map(function(r) { return Number(r.tcCost); });
+      var ccData = costComparison.map(function(r) { return Number(r.ccCost); });
+
+      barChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: '견적원가 (EC)', data: ecData, backgroundColor: '#6954FE', borderRadius: 4 },
+            { label: '목표원가 (TC)', data: tcData, backgroundColor: '#F04438', borderRadius: 4 },
+            { label: '현상원가 (CC)', data: ccData, backgroundColor: '#F79009', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12, family: 'Pretendard Variable' } } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ctx.dataset.label + ': ' + formatNumber(ctx.parsed.y) + '원';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(val) { return formatNumber(val); },
+                font: { size: 11 }
+              },
+              grid: { color: '#F0F1F5' }
+            },
+            x: {
+              ticks: { font: { size: 12, weight: '600' } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    /* ── Top 5 테이블 렌더링 ── */
+    function renderTop5(top5) {
+      var tbody = document.getElementById('top5Body');
+
+      if (!top5 || top5.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">데이터가 존재하지 않습니다</td></tr>';
+        return;
+      }
+
+      var html = '';
+      top5.forEach(function(row, idx) {
+        var badgeClass = (row.bizUnit === 'SEAT') ? 'badge--seat' : 'badge--pt';
+        html += '<tr>'
+          + '<td class="text-center">' + (idx + 1) + '</td>'
+          + '<td>' + (row.pjtNm || '') + '</td>'
+          + '<td class="text-center"><span class="badge ' + badgeClass + '">' + (row.bizUnit || '') + '</span></td>'
+          + '<td class="text-right">' + formatNumber(row.ecTotalCost) + '</td>'
+          + '<td class="text-right">' + formatNumber(row.curTotalCost) + '</td>'
+          + '<td class="text-right" style="font-weight:600; color:#12B76A;">' + formatNumber(row.saveActAmt) + '</td>'
+          + '<td class="text-right">' + (row.achvRate || 0) + '%</td>'
+          + '</tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    /* ── 초기 상태 ── */
+    document.getElementById('contentFrame').style.display = 'none';
+    loadDashboard();
+  </script>
+
+</body>
+</html>

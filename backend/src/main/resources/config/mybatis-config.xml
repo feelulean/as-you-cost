@@ -31,10 +31,6 @@
         <setting name="logImpl" value="SLF4J"/>
     </settings>
 
-    <!-- ── Type Alias (필요 시 확장) ── -->
-    <typeAliases>
-        <typeAlias alias="map"  type="java.util.HashMap"/>
-        <typeAlias alias="list" type="java.util.ArrayList"/>
-    </typeAliases>
+    <!-- Type Alias: MyBatis 3.5.x 내장 alias (map, list 등) 사용 -->
 
 </configuration>

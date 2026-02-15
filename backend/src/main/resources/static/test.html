@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>As-You-Cost API 테스트</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Malgun Gothic', sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 20px; color: #333; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1200px; margin: 0 auto; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.1); padding: 16px; }
+        .card h3 { color: #1976d2; margin-bottom: 12px; font-size: 15px; border-bottom: 2px solid #1976d2; padding-bottom: 6px; }
+        button { background: #1976d2; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 4px; font-size: 13px; }
+        button:hover { background: #1565c0; }
+        button.green { background: #388e3c; }
+        button.green:hover { background: #2e7d32; }
+        button.orange { background: #f57c00; }
+        button.orange:hover { background: #ef6c00; }
+        pre { background: #263238; color: #aed581; padding: 12px; border-radius: 4px; font-size: 12px; max-height: 300px; overflow: auto; margin-top: 8px; white-space: pre-wrap; }
+        .info { background: #e3f2fd; padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; text-align: center; }
+        .info b { color: #1565c0; }
+    </style>
+</head>
+<body>
+    <h1>As-You-Cost API Test Console</h1>
+
+    <div class="info">
+        <b>Tenant:</b> T001 &nbsp;|&nbsp;
+        <b>User:</b> testuser &nbsp;|&nbsp;
+        <b>DB:</b> Supabase (asyoucost schema)
+    </div>
+
+    <div class="grid">
+
+        <!-- ═══════ 1. 견적원가 프로젝트 ═══════ -->
+        <div class="card">
+            <h3>1. 견적원가 프로젝트 (EC)</h3>
+            <button onclick="callApi('/bp/cost/ec/findListEstimateCostPjt.do', {})">목록 조회</button>
+            <button class="green" onclick="callApi('/bp/cost/ec/saveListEstimateCostPjt.do', {
+                saveList: [{
+                    rowStatus: 'C',
+                    pjtNm: '테스트 프로젝트 A',
+                    bizUnit: 'PT',
+                    custNm: '현대모비스',
+                    carType: 'SUV',
+                    oemNm: '현대',
+                    prodGrp: 'TM',
+                    prodQty: 50000,
+                    sopDt: '2027-01'
+                }]
+            })">신규 등록 테스트</button>
+            <pre id="res-ec-pjt">결과가 여기에 표시됩니다.</pre>
+        </div>
+
+        <!-- ═══════ 2. 현상원가 프로젝트 ═══════ -->
+        <div class="card">
+            <h3>2. 현상원가 프로젝트 (CC)</h3>
+            <button onclick="callApi('/bp/cost/cc/findListCurrentCostPjt.do', {})">목록 조회</button>
+            <pre id="res-cc-pjt">결과가 여기에 표시됩니다.</pre>
+        </div>
+
+        <!-- ═══════ 3. 목표원가 프로젝트 ═══════ -->
+        <div class="card">
+            <h3>3. 목표원가 프로젝트 (TC)</h3>
+            <button onclick="callApi('/bp/cost/tc/findListTargetCostPjt.do', {})">목록 조회</button>
+            <pre id="res-tc-pjt">결과가 여기에 표시됩니다.</pre>
+        </div>
+
+        <!-- ═══════ 4. 견적BOM ═══════ -->
+        <div class="card">
+            <h3>4. 견적BOM (EC BOM)</h3>
+            <button onclick="testBomSave()">BOM 저장 테스트</button>
+            <button onclick="testBomFind()">BOM 조회</button>
+            <button class="orange" onclick="testBomInterface()">기존단가 I/F</button>
+            <pre id="res-bom">결과가 여기에 표시됩니다.</pre>
+        </div>
+
+        <!-- ═══════ 5. 수익성 분석 ═══════ -->
+        <div class="card">
+            <h3>5. 수익성 분석 (Profit/WACC)</h3>
+            <button onclick="callApi('/bp/cost/ec/profit/findListEcPjtForProfit.do', {})">프로젝트 목록</button>
+            <button class="green" onclick="testProfitSave()">수익성 저장 테스트</button>
+            <button class="orange" onclick="testAggregateMat()">재료비 취합</button>
+            <pre id="res-profit">결과가 여기에 표시됩니다.</pre>
+        </div>
+
+        <!-- ═══════ 6. WACC 프론트 계산 테스트 ═══════ -->
+        <div class="card">
+            <h3>6. WACC 프론트 계산 (JS Only)</h3>
+            <p style="font-size:12px; color:#666; margin-bottom:8px;">
+                Kd=5%, t=22%, B=30억, S=70억, Rf=3.5%, E(Rm)=9%, Beta=1.2
+            </p>
+            <button class="orange" onclick="testWaccCalc()">WACC 계산 실행</button>
+            <pre id="res-wacc">결과가 여기에 표시됩니다.</pre>
+        </div>
+    </div>
+
+    <script>
+        // 마지막으로 응답을 표시한 pre 태그 ID
+        var lastPreId = '';
+
+        function callApi(url, body) {
+            // 응답 표시할 pre 태그 결정
+            if (url.includes('/ec/find') || url.includes('/ec/save') || url.includes('/ec/delete'))
+                lastPreId = 'res-ec-pjt';
+            else if (url.includes('/cc/'))
+                lastPreId = 'res-cc-pjt';
+            else if (url.includes('/tc/'))
+                lastPreId = 'res-tc-pjt';
+            else if (url.includes('/bom/'))
+                lastPreId = 'res-bom';
+            else if (url.includes('/profit/'))
+                lastPreId = 'res-profit';
+
+            var pre = document.getElementById(lastPreId);
+            pre.textContent = 'Loading...';
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                pre.textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(function(err) {
+                pre.textContent = 'ERROR: ' + err.message;
+            });
+        }
+
+        // ─── BOM 테스트 함수들 ───
+        function testBomSave() {
+            // 먼저 EC 프로젝트 목록에서 첫 번째 코드를 가져와서 BOM 저장
+            fetch('/bp/cost/ec/findListEstimateCostPjt.do', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(list) {
+                if (!list || list.length === 0) {
+                    document.getElementById('res-bom').textContent = 'EC 프로젝트가 없습니다. 먼저 EC 프로젝트를 등록해주세요.';
+                    return;
+                }
+                var pjtCd = list[0].pjtCd;
+                callApi('/bp/cost/ec/bom/saveListEcBom.do', {
+                    ecPjtCd: pjtCd,
+                    bomList: [
+                        { itemCd: 'ASM-001', itemNm: 'Transmission ASSY', lvl: 0, upItemCd: '', qty: 1, unitPrice: 0, matCost: 0, newPartYn: 'N', spec: 'AT 8-Speed' },
+                        { itemCd: 'P-001', itemNm: 'Housing', lvl: 1, upItemCd: 'ASM-001', qty: 1, unitPrice: 85000, matCost: 85000, newPartYn: 'N', spec: 'ADC12' },
+                        { itemCd: 'P-002', itemNm: 'Gear Set', lvl: 1, upItemCd: 'ASM-001', qty: 1, unitPrice: 120000, matCost: 120000, newPartYn: 'N', spec: 'SCM420H' },
+                        { itemCd: 'P-003', itemNm: 'Valve Body', lvl: 1, upItemCd: 'ASM-001', qty: 1, unitPrice: 45000, matCost: 45000, newPartYn: 'Y', spec: 'NEW' },
+                        { itemCd: 'P-004', itemNm: 'Oil Seal', lvl: 2, upItemCd: 'P-001', qty: 3, unitPrice: 2500, matCost: 7500, newPartYn: 'N', spec: 'NBR' }
+                    ]
+                });
+                lastPreId = 'res-bom';
+            });
+        }
+
+        function testBomFind() {
+            fetch('/bp/cost/ec/findListEstimateCostPjt.do', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(list) {
+                if (!list || list.length === 0) {
+                    document.getElementById('res-bom').textContent = 'EC 프로젝트가 없습니다.';
+                    return;
+                }
+                callApi('/bp/cost/ec/bom/findListEcBom.do', { ecPjtCd: list[0].pjtCd });
+                lastPreId = 'res-bom';
+            });
+        }
+
+        function testBomInterface() {
+            fetch('/bp/cost/ec/findListEstimateCostPjt.do', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(list) {
+                if (!list || list.length === 0) {
+                    document.getElementById('res-bom').textContent = 'EC 프로젝트가 없습니다.';
+                    return;
+                }
+                callApi('/bp/cost/ec/bom/interfaceUnitPrices.do', {
+                    ecPjtCd: list[0].pjtCd,
+                    itemCdList: ['P-001', 'P-002', 'P-004']
+                });
+                lastPreId = 'res-bom';
+            });
+        }
+
+        // ─── 수익성 테스트 함수들 ───
+        function testProfitSave() {
+            fetch('/bp/cost/ec/findListEstimateCostPjt.do', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(list) {
+                if (!list || list.length === 0) {
+                    document.getElementById('res-profit').textContent = 'EC 프로젝트가 없습니다.';
+                    return;
+                }
+                callApi('/bp/cost/ec/profit/saveEcProfit.do', {
+                    ecPjtCd: list[0].pjtCd,
+                    matCost: 257500,
+                    laborCost: 150000,
+                    mfgCost: 80000,
+                    sgaCost: 45000,
+                    totalEstmCost: 532500,
+                    kdRate: 5.0,
+                    taxRate: 22.0,
+                    debtAmt: 3000000000,
+                    equityAmt: 7000000000,
+                    rfRate: 3.5,
+                    ermRate: 9.0,
+                    betaVal: 1.2,
+                    keRate: 10.1,
+                    waccRate: 8.24
+                });
+                lastPreId = 'res-profit';
+            });
+        }
+
+        function testAggregateMat() {
+            fetch('/bp/cost/ec/findListEstimateCostPjt.do', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(list) {
+                if (!list || list.length === 0) {
+                    document.getElementById('res-profit').textContent = 'EC 프로젝트가 없습니다.';
+                    return;
+                }
+                callApi('/bp/cost/ec/profit/aggregateMaterialCost.do', { ecPjtCd: list[0].pjtCd });
+                lastPreId = 'res-profit';
+            });
+        }
+
+        // ─── WACC JS 계산 테스트 ───
+        function testWaccCalc() {
+            var Kd   = 5.0  / 100;   // 타인자본비용 5%
+            var t    = 22.0 / 100;   // 법인세율 22%
+            var Rf   = 3.5  / 100;   // 무위험이자율 3.5%
+            var ERm  = 9.0  / 100;   // 시장기대수익률 9%
+            var Beta = 1.2;          // 베타
+            var B    = 3000000000;   // 부채 30억
+            var S    = 7000000000;   // 자기자본 70억
+
+            // [1단계] CAPM: Ke = Rf + Beta × (E(Rm) - Rf)
+            var Ke = Rf + Beta * (ERm - Rf);
+
+            // [2단계] WACC = Kd × (1-t) × B/(B+S) + Ke × S/(B+S)
+            var total = B + S;
+            var WACC = Kd * (1 - t) * (B / total)
+                     + Ke * (S / total);
+
+            var kePercent   = Math.round(Ke   * 10000) / 100;
+            var waccPercent = Math.round(WACC * 10000) / 100;
+
+            var result = '═══ WACC 계산 결과 ═══\n\n';
+            result += '▶ 입력값\n';
+            result += '  Kd (타인자본비용) = 5.00%\n';
+            result += '  t  (법인세율)     = 22.00%\n';
+            result += '  Rf (무위험이자율) = 3.50%\n';
+            result += '  E(Rm) (시장기대)  = 9.00%\n';
+            result += '  Beta              = 1.20\n';
+            result += '  B  (부채)         = 3,000,000,000\n';
+            result += '  S  (자기자본)     = 7,000,000,000\n\n';
+            result += '▶ [1단계] CAPM\n';
+            result += '  Ke = Rf + Beta × (E(Rm) - Rf)\n';
+            result += '     = ' + (Rf*100) + ' + ' + Beta + ' × (' + (ERm*100) + ' - ' + (Rf*100) + ')\n';
+            result += '     = ' + kePercent + '%\n\n';
+            result += '▶ [2단계] WACC\n';
+            result += '  WACC = Kd×(1-t)×[B/(B+S)] + Ke×[S/(B+S)]\n';
+            result += '       = ' + (Kd*100) + '×' + (1-t).toFixed(2) + '×' + (B/total).toFixed(2);
+            result += ' + ' + kePercent + '×' + (S/total).toFixed(2) + '\n';
+            result += '       = ' + waccPercent + '%\n\n';
+            result += '═══════════════════════\n';
+            result += '★ Ke   = ' + kePercent + '%\n';
+            result += '★ WACC = ' + waccPercent + '%';
+
+            document.getElementById('res-wacc').textContent = result;
+        }
+    </script>
+</body>
+</html>

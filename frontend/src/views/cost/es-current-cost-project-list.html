@@ -1,0 +1,374 @@
+<dom-module id="es-current-cost-project-list">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부 — Controller 호출
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/cc/findListCurrentCostPjt.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="saveAjax"
+                 url="/bp/cost/cc/saveCurrentCostPjt.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveResponse">
+        </sc-ajax>
+
+        <sc-ajax id="changeStatusAjax"
+                 url="/bp/cost/cc/changeStatusCurrentCostPjt.do"
+                 body="{{statusParam}}"
+                 on-response="onChangeStatusResponse">
+        </sc-ajax>
+
+        <sc-ajax id="recalculateAjax"
+                 url="/bp/cost/cc/recalculateCurrentCostPjt.do"
+                 body="{{recalcParam}}"
+                 on-response="onRecalculateResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역 (Search Container)
+             ============================================================ -->
+        <sc-search-container on-search="onFindList" auth-code="V">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/>
+                    <col/>
+                    <col style="width:120px"/>
+                    <col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.pjtCd}}"
+                                       on-enter="onFindList">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="사업부"></sc-label></th>
+                    <td>
+                        <sc-combobox-field value="{{searchParam.bizUnit}}"
+                                          items="{{codes.bizUnitList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          placeholder="전체">
+                        </sc-combobox-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th><sc-label text="고객사"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.custNm}}">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="차종"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.carType}}">
+                        </sc-text-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             데이터 그리드 (Grid)
+             - selection-mode="radio": 단일 선택 (편집 불가, 행 선택 후 버튼 제어)
+             ============================================================ -->
+        <sc-grid id="gridPanel"
+                 data-provider="{{resultList}}"
+                 selection-mode="radio"
+                 class="flex">
+
+            <sc-toolbar>
+                <sc-button text="조회"          on-click="onFindList"       auth-code="V"></sc-button>
+                <sc-button text="신규"          on-click="onAddProject"     auth-code="S"></sc-button>
+                <sc-button text="수정"          on-click="onEditProject"    auth-code="S"></sc-button>
+                <sc-button text="진행상태변경"  on-click="onChangeStatus"   auth-code="S"></sc-button>
+                <sc-button text="재산출"        on-click="onRecalculate"    auth-code="S"></sc-button>
+                <sc-button text="산출결과 등록" on-click="onRegisterResult" auth-code="S"></sc-button>
+            </sc-toolbar>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="pjtCd"
+                                header-text="프로젝트 코드"
+                                width="130"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="pjtNm"
+                                header-text="프로젝트명"
+                                width="250"
+                                text-align="left">
+                </sc-data-column>
+
+                <sc-combobox-column data-field="bizUnit"
+                                   header-text="사업부"
+                                   width="100"
+                                   items="{{codes.bizUnitList}}"
+                                   display-field="label"
+                                   value-field="data">
+                </sc-combobox-column>
+
+                <sc-data-column data-field="custNm"
+                                header-text="고객사"
+                                width="150">
+                </sc-data-column>
+
+                <sc-data-column data-field="carType"
+                                header-text="차종"
+                                width="120">
+                </sc-data-column>
+
+                <sc-data-column data-field="ecPjtCd"
+                                header-text="견적코드"
+                                width="130"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="ccRev"
+                                header-text="현상차수"
+                                width="80"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="progStsNm"
+                                header-text="진행상태"
+                                width="100"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="regDttm"
+                                header-text="등록일"
+                                width="100"
+                                text-align="center">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'es-current-cost-project-list',
+
+            properties: {
+                // 조회 조건 파라미터
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 그리드 데이터
+                resultList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                // 저장/상태변경/재산출 파라미터
+                saveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                statusParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                recalcParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 공통코드
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            bizUnitList: [
+                                { label: 'PT',   data: 'PT' },
+                                { label: 'SEAT', data: 'SEAT' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ──────────────────────────────────────────────
+               조회
+               ────────────────────────────────────────────── */
+
+            /**
+             * 현상원가 프로젝트 목록 조회
+             */
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            /**
+             * 조회 결과 수신
+             */
+            onFindListResponse: function(e) {
+                this.set('resultList', e.detail.response);
+            },
+
+            /* ──────────────────────────────────────────────
+               신규 등록
+               ────────────────────────────────────────────── */
+
+            /**
+             * 신규 프로젝트 등록 팝업
+             * - 견적원가(EC) 프로젝트를 선택하여 현상원가로 이관한다.
+             */
+            onAddProject: function() {
+                var me = this;
+                UT.popup({
+                    url: 'ep-estimate-cost-search-popup',
+                    param: {},
+                    close: function(result) {
+                        if (result) {
+                            me.set('saveParam', {
+                                ecPjtCd: result.ecPjtCd,
+                                pjtNm:   result.pjtNm,
+                                bizUnit: result.bizUnit,
+                                custNm:  result.custNm,
+                                carType: result.carType,
+                                oemNm:   result.oemNm,
+                                prodGrp: result.prodGrp
+                            });
+                            me.$.saveAjax.generateRequest();
+                        }
+                    }
+                });
+            },
+
+            /* ──────────────────────────────────────────────
+               수정
+               ────────────────────────────────────────────── */
+
+            /**
+             * 선택된 프로젝트 상세 수정 화면 이동
+             */
+            onEditProject: function() {
+                var selectedRow = this._getSelectedRow();
+                if (!selectedRow) return;
+
+                UT.navigateTo('es-current-cost-detail', {
+                    pjtCd: selectedRow.pjtCd,
+                    ccRev: selectedRow.ccRev
+                });
+            },
+
+            /* ──────────────────────────────────────────────
+               진행상태 변경
+               ────────────────────────────────────────────── */
+
+            /**
+             * 선택된 프로젝트의 진행상태(progSts)를 다음 단계로 변경
+             * - D(Draft) → P(진행중) → A(확정) → C(완료)
+             */
+            onChangeStatus: function() {
+                var selectedRow = this._getSelectedRow();
+                if (!selectedRow) return;
+
+                // 완료(C) 상태에서는 더 이상 변경 불가
+                if (selectedRow.progSts === 'C') {
+                    UT.alert('이미 완료된 프로젝트는 상태를 변경할 수 없습니다.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00008', function() { // 상태를 변경하시겠습니까?
+                    me.set('statusParam', {
+                        pjtCd:   selectedRow.pjtCd,
+                        ccRev:   selectedRow.ccRev,
+                        progSts: selectedRow.progSts
+                    });
+                    me.$.changeStatusAjax.generateRequest();
+                });
+            },
+
+            /**
+             * 상태 변경 완료 콜백
+             */
+            onChangeStatusResponse: function() {
+                UT.alert('MSG_COM_00009'); // 상태가 변경되었습니다.
+                this.onFindList();
+            },
+
+            /* ──────────────────────────────────────────────
+               재산출
+               ────────────────────────────────────────────── */
+
+            /**
+             * 선택된 프로젝트의 현상원가를 재산출한다.
+             * - 현상차수(ccRev)를 +1 증가시키고 최신 데이터로 갱신
+             */
+            onRecalculate: function() {
+                var selectedRow = this._getSelectedRow();
+                if (!selectedRow) return;
+
+                // 완료(C) 상태에서는 재산출 불가
+                if (selectedRow.progSts === 'C') {
+                    UT.alert('이미 완료된 프로젝트는 재산출할 수 없습니다.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00010', function() { // 재산출하시겠습니까?
+                    me.set('recalcParam', {
+                        pjtCd: selectedRow.pjtCd,
+                        ccRev: selectedRow.ccRev
+                    });
+                    me.$.recalculateAjax.generateRequest();
+                });
+            },
+
+            /**
+             * 재산출 완료 콜백
+             */
+            onRecalculateResponse: function() {
+                UT.alert('MSG_COM_00011'); // 재산출이 완료되었습니다.
+                this.onFindList();
+            },
+
+            /* ──────────────────────────────────────────────
+               산출결과 등록
+               ────────────────────────────────────────────── */
+
+            /**
+             * 선택된 프로젝트의 산출결과 등록 화면으로 이동
+             */
+            onRegisterResult: function() {
+                var selectedRow = this._getSelectedRow();
+                if (!selectedRow) return;
+
+                UT.navigateTo('es-current-cost-result', {
+                    pjtCd: selectedRow.pjtCd,
+                    ccRev: selectedRow.ccRev
+                });
+            },
+
+            /* ──────────────────────────────────────────────
+               공통 유틸
+               ────────────────────────────────────────────── */
+
+            /**
+             * 그리드에서 선택된 단일 행 반환
+             * - 선택된 행이 없으면 경고 후 null 반환
+             */
+            _getSelectedRow: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007'); // 선택된 데이터가 없습니다.
+                    return null;
+                }
+                return selectedRows[0];
+            },
+
+            /**
+             * 저장 완료 콜백
+             */
+            onSaveResponse: function() {
+                UT.alert('MSG_COM_00003'); // 저장되었습니다.
+                this.onFindList();
+            }
+        });
+    </script>
+</dom-module>

@@ -1,22 +1,22 @@
-<dom-module id="es-target-cost-project-list">
+<dom-module id="es-project-list">
     <template>
         <!-- ============================================================
              Ajax 선언부 — Controller 호출
              ============================================================ -->
         <sc-ajax id="findListAjax"
-                 url="/bp/cost/tc/findListTargetCostPjt.do"
+                 url="/bp/cost/ec/findListEstimateCostPjt.do"
                  body="{{searchParam}}"
                  on-response="onFindListResponse">
         </sc-ajax>
 
         <sc-ajax id="saveListAjax"
-                 url="/bp/cost/tc/saveListTargetCostPjt.do"
+                 url="/bp/cost/ec/saveListEstimateCostPjt.do"
                  body="{{saveParam}}"
                  on-response="onSaveListResponse">
         </sc-ajax>
 
         <sc-ajax id="deleteListAjax"
-                 url="/bp/cost/tc/deleteListTargetCostPjt.do"
+                 url="/bp/cost/ec/deleteListEstimateCostPjt.do"
                  body="{{deleteParam}}"
                  on-response="onDeleteListResponse">
         </sc-ajax>
@@ -70,6 +70,7 @@
         <sc-grid id="gridPanel"
                  data-provider="{{resultList}}"
                  editable="true"
+                 selection-mode="radio"
                  class="flex">
 
             <sc-toolbar>
@@ -82,7 +83,7 @@
             <sc-grid-columns>
                 <sc-data-column data-field="pjtCd"
                                 header-text="프로젝트 코드"
-                                width="120"
+                                width="130"
                                 editable="false"
                                 text-align="center">
                 </sc-data-column>
@@ -101,13 +102,15 @@
                                    editable="true"
                                    items="{{codes.bizUnitList}}"
                                    display-field="label"
-                                   value-field="data">
+                                   value-field="data"
+                                   required="true">
                 </sc-combobox-column>
 
                 <sc-data-column data-field="custNm"
                                 header-text="고객사"
                                 width="150"
-                                editable="true">
+                                editable="true"
+                                required="true">
                 </sc-data-column>
 
                 <sc-data-column data-field="carType"
@@ -131,26 +134,25 @@
                                    value-field="data">
                 </sc-combobox-column>
 
-                <sc-group-column header-text="견적원가 정보">
-                    <sc-data-column data-field="ecPjtCd"
-                                    header-text="견적코드"
-                                    width="120"
-                                    editable="false"
-                                    text-align="center">
-                    </sc-data-column>
+                <sc-data-column data-field="prodQty"
+                                header-text="생산수량"
+                                width="100"
+                                editable="true"
+                                text-align="right"
+                                data-type="number"
+                                format="#,###">
+                </sc-data-column>
 
-                    <sc-image-column data-field="btnSelectEc"
-                                    header-text="조회"
-                                    width="50"
-                                    image-cls="search"
-                                    singular-source="true"
-                                    on-item-click="onShowEcPopup">
-                    </sc-image-column>
-                </sc-group-column>
+                <sc-data-column data-field="sopDt"
+                                header-text="SOP"
+                                width="100"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
 
                 <sc-data-column data-field="stsNm"
                                 header-text="상태"
-                                width="80"
+                                width="90"
                                 editable="false"
                                 text-align="center">
                 </sc-data-column>
@@ -167,7 +169,7 @@
 
     <script>
         Polymer({
-            is: 'es-target-cost-project-list',
+            is: 'es-project-list',
 
             properties: {
                 // 조회 조건 파라미터
@@ -200,7 +202,8 @@
                             ],
                             prodGrpList: [
                                 { label: 'T/M',  data: 'TM' },
-                                { label: 'AXLE', data: 'AXLE' }
+                                { label: 'AXLE', data: 'AXLE' },
+                                { label: 'SEAT', data: 'SEAT' }
                             ]
                         };
                     }
@@ -208,7 +211,7 @@
             },
 
             /**
-             * 목록 조회
+             * 견적원가 프로젝트 목록 조회
              */
             onFindList: function() {
                 this.$.findListAjax.generateRequest();
@@ -222,7 +225,7 @@
             },
 
             /**
-             * 행 추가
+             * 행 추가 — 신규 프로젝트 행 삽입
              */
             onAddRow: function() {
                 var grid = this.$.gridPanel;
@@ -234,12 +237,13 @@
                     carType:  '',
                     oemNm:    '',
                     prodGrp:  '',
-                    ecPjtCd:  ''
+                    prodQty:  0,
+                    sopDt:    ''
                 });
             },
 
             /**
-             * 목록 저장
+             * 목록 저장 — 변경된 행만 서버에 전송
              * - 작성중(T) 상태이거나 신규(rowStatus=C) 행만 저장 가능
              */
             onSaveList: function() {
@@ -272,9 +276,9 @@
                     UT.alert(lockedCount + '건의 진행 중인 프로젝트는 저장에서 제외됩니다.');
                 }
 
-                // 필수값 검증: 프로젝트명
+                // 필수값 검증: 프로젝트명, 사업부, 고객사
                 for (var j = 0; j < savableRows.length; j++) {
-                    if (!savableRows[j].pjtNm) {
+                    if (!savableRows[j].pjtNm || !savableRows[j].bizUnit || !savableRows[j].custNm) {
                         UT.alert('MSG_COM_00001'); // 필수 입력값을 확인하세요.
                         return;
                     }
@@ -328,25 +332,6 @@
             onDeleteListResponse: function() {
                 UT.alert('MSG_COM_00005'); // 삭제되었습니다.
                 this.onFindList();
-            },
-
-            /**
-             * 견적코드 조회 팝업 오픈
-             */
-            onShowEcPopup: function(e) {
-                var me = this;
-                var rowIndex = e.detail.rowIndex;
-
-                UT.popup({
-                    url: 'ep-estimate-cost-search-popup',
-                    param: {},
-                    close: function(result) {
-                        if (result) {
-                            var grid = me.$.gridPanel;
-                            grid.setCellData(rowIndex, 'ecPjtCd', result.ecPjtCd);
-                        }
-                    }
-                });
             }
         });
     </script>
