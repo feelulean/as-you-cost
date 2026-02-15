@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    목표원가 부문별 Guide Mapper
+    테이블: PCM_TGT_GUIDE (목표원가 부문별 Guide)
+-->
+<mapper namespace="smartsuite.app.bp.cost.targetcost.TargetCostGuideRepository">
+
+    <!-- ============================================================
+         부문별 Guide 목록 조회
+         ============================================================ -->
+    <select id="findListTargetCostGuide" parameterType="map" resultType="map">
+        SELECT  A.TEN_ID              AS tenId
+              , A.TGT_PJT_CD         AS tgtPjtCd
+              , A.GUIDE_SEQ           AS guideSeq
+              , A.COST_ITEM_CD       AS costItemCd
+              , A.COST_ITEM_NM       AS costItemNm
+              , A.DEPT_CD            AS deptCd
+              , A.DEPT_NM            AS deptNm
+              , A.EC_COST_TOT_AMT    AS ecCostTotAmt
+              , A.EC_COST_UNIT_AMT   AS ecCostUnitAmt
+              , A.GUIDE_TGT_TOT_AMT  AS guideTgtTotAmt
+              , A.GUIDE_TGT_UNIT_AMT AS guideTgtUnitAmt
+              , A.CFT_TGT_TOT_AMT    AS cftTgtTotAmt
+              , A.CFT_TGT_UNIT_AMT   AS cftTgtUnitAmt
+              , A.SAVE_RATE          AS saveRate
+              , A.PROD_QTY           AS prodQty
+              , A.STS                AS sts
+              , A.RMK                AS rmk
+          FROM  PCM_TGT_GUIDE A
+         WHERE  A.TEN_ID     = #{g.tenant}
+           AND  A.TGT_PJT_CD = #{p.tgtPjtCd}
+         ORDER BY A.GUIDE_SEQ
+    </select>
+
+    <!-- ============================================================
+         프로젝트 기본 정보 조회
+         (판가, 목표수익률, 수량, 연계 견적코드)
+         ============================================================ -->
+    <select id="findTargetCostPjtInfo" parameterType="map" resultType="map">
+        SELECT  M.TGT_PJT_CD                       AS tgtPjtCd
+              , M.PJT_NM                            AS pjtNm
+              , M.EC_PJT_CD                         AS ecPjtCd
+              , M.PROD_QTY                          AS prodQty
+              , COALESCE(P.SELL_PRICE_TOT_AMT, 0)    AS sellPriceTotAmt
+              , COALESCE(P.TGT_PROFIT_RATE, 0)      AS tgtProfitRate
+          FROM  PCM_TGT_PJT_MSTR  M
+          LEFT  JOIN PCM_TGT_PROFIT P
+            ON  P.TEN_ID     = M.TEN_ID
+           AND  P.TGT_PJT_CD = M.TGT_PJT_CD
+         WHERE  M.TEN_ID     = #{g.tenant}
+           AND  M.TGT_PJT_CD = #{p.tgtPjtCd}
+    </select>
+
+    <!-- ============================================================
+         견적/현상원가 부문별 데이터 조회
+         (연계된 견적코드 기준으로 원가항목별 합계)
+         ============================================================ -->
+    <select id="findListEstimateCostByPjt" parameterType="map" resultType="map">
+        SELECT  E.COST_ITEM_CD   AS costItemCd
+              , E.COST_ITEM_NM   AS costItemNm
+              , E.DEPT_CD        AS deptCd
+              , E.DEPT_NM        AS deptNm
+              , SUM(E.COST_AMT)  AS costTotAmt
+          FROM  PCM_EC_COST_DTL  E
+         WHERE  E.TEN_ID   = #{g.tenant}
+           AND  E.EC_PJT_CD = #{p.ecPjtCd}
+         GROUP BY E.COST_ITEM_CD
+              , E.COST_ITEM_NM
+              , E.DEPT_CD
+              , E.DEPT_NM
+         ORDER BY E.COST_ITEM_CD
+    </select>
+
+    <!-- ============================================================
+         신규 등록
+         ============================================================ -->
+    <insert id="insertTargetCostGuide" parameterType="map">
+        INSERT INTO PCM_TGT_GUIDE (
+            TEN_ID
+          , TGT_PJT_CD
+          , GUIDE_SEQ
+          , COST_ITEM_CD
+          , COST_ITEM_NM
+          , DEPT_CD
+          , DEPT_NM
+          , EC_COST_TOT_AMT
+          , EC_COST_UNIT_AMT
+          , GUIDE_TGT_TOT_AMT
+          , GUIDE_TGT_UNIT_AMT
+          , CFT_TGT_TOT_AMT
+          , CFT_TGT_UNIT_AMT
+          , SAVE_RATE
+          , PROD_QTY
+          , RMK
+          , STS
+          , REGR_ID
+          , REG_DTTM
+          , MODR_ID
+          , MOD_DTTM
+        ) VALUES (
+            #{g.tenant}
+          , #{p.tgtPjtCd}
+          , #{p.guideSeq}
+          , #{p.costItemCd}
+          , #{p.costItemNm}
+          , #{p.deptCd}
+          , #{p.deptNm}
+          , #{p.ecCostTotAmt}
+          , #{p.ecCostUnitAmt}
+          , #{p.guideTgtTotAmt}
+          , #{p.guideTgtUnitAmt}
+          , #{p.cftTgtTotAmt}
+          , #{p.cftTgtUnitAmt}
+          , #{p.saveRate}
+          , #{p.prodQty}
+          , #{p.rmk}
+          , #{p.sts}
+          , #{g.username}
+          , #{g.now}
+          , #{g.username}
+          , #{g.now}
+        )
+    </insert>
+
+    <!-- ============================================================
+         수정 (CFT 확정 금액, 절감률 갱신)
+         ============================================================ -->
+    <update id="updateTargetCostGuide" parameterType="map">
+        UPDATE  PCM_TGT_GUIDE
+           SET  GUIDE_TGT_TOT_AMT  = #{p.guideTgtTotAmt}
+              , GUIDE_TGT_UNIT_AMT = #{p.guideTgtUnitAmt}
+              , CFT_TGT_TOT_AMT    = #{p.cftTgtTotAmt}
+              , CFT_TGT_UNIT_AMT   = #{p.cftTgtUnitAmt}
+              , SAVE_RATE          = #{p.saveRate}
+              , RMK                = #{p.rmk}
+              , MODR_ID            = #{g.username}
+              , MOD_DTTM           = #{g.now}
+         WHERE  TEN_ID       = #{g.tenant}
+           AND  TGT_PJT_CD   = #{p.tgtPjtCd}
+           AND  GUIDE_SEQ     = #{p.guideSeq}
+    </update>
+
+    <!-- ============================================================
+         프로젝트 기준 전체 삭제 (재산출 시)
+         ============================================================ -->
+    <delete id="deleteTargetCostGuideByPjt" parameterType="map">
+        DELETE FROM PCM_TGT_GUIDE
+         WHERE  TEN_ID     = #{g.tenant}
+           AND  TGT_PJT_CD = #{p.tgtPjtCd}
+    </delete>
+
+</mapper>

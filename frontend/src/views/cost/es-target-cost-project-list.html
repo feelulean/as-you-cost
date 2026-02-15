@@ -1,0 +1,323 @@
+<dom-module id="es-target-cost-project-list">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부 — Controller 호출
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/tc/findListTargetCostPjt.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="saveListAjax"
+                 url="/bp/cost/tc/saveListTargetCostPjt.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/cost/tc/deleteListTargetCostPjt.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteListResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역 (Search Container)
+             ============================================================ -->
+        <sc-search-container on-search="onFindList" auth-code="V">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/>
+                    <col/>
+                    <col style="width:120px"/>
+                    <col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.pjtCd}}"
+                                       on-enter="onFindList">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="사업부"></sc-label></th>
+                    <td>
+                        <sc-combobox-field value="{{searchParam.bizUnit}}"
+                                          items="{{codes.bizUnitList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          placeholder="전체">
+                        </sc-combobox-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th><sc-label text="고객사"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.custNm}}">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="차종"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.carType}}">
+                        </sc-text-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             데이터 그리드 (Grid)
+             ============================================================ -->
+        <sc-grid id="gridPanel"
+                 data-provider="{{resultList}}"
+                 editable="true"
+                 class="flex">
+
+            <sc-toolbar>
+                <sc-button text="조회"   on-click="onFindList"   auth-code="V"></sc-button>
+                <sc-button text="추가"   on-click="onAddRow"     auth-code="S"></sc-button>
+                <sc-button text="삭제"   on-click="onDeleteList" auth-code="S"></sc-button>
+                <sc-button text="저장"   on-click="onSaveList"   auth-code="S"></sc-button>
+            </sc-toolbar>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="pjtCd"
+                                header-text="프로젝트 코드"
+                                width="120"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="pjtNm"
+                                header-text="프로젝트명"
+                                width="250"
+                                editable="true"
+                                required="true"
+                                text-align="left">
+                </sc-data-column>
+
+                <sc-combobox-column data-field="bizUnit"
+                                   header-text="사업부"
+                                   width="100"
+                                   editable="true"
+                                   items="{{codes.bizUnitList}}"
+                                   display-field="label"
+                                   value-field="data">
+                </sc-combobox-column>
+
+                <sc-data-column data-field="custNm"
+                                header-text="고객사"
+                                width="150"
+                                editable="true">
+                </sc-data-column>
+
+                <sc-data-column data-field="carType"
+                                header-text="차종"
+                                width="120"
+                                editable="true">
+                </sc-data-column>
+
+                <sc-data-column data-field="oemNm"
+                                header-text="OEM"
+                                width="120"
+                                editable="true">
+                </sc-data-column>
+
+                <sc-combobox-column data-field="prodGrp"
+                                   header-text="제품군"
+                                   width="100"
+                                   editable="true"
+                                   items="{{codes.prodGrpList}}"
+                                   display-field="label"
+                                   value-field="data">
+                </sc-combobox-column>
+
+                <sc-group-column header-text="견적원가 정보">
+                    <sc-data-column data-field="ecPjtCd"
+                                    header-text="견적코드"
+                                    width="120"
+                                    editable="false"
+                                    text-align="center">
+                    </sc-data-column>
+
+                    <sc-image-column data-field="btnSelectEc"
+                                    header-text="조회"
+                                    width="50"
+                                    image-cls="search"
+                                    singular-source="true"
+                                    on-item-click="onShowEcPopup">
+                    </sc-image-column>
+                </sc-group-column>
+
+                <sc-data-column data-field="stsNm"
+                                header-text="상태"
+                                width="80"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="regDttm"
+                                header-text="등록일"
+                                width="100"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'es-target-cost-project-list',
+
+            properties: {
+                // 조회 조건 파라미터
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 그리드 데이터
+                resultList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                // 저장/삭제 파라미터
+                saveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 공통코드
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            bizUnitList: [
+                                { label: 'PT',   data: 'PT' },
+                                { label: 'SEAT', data: 'SEAT' }
+                            ],
+                            prodGrpList: [
+                                { label: 'T/M',  data: 'TM' },
+                                { label: 'AXLE', data: 'AXLE' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /**
+             * 목록 조회
+             */
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            /**
+             * 조회 결과 수신
+             */
+            onFindListResponse: function(e) {
+                this.set('resultList', e.detail.response);
+            },
+
+            /**
+             * 행 추가
+             */
+            onAddRow: function() {
+                var grid = this.$.gridPanel;
+                grid.insertRow(0, {
+                    pjtCd:    '',
+                    pjtNm:    '',
+                    bizUnit:  '',
+                    custNm:   '',
+                    carType:  '',
+                    oemNm:    '',
+                    prodGrp:  '',
+                    ecPjtCd:  ''
+                });
+            },
+
+            /**
+             * 목록 저장
+             */
+            onSaveList: function() {
+                var grid = this.$.gridPanel;
+                var modifiedRows = grid.getModifiedRows();
+
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006'); // 변경된 데이터가 없습니다.
+                    return;
+                }
+
+                // 필수값 검증: 프로젝트명
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].pjtNm) {
+                        UT.alert('MSG_COM_00001'); // 필수 입력값을 확인하세요.
+                        return;
+                    }
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() { // 저장하시겠습니까?
+                    me.set('saveParam', { saveList: modifiedRows });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+
+            /**
+             * 저장 완료 콜백
+             */
+            onSaveListResponse: function() {
+                UT.alert('MSG_COM_00003'); // 저장되었습니다.
+                this.onFindList();
+            },
+
+            /**
+             * 행 삭제
+             */
+            onDeleteList: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007'); // 선택된 데이터가 없습니다.
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() { // 삭제하시겠습니까?
+                    me.set('deleteParam', { deleteList: selectedRows });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+
+            /**
+             * 삭제 완료 콜백
+             */
+            onDeleteListResponse: function() {
+                UT.alert('MSG_COM_00005'); // 삭제되었습니다.
+                this.onFindList();
+            },
+
+            /**
+             * 견적코드 조회 팝업 오픈
+             */
+            onShowEcPopup: function(e) {
+                var me = this;
+                var rowIndex = e.detail.rowIndex;
+
+                UT.popup({
+                    url: 'ep-estimate-cost-search-popup',
+                    param: {},
+                    close: function(result) {
+                        if (result) {
+                            var grid = me.$.gridPanel;
+                            grid.setCellData(rowIndex, 'ecPjtCd', result.ecPjtCd);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</dom-module>

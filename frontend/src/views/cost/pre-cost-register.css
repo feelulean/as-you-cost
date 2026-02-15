@@ -1,0 +1,233 @@
+/* ============================================================
+   사전원가 등록 화면 — Page-Specific Styles
+   ============================================================ */
+
+/* ── 원가 요약 카드 그리드 ── */
+.cost-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border-light);
+}
+
+.cost-summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md) var(--spacing-sm);
+  background: var(--bg-content);
+  text-align: center;
+  min-height: 80px;
+}
+
+.cost-summary-card__label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.cost-summary-card__value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+
+.cost-summary-card__ratio {
+  font-size: var(--font-size-xs);
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.cost-summary-card__unit {
+  font-size: var(--font-size-xs);
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.cost-summary-card.is-total {
+  background: var(--primary-700);
+}
+
+.cost-summary-card.is-total .cost-summary-card__label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cost-summary-card.is-total .cost-summary-card__value {
+  color: #ffffff;
+  font-size: 19px;
+}
+
+.cost-summary-card.is-total .cost-summary-card__unit {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+
+/* ── 비교 분석 테이블 ── */
+.compare-table tbody td,
+.compare-table tfoot td {
+  font-size: var(--font-size-sm);
+}
+
+.compare-down {
+  color: #1565c0 !important;
+  font-weight: 500;
+}
+
+.compare-up {
+  color: var(--color-danger) !important;
+  font-weight: 500;
+}
+
+.compare-neutral {
+  color: var(--text-secondary) !important;
+}
+
+
+/* ── CSS-only Bar Chart ── */
+.chart-placeholder {
+  padding: var(--spacing-lg);
+}
+
+.chart-placeholder__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-bar-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.chart-bar {
+  height: 18px;
+  width: var(--bar-width);
+  background: var(--bar-color);
+  border-radius: 2px 4px 4px 2px;
+  transition: width 0.5s ease;
+  opacity: 0.85;
+  position: relative;
+  min-width: 20px;
+}
+
+.chart-bar:hover {
+  opacity: 1;
+}
+
+.chart-legend {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
+}
+
+.chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.chart-legend__item i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+
+/* ── 원가 내역 탭: 그리드 쌓기 ── */
+#tab-cost-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  overflow-y: auto;
+}
+
+#tab-cost-detail .sc-grid {
+  flex: none;
+  max-height: 280px;
+}
+
+/* ── 비교 분석 탭 ── */
+#tab-compare {
+  padding: var(--spacing-sm);
+  overflow-y: auto;
+}
+
+/* ── 첨부 파일 탭 ── */
+#tab-attachments {
+  padding: var(--spacing-sm);
+}
+
+
+/* ── Form Table 2-column ── */
+.sc-form-table tr {
+  display: table-row;
+}
+
+.sc-form-table tr > th,
+.sc-form-table tr > td {
+  width: auto;
+}
+
+.sc-form-table tr > th:nth-child(odd) {
+  width: 110px;
+}
+
+.sc-form-table tr > td:nth-child(2) {
+  border-right: 1px solid var(--border-light);
+}
+
+
+/* ── Responsive ── */
+@media (max-width: 1280px) {
+  .sc-split-layout {
+    flex-direction: column;
+  }
+
+  .sc-split-layout__master {
+    width: 100%;
+    min-width: 0;
+    max-height: 40vh;
+  }
+
+  .sc-split-layout__divider {
+    width: 100%;
+    height: 4px;
+    cursor: row-resize;
+  }
+
+  .cost-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sc-search-container__body {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .cost-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sc-search-container__body {
+    grid-template-columns: 1fr;
+  }
+}

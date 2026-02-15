@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!--
+    As-You-Cost MyBatis 전역 설정
+    - PostgreSQL 방언에 맞춘 설정 적용
+    - 01_architecture.md 5항 글로벌 파라미터 규칙 지원
+-->
+<configuration>
+
+    <settings>
+        <!-- ── 기본 동작 설정 ── -->
+
+        <!-- CamelCase 자동 매핑: DB 컬럼(COST_ITEM_NM) → Java 필드(costItemNm) -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+
+        <!-- NULL 파라미터 전달 시 JDBC 타입 지정 (PostgreSQL: OTHER) -->
+        <setting name="jdbcTypeForNull" value="OTHER"/>
+
+        <!-- 지연 로딩 비활성화 (즉시 로딩) -->
+        <setting name="lazyLoadingEnabled" value="false"/>
+
+        <!-- 호출 Setter 방식 사용 -->
+        <setting name="aggressiveLazyLoading" value="false"/>
+
+        <!-- NULL 반환 시 빈 Map 대신 null 반환 -->
+        <setting name="callSettersOnNulls" value="true"/>
+
+        <!-- SQL 실행 로그 출력 -->
+        <setting name="logImpl" value="SLF4J"/>
+    </settings>
+
+    <!-- ── Type Alias (필요 시 확장) ── -->
+    <typeAliases>
+        <typeAlias alias="map"  type="java.util.HashMap"/>
+        <typeAlias alias="list" type="java.util.ArrayList"/>
+    </typeAliases>
+
+</configuration>

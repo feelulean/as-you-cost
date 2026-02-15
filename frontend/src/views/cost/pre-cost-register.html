@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사전원가 등록 — As-You-Cost</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles/emro-base.css">
+  <link rel="stylesheet" href="../../styles/emro-components.css">
+  <link rel="stylesheet" href="pre-cost-register.css">
+</head>
+<body>
+
+<!-- ============================================================
+     EMRO SHELL — 전체 애플리케이션 프레임
+     ============================================================ -->
+<div class="emro-shell">
+
+  <!-- ── Global Header ── -->
+  <header class="emro-header">
+    <div class="emro-header__logo">
+      As-You-Cost <span>사전원가관리</span>
+    </div>
+    <nav class="emro-header__nav">
+      <span class="emro-header__nav-item">홈</span>
+      <span class="emro-header__nav-item">알림 (3)</span>
+      <span class="emro-header__nav-item">관리자</span>
+      <span class="emro-header__nav-item">로그아웃</span>
+    </nav>
+  </header>
+
+  <!-- ── MDI Tab Bar ── -->
+  <div class="emro-tab-bar">
+    <button class="emro-tab" title="대시보드">
+      대시보드 <span class="emro-tab__close">×</span>
+    </button>
+    <button class="emro-tab is-active" title="사전원가 등록">
+      사전원가 등록 <span class="emro-tab__close">×</span>
+    </button>
+    <button class="emro-tab" title="원가 비교분석">
+      원가 비교분석 <span class="emro-tab__close">×</span>
+    </button>
+    <button class="emro-tab" title="원가 이력관리">
+      원가 이력관리 <span class="emro-tab__close">×</span>
+    </button>
+  </div>
+
+  <!-- ── Main Content Area ── -->
+  <main class="emro-content">
+    <div class="emro-page">
+
+      <!-- ── Page Title ── -->
+      <div class="emro-page__title-bar">
+        <h2 class="emro-page__title">사전원가 등록</h2>
+        <div class="emro-page__breadcrumb">
+          <span>원가관리</span>
+          <span>사전원가</span>
+          <span>등록</span>
+        </div>
+      </div>
+
+
+      <!-- ==========================================================
+           SECTION 1: sc-search-container — 조회 조건 영역
+           ========================================================== -->
+      <sc-search-container class="sc-search-container">
+        <div class="sc-search-container__header">
+          <button class="sc-search-container__toggle">조회 조건</button>
+          <div class="sc-search-container__actions">
+            <sc-button class="sc-button sc-button--primary">
+              <span class="sc-button__icon">🔍</span> 조회
+            </sc-button>
+            <sc-button class="sc-button sc-button--default">
+              <span class="sc-button__icon">↻</span> 초기화
+            </sc-button>
+          </div>
+        </div>
+
+        <div class="sc-search-container__body">
+          <!-- Row 1 -->
+          <div class="sc-search-field">
+            <label class="sc-search-field__label">프로젝트</label>
+            <div class="sc-search-field__control">
+              <sc-input class="sc-input" type="text" placeholder="프로젝트명 또는 코드 입력"></sc-input>
+            </div>
+          </div>
+
+          <div class="sc-search-field">
+            <label class="sc-search-field__label">원가 유형</label>
+            <div class="sc-search-field__control">
+              <sc-select class="sc-select">
+                <option value="">전체</option>
+                <option value="ESTIMATE">견적원가</option>
+                <option value="TARGET">목표원가</option>
+                <option value="PLANNED">예정원가</option>
+              </sc-select>
+            </div>
+          </div>
+
+          <div class="sc-search-field">
+            <label class="sc-search-field__label">상태</label>
+            <div class="sc-search-field__control">
+              <sc-select class="sc-select">
+                <option value="">전체</option>
+                <option value="DRAFT">작성중</option>
+                <option value="SUBMITTED">제출</option>
+                <option value="APPROVED">승인</option>
+                <option value="REJECTED">반려</option>
+              </sc-select>
+            </div>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="sc-search-field">
+            <label class="sc-search-field__label">등록일자</label>
+            <div class="sc-search-field__control">
+              <div class="sc-date-range">
+                <sc-datepicker class="sc-datepicker" type="date" value="2026-01-01"></sc-datepicker>
+                <span class="sc-date-range__separator">~</span>
+                <sc-datepicker class="sc-datepicker" type="date" value="2026-02-15"></sc-datepicker>
+              </div>
+            </div>
+          </div>
+
+          <div class="sc-search-field">
+            <label class="sc-search-field__label">제품군</label>
+            <div class="sc-search-field__control">
+              <sc-select class="sc-select">
+                <option value="">전체</option>
+                <option value="MECH">기계부품</option>
+                <option value="ELEC">전자부품</option>
+                <option value="ASSY">조립품</option>
+                <option value="MOLD">금형</option>
+              </sc-select>
+            </div>
+          </div>
+
+          <div class="sc-search-field">
+            <label class="sc-search-field__label">담당자</label>
+            <div class="sc-search-field__control">
+              <sc-input class="sc-input" type="text" placeholder="담당자명"></sc-input>
+            </div>
+          </div>
+        </div>
+      </sc-search-container>
+
+
+      <!-- ==========================================================
+           SECTION 2: SPLIT LAYOUT — 목록 / 상세
+           ========================================================== -->
+      <div class="sc-split-layout">
+
+        <!-- ── LEFT: Master Grid (사전원가 목록) ── -->
+        <div class="sc-split-layout__master">
+          <sc-grid class="sc-grid">
+
+            <!-- Grid Toolbar -->
+            <div class="sc-grid__toolbar">
+              <div class="sc-grid__toolbar-left">
+                <span class="sc-grid__title">사전원가 목록</span>
+                <span class="sc-grid__count">총 <strong>12</strong>건</span>
+              </div>
+              <div class="sc-grid__toolbar-right">
+                <sc-button class="sc-button sc-button--primary">
+                  <span class="sc-button__icon">+</span> 신규
+                </sc-button>
+                <sc-button class="sc-button sc-button--danger">
+                  <span class="sc-button__icon">−</span> 삭제
+                </sc-button>
+                <sc-button class="sc-button sc-button--default" title="엑셀 다운로드">
+                  <span class="sc-button__icon">⬇</span> Excel
+                </sc-button>
+              </div>
+            </div>
+
+            <!-- Grid Table -->
+            <div class="sc-grid__wrapper">
+              <table class="sc-grid__table">
+                <thead>
+                  <tr>
+                    <th style="width:36px"><input type="checkbox"></th>
+                    <th style="width:50px" class="is-sortable">No</th>
+                    <th style="width:100px" class="is-sortable">원가유형</th>
+                    <th style="width:120px" class="is-sortable">프로젝트코드</th>
+                    <th class="is-sortable">프로젝트명</th>
+                    <th style="width:90px">제품군</th>
+                    <th style="width:110px" class="is-sortable">총 원가(원)</th>
+                    <th style="width:75px">상태</th>
+                    <th style="width:90px" class="is-sortable">등록일</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="is-selected">
+                    <td class="cell-center"><input type="checkbox" checked></td>
+                    <td class="cell-center">1</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">견적원가</span></td>
+                    <td class="cell-center">PRJ-2026-001</td>
+                    <td class="cell-left cell-link">고속 모터 어셈블리 A</td>
+                    <td class="cell-center">기계부품</td>
+                    <td class="cell-number">45,230,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--draft">작성중</span></td>
+                    <td class="cell-center">2026-02-10</td>
+                  </tr>
+                  <tr>
+                    <td class="cell-center"><input type="checkbox"></td>
+                    <td class="cell-center">2</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">목표원가</span></td>
+                    <td class="cell-center">PRJ-2026-001</td>
+                    <td class="cell-left cell-link">고속 모터 어셈블리 A</td>
+                    <td class="cell-center">기계부품</td>
+                    <td class="cell-number">42,100,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--submitted">제출</span></td>
+                    <td class="cell-center">2026-02-12</td>
+                  </tr>
+                  <tr>
+                    <td class="cell-center"><input type="checkbox"></td>
+                    <td class="cell-center">3</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">예정원가</span></td>
+                    <td class="cell-center">PRJ-2026-002</td>
+                    <td class="cell-left cell-link">PCB 컨트롤러 보드 v2</td>
+                    <td class="cell-center">전자부품</td>
+                    <td class="cell-number">8,750,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--approved">승인</span></td>
+                    <td class="cell-center">2026-02-08</td>
+                  </tr>
+                  <tr>
+                    <td class="cell-center"><input type="checkbox"></td>
+                    <td class="cell-center">4</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">견적원가</span></td>
+                    <td class="cell-center">PRJ-2026-003</td>
+                    <td class="cell-left cell-link">알루미늄 하우징 금형</td>
+                    <td class="cell-center">금형</td>
+                    <td class="cell-number">125,600,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--approved">승인</span></td>
+                    <td class="cell-center">2026-01-28</td>
+                  </tr>
+                  <tr>
+                    <td class="cell-center"><input type="checkbox"></td>
+                    <td class="cell-center">5</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">목표원가</span></td>
+                    <td class="cell-center">PRJ-2026-003</td>
+                    <td class="cell-left cell-link">알루미늄 하우징 금형</td>
+                    <td class="cell-center">금형</td>
+                    <td class="cell-number">118,400,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--rejected">반려</span></td>
+                    <td class="cell-center">2026-02-05</td>
+                  </tr>
+                  <tr>
+                    <td class="cell-center"><input type="checkbox"></td>
+                    <td class="cell-center">6</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">견적원가</span></td>
+                    <td class="cell-center">PRJ-2026-004</td>
+                    <td class="cell-left cell-link">센서 모듈 패키지</td>
+                    <td class="cell-center">전자부품</td>
+                    <td class="cell-number">15,320,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--draft">작성중</span></td>
+                    <td class="cell-center">2026-02-14</td>
+                  </tr>
+                  <tr>
+                    <td class="cell-center"><input type="checkbox"></td>
+                    <td class="cell-center">7</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--progress">예정원가</span></td>
+                    <td class="cell-center">PRJ-2026-005</td>
+                    <td class="cell-left cell-link">EV 배터리 팩 조립</td>
+                    <td class="cell-center">조립품</td>
+                    <td class="cell-number">287,500,000</td>
+                    <td class="cell-center"><span class="sc-badge sc-badge--submitted">제출</span></td>
+                    <td class="cell-center">2026-02-01</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Grid Footer -->
+            <div class="sc-grid__footer">
+              <span class="sc-grid__count">선택: <strong>1</strong>건</span>
+              <div class="sc-button-group">
+                <span style="font-size:11px; color:#888;">1 / 2 페이지</span>
+              </div>
+            </div>
+          </sc-grid>
+        </div>
+
+
+        <!-- ── Divider ── -->
+        <div class="sc-split-layout__divider"></div>
+
+
+        <!-- ── RIGHT: Detail Panel (상세 정보) ── -->
+        <div class="sc-split-layout__detail">
+          <div class="sc-tab-group">
+
+            <!-- Detail Tab Headers -->
+            <div class="sc-tab-headers">
+              <button class="sc-tab-header is-active">기본 정보</button>
+              <button class="sc-tab-header">원가 내역</button>
+              <button class="sc-tab-header">비교 분석</button>
+              <button class="sc-tab-header">첨부 파일</button>
+            </div>
+
+            <!-- ──────────────────────────────────────
+                 TAB 1: 기본 정보
+                 ────────────────────────────────────── -->
+            <div class="sc-tab-panel" id="tab-basic-info">
+
+              <!-- 기본 정보 폼 -->
+              <div class="sc-form-panel u-mt-sm">
+                <div class="sc-form-panel__header">
+                  <span class="sc-form-panel__title">프로젝트 정보</span>
+                  <div class="sc-button-group">
+                    <sc-button class="sc-button sc-button--primary">저장</sc-button>
+                    <sc-button class="sc-button sc-button--default">제출</sc-button>
+                  </div>
+                </div>
+                <table class="sc-form-table">
+                  <tbody>
+                    <tr>
+                      <th class="is-required">프로젝트코드</th>
+                      <td>
+                        <div style="display:flex; gap:4px;">
+                          <sc-input class="sc-input" type="text" value="PRJ-2026-001" style="flex:1" readonly></sc-input>
+                          <sc-button class="sc-button sc-button--default sc-button--icon" title="프로젝트 검색">…</sc-button>
+                        </div>
+                      </td>
+                      <th class="is-required">프로젝트명</th>
+                      <td><sc-input class="sc-input" type="text" value="고속 모터 어셈블리 A"></sc-input></td>
+                    </tr>
+                    <tr>
+                      <th class="is-required">원가 유형</th>
+                      <td>
+                        <sc-select class="sc-select">
+                          <option value="ESTIMATE" selected>견적원가</option>
+                          <option value="TARGET">목표원가</option>
+                          <option value="PLANNED">예정원가</option>
+                        </sc-select>
+                      </td>
+                      <th>제품군</th>
+                      <td>
+                        <sc-select class="sc-select">
+                          <option value="MECH" selected>기계부품</option>
+                          <option value="ELEC">전자부품</option>
+                          <option value="ASSY">조립품</option>
+                          <option value="MOLD">금형</option>
+                        </sc-select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>고객사</th>
+                      <td><sc-input class="sc-input" type="text" value="현대모비스"></sc-input></td>
+                      <th>납품 예정일</th>
+                      <td><sc-datepicker class="sc-datepicker" type="date" value="2026-06-30"></sc-datepicker></td>
+                    </tr>
+                    <tr>
+                      <th>담당자</th>
+                      <td><sc-input class="sc-input" type="text" value="김원가"></sc-input></td>
+                      <th>등록일</th>
+                      <td><sc-input class="sc-input" type="text" value="2026-02-10" disabled></sc-input></td>
+                    </tr>
+                    <tr>
+                      <th>수량 (EA)</th>
+                      <td><sc-input class="sc-input" type="text" value="5,000" style="text-align:right"></sc-input></td>
+                      <th>상태</th>
+                      <td><span class="sc-badge sc-badge--draft">작성중</span></td>
+                    </tr>
+                    <tr>
+                      <th>비고</th>
+                      <td colspan="3">
+                        <textarea class="sc-input sc-textarea" rows="2" placeholder="비고 사항을 입력하세요.">1차 견적 기준. 재료비 변동 가능.</textarea>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 원가 요약 -->
+              <div class="sc-form-panel u-mt-sm">
+                <div class="sc-form-panel__header">
+                  <span class="sc-form-panel__title">원가 요약</span>
+                </div>
+                <div class="cost-summary-grid">
+                  <div class="cost-summary-card">
+                    <div class="cost-summary-card__label">재료비</div>
+                    <div class="cost-summary-card__value">28,150,000</div>
+                    <div class="cost-summary-card__ratio">62.3%</div>
+                  </div>
+                  <div class="cost-summary-card">
+                    <div class="cost-summary-card__label">노무비</div>
+                    <div class="cost-summary-card__value">9,800,000</div>
+                    <div class="cost-summary-card__ratio">21.7%</div>
+                  </div>
+                  <div class="cost-summary-card">
+                    <div class="cost-summary-card__label">경비</div>
+                    <div class="cost-summary-card__value">4,280,000</div>
+                    <div class="cost-summary-card__ratio">9.5%</div>
+                  </div>
+                  <div class="cost-summary-card">
+                    <div class="cost-summary-card__label">이익</div>
+                    <div class="cost-summary-card__value">3,000,000</div>
+                    <div class="cost-summary-card__ratio">6.5%</div>
+                  </div>
+                  <div class="cost-summary-card is-total">
+                    <div class="cost-summary-card__label">총 원가</div>
+                    <div class="cost-summary-card__value">45,230,000</div>
+                    <div class="cost-summary-card__unit">원</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+
+            <!-- ──────────────────────────────────────
+                 TAB 2: 원가 내역
+                 ────────────────────────────────────── -->
+            <div class="sc-tab-panel" id="tab-cost-detail" hidden>
+
+              <!-- 재료비 그리드 -->
+              <sc-grid class="sc-grid u-mt-sm">
+                <div class="sc-grid__toolbar">
+                  <div class="sc-grid__toolbar-left">
+                    <span class="sc-grid__title">재료비 내역</span>
+                    <span class="sc-grid__count">총 <strong>5</strong>건</span>
+                  </div>
+                  <div class="sc-grid__toolbar-right">
+                    <sc-button class="sc-button sc-button--primary">
+                      <span class="sc-button__icon">+</span> 행추가
+                    </sc-button>
+                    <sc-button class="sc-button sc-button--danger">
+                      <span class="sc-button__icon">−</span> 행삭제
+                    </sc-button>
+                  </div>
+                </div>
+                <div class="sc-grid__wrapper">
+                  <table class="sc-grid__table">
+                    <thead>
+                      <tr>
+                        <th style="width:36px"><input type="checkbox"></th>
+                        <th style="width:45px">No</th>
+                        <th style="width:100px">자재코드</th>
+                        <th>자재명</th>
+                        <th style="width:70px">규격</th>
+                        <th style="width:55px">단위</th>
+                        <th style="width:70px">수량</th>
+                        <th style="width:90px">단가(원)</th>
+                        <th style="width:110px">금액(원)</th>
+                        <th style="width:80px">비고</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">1</td>
+                        <td class="cell-center">MAT-001</td>
+                        <td class="cell-left">모터 코어 (스테이터)</td>
+                        <td class="cell-center">Φ80</td>
+                        <td class="cell-center">EA</td>
+                        <td class="cell-number">5,000</td>
+                        <td class="cell-number">2,500</td>
+                        <td class="cell-number">12,500,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">2</td>
+                        <td class="cell-center">MAT-002</td>
+                        <td class="cell-left">네오디뮴 영구자석</td>
+                        <td class="cell-center">N52</td>
+                        <td class="cell-center">SET</td>
+                        <td class="cell-number">5,000</td>
+                        <td class="cell-number">1,800</td>
+                        <td class="cell-number">9,000,000</td>
+                        <td class="cell-left">시세변동</td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">3</td>
+                        <td class="cell-center">MAT-003</td>
+                        <td class="cell-left">에나멜 코일 와이어</td>
+                        <td class="cell-center">0.5mm</td>
+                        <td class="cell-center">KG</td>
+                        <td class="cell-number">250</td>
+                        <td class="cell-number">18,600</td>
+                        <td class="cell-number">4,650,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">4</td>
+                        <td class="cell-center">MAT-004</td>
+                        <td class="cell-left">베어링 (608ZZ)</td>
+                        <td class="cell-center">8×22×7</td>
+                        <td class="cell-center">EA</td>
+                        <td class="cell-number">10,000</td>
+                        <td class="cell-number">120</td>
+                        <td class="cell-number">1,200,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">5</td>
+                        <td class="cell-center">MAT-005</td>
+                        <td class="cell-left">하우징 커버 (AL6061)</td>
+                        <td class="cell-center">CNC</td>
+                        <td class="cell-center">EA</td>
+                        <td class="cell-number">5,000</td>
+                        <td class="cell-number">160</td>
+                        <td class="cell-number">800,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="8" class="cell-right" style="font-weight:600;">재료비 소계</td>
+                        <td class="cell-number">28,150,000</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </sc-grid>
+
+              <!-- 노무비 그리드 -->
+              <sc-grid class="sc-grid u-mt-sm">
+                <div class="sc-grid__toolbar">
+                  <div class="sc-grid__toolbar-left">
+                    <span class="sc-grid__title">노무비 내역</span>
+                    <span class="sc-grid__count">총 <strong>3</strong>건</span>
+                  </div>
+                  <div class="sc-grid__toolbar-right">
+                    <sc-button class="sc-button sc-button--primary">
+                      <span class="sc-button__icon">+</span> 행추가
+                    </sc-button>
+                    <sc-button class="sc-button sc-button--danger">
+                      <span class="sc-button__icon">−</span> 행삭제
+                    </sc-button>
+                  </div>
+                </div>
+                <div class="sc-grid__wrapper">
+                  <table class="sc-grid__table">
+                    <thead>
+                      <tr>
+                        <th style="width:36px"><input type="checkbox"></th>
+                        <th style="width:45px">No</th>
+                        <th>공정명</th>
+                        <th style="width:80px">직종</th>
+                        <th style="width:70px">인원(명)</th>
+                        <th style="width:70px">공수(일)</th>
+                        <th style="width:90px">일급(원)</th>
+                        <th style="width:110px">금액(원)</th>
+                        <th style="width:100px">비고</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">1</td>
+                        <td class="cell-left">코일 와인딩</td>
+                        <td class="cell-center">기술직</td>
+                        <td class="cell-number">3</td>
+                        <td class="cell-number">20</td>
+                        <td class="cell-number">120,000</td>
+                        <td class="cell-number">7,200,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">2</td>
+                        <td class="cell-left">조립 검사</td>
+                        <td class="cell-center">검사직</td>
+                        <td class="cell-number">2</td>
+                        <td class="cell-number">10</td>
+                        <td class="cell-number">100,000</td>
+                        <td class="cell-number">2,000,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">3</td>
+                        <td class="cell-left">포장 출하</td>
+                        <td class="cell-center">일반직</td>
+                        <td class="cell-number">2</td>
+                        <td class="cell-number">5</td>
+                        <td class="cell-number">60,000</td>
+                        <td class="cell-number">600,000</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="7" class="cell-right" style="font-weight:600;">노무비 소계</td>
+                        <td class="cell-number">9,800,000</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </sc-grid>
+
+              <!-- 경비 그리드 -->
+              <sc-grid class="sc-grid u-mt-sm">
+                <div class="sc-grid__toolbar">
+                  <div class="sc-grid__toolbar-left">
+                    <span class="sc-grid__title">경비 내역</span>
+                    <span class="sc-grid__count">총 <strong>3</strong>건</span>
+                  </div>
+                  <div class="sc-grid__toolbar-right">
+                    <sc-button class="sc-button sc-button--primary">
+                      <span class="sc-button__icon">+</span> 행추가
+                    </sc-button>
+                    <sc-button class="sc-button sc-button--danger">
+                      <span class="sc-button__icon">−</span> 행삭제
+                    </sc-button>
+                  </div>
+                </div>
+                <div class="sc-grid__wrapper">
+                  <table class="sc-grid__table">
+                    <thead>
+                      <tr>
+                        <th style="width:36px"><input type="checkbox"></th>
+                        <th style="width:45px">No</th>
+                        <th style="width:120px">경비 항목</th>
+                        <th>내역</th>
+                        <th style="width:110px">금액(원)</th>
+                        <th style="width:80px">산출 근거</th>
+                        <th style="width:100px">비고</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">1</td>
+                        <td class="cell-left">외주 가공비</td>
+                        <td class="cell-left">CNC 가공 외주 (하우징)</td>
+                        <td class="cell-number">2,500,000</td>
+                        <td class="cell-center">견적서</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">2</td>
+                        <td class="cell-left">검사 시험비</td>
+                        <td class="cell-left">진동·소음 시험 (KS 인증)</td>
+                        <td class="cell-number">1,200,000</td>
+                        <td class="cell-center">표준단가</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">3</td>
+                        <td class="cell-left">운송비</td>
+                        <td class="cell-left">완제품 납품 운송</td>
+                        <td class="cell-number">580,000</td>
+                        <td class="cell-center">실비</td>
+                        <td class="cell-left"></td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="4" class="cell-right" style="font-weight:600;">경비 소계</td>
+                        <td class="cell-number">4,280,000</td>
+                        <td colspan="2"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </sc-grid>
+
+            </div>
+
+
+            <!-- ──────────────────────────────────────
+                 TAB 3: 비교 분석
+                 ────────────────────────────────────── -->
+            <div class="sc-tab-panel" id="tab-compare" hidden>
+
+              <div class="sc-form-panel u-mt-sm">
+                <div class="sc-form-panel__header">
+                  <span class="sc-form-panel__title">원가 유형별 비교 (PRJ-2026-001)</span>
+                </div>
+                <div class="sc-grid__wrapper">
+                  <table class="sc-grid__table compare-table">
+                    <thead>
+                      <tr>
+                        <th style="width:140px">원가 항목</th>
+                        <th>견적원가</th>
+                        <th>목표원가</th>
+                        <th>예정원가</th>
+                        <th style="width:100px">견적 vs 목표</th>
+                        <th style="width:100px">목표 vs 예정</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="cell-left" style="font-weight:500;">재료비</td>
+                        <td class="cell-number">28,150,000</td>
+                        <td class="cell-number">26,800,000</td>
+                        <td class="cell-number">27,200,000</td>
+                        <td class="cell-number compare-down">▼ 1,350,000</td>
+                        <td class="cell-number compare-up">▲ 400,000</td>
+                      </tr>
+                      <tr>
+                        <td class="cell-left" style="font-weight:500;">노무비</td>
+                        <td class="cell-number">9,800,000</td>
+                        <td class="cell-number">9,200,000</td>
+                        <td class="cell-number">9,500,000</td>
+                        <td class="cell-number compare-down">▼ 600,000</td>
+                        <td class="cell-number compare-up">▲ 300,000</td>
+                      </tr>
+                      <tr>
+                        <td class="cell-left" style="font-weight:500;">경비</td>
+                        <td class="cell-number">4,280,000</td>
+                        <td class="cell-number">3,800,000</td>
+                        <td class="cell-number">4,100,000</td>
+                        <td class="cell-number compare-down">▼ 480,000</td>
+                        <td class="cell-number compare-up">▲ 300,000</td>
+                      </tr>
+                      <tr>
+                        <td class="cell-left" style="font-weight:500;">이익</td>
+                        <td class="cell-number">3,000,000</td>
+                        <td class="cell-number">2,300,000</td>
+                        <td class="cell-number">—</td>
+                        <td class="cell-number compare-down">▼ 700,000</td>
+                        <td class="cell-center">—</td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td class="cell-left" style="font-weight:700;">합계</td>
+                        <td class="cell-number">45,230,000</td>
+                        <td class="cell-number">42,100,000</td>
+                        <td class="cell-number">40,800,000</td>
+                        <td class="cell-number compare-down">▼ 3,130,000</td>
+                        <td class="cell-number compare-down">▼ 1,300,000</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              <!-- 차트 자리표시 -->
+              <div class="sc-form-panel u-mt-sm">
+                <div class="sc-form-panel__header">
+                  <span class="sc-form-panel__title">비교 차트</span>
+                </div>
+                <div class="chart-placeholder">
+                  <div class="chart-placeholder__bars">
+                    <div class="chart-bar-group">
+                      <span class="chart-bar-label">재료비</span>
+                      <div class="chart-bar" style="--bar-width:100%; --bar-color:var(--primary-500);" title="견적: 28,150,000"></div>
+                      <div class="chart-bar" style="--bar-width:95%; --bar-color:var(--secondary-400);" title="목표: 26,800,000"></div>
+                      <div class="chart-bar" style="--bar-width:97%; --bar-color:var(--color-success);" title="예정: 27,200,000"></div>
+                    </div>
+                    <div class="chart-bar-group">
+                      <span class="chart-bar-label">노무비</span>
+                      <div class="chart-bar" style="--bar-width:100%; --bar-color:var(--primary-500);" title="견적: 9,800,000"></div>
+                      <div class="chart-bar" style="--bar-width:94%; --bar-color:var(--secondary-400);" title="목표: 9,200,000"></div>
+                      <div class="chart-bar" style="--bar-width:97%; --bar-color:var(--color-success);" title="예정: 9,500,000"></div>
+                    </div>
+                    <div class="chart-bar-group">
+                      <span class="chart-bar-label">경비</span>
+                      <div class="chart-bar" style="--bar-width:100%; --bar-color:var(--primary-500);" title="견적: 4,280,000"></div>
+                      <div class="chart-bar" style="--bar-width:89%; --bar-color:var(--secondary-400);" title="목표: 3,800,000"></div>
+                      <div class="chart-bar" style="--bar-width:96%; --bar-color:var(--color-success);" title="예정: 4,100,000"></div>
+                    </div>
+                  </div>
+                  <div class="chart-legend">
+                    <span class="chart-legend__item"><i style="background:var(--primary-500)"></i> 견적원가</span>
+                    <span class="chart-legend__item"><i style="background:var(--secondary-400)"></i> 목표원가</span>
+                    <span class="chart-legend__item"><i style="background:var(--color-success)"></i> 예정원가</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+
+            <!-- ──────────────────────────────────────
+                 TAB 4: 첨부 파일
+                 ────────────────────────────────────── -->
+            <div class="sc-tab-panel" id="tab-attachments" hidden>
+              <sc-grid class="sc-grid u-mt-sm">
+                <div class="sc-grid__toolbar">
+                  <div class="sc-grid__toolbar-left">
+                    <span class="sc-grid__title">첨부 파일</span>
+                    <span class="sc-grid__count">총 <strong>2</strong>건</span>
+                  </div>
+                  <div class="sc-grid__toolbar-right">
+                    <sc-button class="sc-button sc-button--primary">
+                      <span class="sc-button__icon">📎</span> 파일 추가
+                    </sc-button>
+                    <sc-button class="sc-button sc-button--danger">
+                      <span class="sc-button__icon">−</span> 삭제
+                    </sc-button>
+                  </div>
+                </div>
+                <div class="sc-grid__wrapper">
+                  <table class="sc-grid__table">
+                    <thead>
+                      <tr>
+                        <th style="width:36px"><input type="checkbox"></th>
+                        <th style="width:45px">No</th>
+                        <th>파일명</th>
+                        <th style="width:90px">파일크기</th>
+                        <th style="width:100px">등록일</th>
+                        <th style="width:80px">등록자</th>
+                        <th style="width:70px">다운로드</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">1</td>
+                        <td class="cell-left cell-link">PRJ-2026-001_견적서_v1.xlsx</td>
+                        <td class="cell-right">245 KB</td>
+                        <td class="cell-center">2026-02-10</td>
+                        <td class="cell-center">김원가</td>
+                        <td class="cell-center"><span class="cell-link">⬇</span></td>
+                      </tr>
+                      <tr>
+                        <td class="cell-center"><input type="checkbox"></td>
+                        <td class="cell-center">2</td>
+                        <td class="cell-left cell-link">모터_BOM_도면.pdf</td>
+                        <td class="cell-right">1.2 MB</td>
+                        <td class="cell-center">2026-02-10</td>
+                        <td class="cell-center">김원가</td>
+                        <td class="cell-center"><span class="cell-link">⬇</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </sc-grid>
+            </div>
+
+          </div><!-- /sc-tab-group -->
+        </div><!-- /sc-split-layout__detail -->
+
+      </div><!-- /sc-split-layout -->
+
+    </div><!-- /emro-page -->
+  </main>
+
+</div><!-- /emro-shell -->
+
+</body>
+</html>
