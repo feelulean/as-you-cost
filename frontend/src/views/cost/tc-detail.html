@@ -1,0 +1,1375 @@
+<dom-module id="tc-detail">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+            .pjt-header {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                padding: 8px 12px;
+                background: #f7f8fa;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                font-size: 12px;
+            }
+            .pjt-header .label {
+                font-weight: 600;
+                color: #364FC7;
+            }
+            .pjt-header .value {
+                color: #333;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+
+        <!-- 담당자 정보 -->
+        <sc-ajax id="findManagerAjax"
+                 url="/bp/cost/tc/detail/findListTcManager.do"
+                 body="{{searchParam}}"
+                 on-response="onFindManagerResponse">
+        </sc-ajax>
+        <sc-ajax id="saveManagerAjax"
+                 url="/bp/cost/tc/detail/saveListTcManager.do"
+                 body="{{saveManagerParam}}"
+                 on-response="onSaveManagerResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteManagerAjax"
+                 url="/bp/cost/tc/detail/deleteListTcManager.do"
+                 body="{{deleteManagerParam}}"
+                 on-response="onDeleteManagerResponse">
+        </sc-ajax>
+
+        <!-- 대표사양 관리 -->
+        <sc-ajax id="findSpecAjax"
+                 url="/bp/cost/tc/detail/findListTcSpec.do"
+                 body="{{searchParam}}"
+                 on-response="onFindSpecResponse">
+        </sc-ajax>
+        <sc-ajax id="saveSpecAjax"
+                 url="/bp/cost/tc/detail/saveListTcSpec.do"
+                 body="{{saveSpecParam}}"
+                 on-response="onSaveSpecResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteSpecAjax"
+                 url="/bp/cost/tc/detail/deleteListTcSpec.do"
+                 body="{{deleteSpecParam}}"
+                 on-response="onDeleteSpecResponse">
+        </sc-ajax>
+
+        <!-- 판가정보 -->
+        <sc-ajax id="findPriceAjax"
+                 url="/bp/cost/tc/detail/findListTcPrice.do"
+                 body="{{searchParam}}"
+                 on-response="onFindPriceResponse">
+        </sc-ajax>
+        <sc-ajax id="savePriceAjax"
+                 url="/bp/cost/tc/detail/saveListTcPrice.do"
+                 body="{{savePriceParam}}"
+                 on-response="onSavePriceResponse">
+        </sc-ajax>
+        <sc-ajax id="deletePriceAjax"
+                 url="/bp/cost/tc/detail/deleteListTcPrice.do"
+                 body="{{deletePriceParam}}"
+                 on-response="onDeletePriceResponse">
+        </sc-ajax>
+
+        <!-- 수량/할인율 -->
+        <sc-ajax id="findQtyDiscAjax"
+                 url="/bp/cost/tc/detail/findListTcQtyDisc.do"
+                 body="{{searchParam}}"
+                 on-response="onFindQtyDiscResponse">
+        </sc-ajax>
+        <sc-ajax id="saveQtyDiscAjax"
+                 url="/bp/cost/tc/detail/saveListTcQtyDisc.do"
+                 body="{{saveQtyDiscParam}}"
+                 on-response="onSaveQtyDiscResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteQtyDiscAjax"
+                 url="/bp/cost/tc/detail/deleteListTcQtyDisc.do"
+                 body="{{deleteQtyDiscParam}}"
+                 on-response="onDeleteQtyDiscResponse">
+        </sc-ajax>
+
+        <!-- 개발/평가일정 -->
+        <sc-ajax id="findDevScheduleAjax"
+                 url="/bp/cost/tc/detail/findListTcDevSchedule.do"
+                 body="{{searchParam}}"
+                 on-response="onFindDevScheduleResponse">
+        </sc-ajax>
+        <sc-ajax id="saveDevScheduleAjax"
+                 url="/bp/cost/tc/detail/saveListTcDevSchedule.do"
+                 body="{{saveDevScheduleParam}}"
+                 on-response="onSaveDevScheduleResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteDevScheduleAjax"
+                 url="/bp/cost/tc/detail/deleteListTcDevSchedule.do"
+                 body="{{deleteDevScheduleParam}}"
+                 on-response="onDeleteDevScheduleResponse">
+        </sc-ajax>
+
+        <!-- 목표수립일정 -->
+        <sc-ajax id="findSetupScheduleAjax"
+                 url="/bp/cost/tc/detail/findListTcSetupSchedule.do"
+                 body="{{searchParam}}"
+                 on-response="onFindSetupScheduleResponse">
+        </sc-ajax>
+        <sc-ajax id="saveSetupScheduleAjax"
+                 url="/bp/cost/tc/detail/saveListTcSetupSchedule.do"
+                 body="{{saveSetupScheduleParam}}"
+                 on-response="onSaveSetupScheduleResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteSetupScheduleAjax"
+                 url="/bp/cost/tc/detail/deleteListTcSetupSchedule.do"
+                 body="{{deleteSetupScheduleParam}}"
+                 on-response="onDeleteSetupScheduleResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             프로젝트 헤더 정보
+             ============================================================ -->
+        <div class="pjt-header">
+            <span class="label">프로젝트코드:</span>
+            <span class="value">{{tgtPjtCd}}</span>
+            <span class="label">프로젝트명:</span>
+            <span class="value">{{pjtNm}}</span>
+        </div>
+
+        <!-- ============================================================
+             탭 버튼 바
+             ============================================================ -->
+        <div class="tab-bar">
+            <button class$="tab-btn {{_activeTab(activeTab,'manager')}}"
+                    on-click="_setTab" data-tab="manager">담당자 정보</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'spec')}}"
+                    on-click="_setTab" data-tab="spec">대표사양 관리</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'price')}}"
+                    on-click="_setTab" data-tab="price">판가정보</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'qtyDisc')}}"
+                    on-click="_setTab" data-tab="qtyDisc">수량/할인율</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'devSchedule')}}"
+                    on-click="_setTab" data-tab="devSchedule">개발/평가일정</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'setupSchedule')}}"
+                    on-click="_setTab" data-tab="setupSchedule">목표수립일정</button>
+        </div>
+
+        <!-- ============================================================
+             탭 콘텐츠 영역
+             ============================================================ -->
+        <div style="flex:1; overflow:auto;">
+
+            <!-- ======================================================
+                 TAB 1: 담당자 정보
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'manager')}}">
+                <sc-grid id="managerGrid"
+                         data-provider="{{managerList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindManager" auth-code="V"></sc-button>
+                        <sc-button text="추가" on-click="onAddManagerRow" auth-code="S"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteManager" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveManager" auth-code="S"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="seqNo"
+                                        header-text="순번"
+                                        width="60"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-combobox-column data-field="deptDiv"
+                                           header-text="부문"
+                                           width="120"
+                                           editable="true"
+                                           items="{{codes.deptDivList}}"
+                                           display-field="label"
+                                           value-field="data">
+                        </sc-combobox-column>
+
+                        <sc-data-column data-field="mgrNm"
+                                        header-text="이름"
+                                        width="100"
+                                        editable="true"
+                                        required="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="position"
+                                        header-text="직급"
+                                        width="80"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="deptNm"
+                                        header-text="소속"
+                                        width="120"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-combobox-column data-field="roleCd"
+                                           header-text="ROLE"
+                                           width="80"
+                                           editable="true"
+                                           items="{{codes.roleList}}"
+                                           display-field="label"
+                                           value-field="data">
+                        </sc-combobox-column>
+
+                        <sc-data-column data-field="rmk"
+                                        header-text="비고"
+                                        width="200"
+                                        editable="true">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="mgrSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 2: 대표사양 관리
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'spec')}}">
+                <sc-grid id="specGrid"
+                         data-provider="{{specList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindSpec" auth-code="V"></sc-button>
+                        <sc-button text="추가" on-click="onAddSpecRow" auth-code="S"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteSpec" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveSpec" auth-code="S"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="seqNo"
+                                        header-text="순번"
+                                        width="60"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="pjtCd"
+                                        header-text="프로젝트코드"
+                                        width="120"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="ecCostCd"
+                                        header-text="견적원코드"
+                                        width="120"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="tgtCostCd"
+                                        header-text="목표원가코드"
+                                        width="120"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="prodGrpNm"
+                                        header-text="제품군"
+                                        width="100"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="carType"
+                                        header-text="차종"
+                                        width="100"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="oemNm"
+                                        header-text="OEM"
+                                        width="100"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="specDesc"
+                                        header-text="사양"
+                                        width="150"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="selYn"
+                                        header-text="선택여부"
+                                        width="80"
+                                        text-align="center"
+                                        editable="true"
+                                        data-type="checkbox">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="specSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 3: 판가정보
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'price')}}">
+                <sc-grid id="priceGrid"
+                         data-provider="{{priceList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindPrice" auth-code="V"></sc-button>
+                        <sc-button text="추가" on-click="onAddPriceRow" auth-code="S"></sc-button>
+                        <sc-button text="삭제" on-click="onDeletePrice" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSavePrice" auth-code="S"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="seqNo"
+                                        header-text="순번"
+                                        width="60"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="specDesc"
+                                        header-text="사양"
+                                        width="150"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="tgtCostCd"
+                                        header-text="목표원가코드"
+                                        width="120"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-combobox-column data-field="currency"
+                                           header-text="통화"
+                                           width="80"
+                                           editable="true"
+                                           items="{{codes.currencyList}}"
+                                           display-field="label"
+                                           value-field="data">
+                        </sc-combobox-column>
+
+                        <sc-data-column data-field="estSellPrice"
+                                        header-text="예상판가"
+                                        width="130"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,###.##">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="sopYm"
+                                        header-text="SOP"
+                                        width="100"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="eopYm"
+                                        header-text="EOP"
+                                        width="100"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="priceSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 4: 수량/할인율
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'qtyDisc')}}">
+                <sc-grid id="qtyDiscGrid"
+                         data-provider="{{qtyDiscList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindQtyDisc" auth-code="V"></sc-button>
+                        <sc-button text="추가" on-click="onAddQtyDiscRow" auth-code="S"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteQtyDisc" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveQtyDisc" auth-code="S"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="seqNo"
+                                        header-text="순번"
+                                        width="60"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="specDesc"
+                                        header-text="사양"
+                                        width="150"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="tgtCostCd"
+                                        header-text="목표원가코드"
+                                        width="120"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="yearVal"
+                                        header-text="년도"
+                                        width="80"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="qty"
+                                        header-text="수량"
+                                        width="120"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,###">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="discRate"
+                                        header-text="할인율(%)"
+                                        width="100"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,##0.0">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="qtyDiscSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 5: 개발/평가일정
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'devSchedule')}}">
+                <sc-grid id="devScheduleGrid"
+                         data-provider="{{devScheduleList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindDevSchedule" auth-code="V"></sc-button>
+                        <sc-button text="추가" on-click="onAddDevScheduleRow" auth-code="S"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteDevSchedule" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveDevSchedule" auth-code="S"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="seqNo"
+                                        header-text="순번"
+                                        width="60"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="schedType"
+                                        header-text="구분"
+                                        width="100"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="schedNm"
+                                        header-text="일정명"
+                                        width="180"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="planStartDt"
+                                        header-text="예정시작일"
+                                        width="110"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="planEndDt"
+                                        header-text="예정완료일"
+                                        width="110"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="evalRound"
+                                        header-text="차수"
+                                        width="60"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="evalPeriod"
+                                        header-text="시기"
+                                        width="100"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="rmk"
+                                        header-text="비고"
+                                        width="200"
+                                        editable="true">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="schedSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 6: 목표수립일정
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'setupSchedule')}}">
+                <sc-grid id="setupScheduleGrid"
+                         data-provider="{{setupScheduleList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindSetupSchedule" auth-code="V"></sc-button>
+                        <sc-button text="추가" on-click="onAddSetupScheduleRow" auth-code="S"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteSetupSchedule" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveSetupSchedule" auth-code="S"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="seqNo"
+                                        header-text="순번"
+                                        width="60"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="deptNm"
+                                        header-text="담당부서"
+                                        width="120"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="startDt"
+                                        header-text="시작일"
+                                        width="110"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="endDt"
+                                        header-text="종료일"
+                                        width="110"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="actEndDt"
+                                        header-text="업무종료일"
+                                        width="110"
+                                        editable="true"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="procYn"
+                                        header-text="처리여부"
+                                        width="80"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="delayDays"
+                                        header-text="지연일"
+                                        width="80"
+                                        editable="false"
+                                        text-align="right"
+                                        data-type="number">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="emailSent"
+                                        header-text="E-Mail발송"
+                                        width="100"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="setupSchedSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+        </div><!-- /탭 콘텐츠 영역 -->
+    </template>
+
+    <script>
+        Polymer({
+            is: 'tc-detail',
+
+            properties: {
+                /* ─── URL 파라미터 ─── */
+                tgtPjtCd: {
+                    type: String,
+                    value: ''
+                },
+                pjtNm: {
+                    type: String,
+                    value: ''
+                },
+
+                /* ─── 활성 탭 ─── */
+                activeTab: {
+                    type: String,
+                    value: 'manager'
+                },
+
+                /* ─── 조회 파라미터 ─── */
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 1: 담당자 정보 ─── */
+                managerList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveManagerParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteManagerParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 2: 대표사양 관리 ─── */
+                specList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveSpecParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteSpecParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 3: 판가정보 ─── */
+                priceList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                savePriceParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deletePriceParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 4: 수량/할인율 ─── */
+                qtyDiscList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveQtyDiscParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteQtyDiscParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 5: 개발/평가일정 ─── */
+                devScheduleList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveDevScheduleParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteDevScheduleParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 6: 목표수립일정 ─── */
+                setupScheduleList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveSetupScheduleParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                deleteSetupScheduleParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── 공통코드 ─── */
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            deptDivList: [
+                                { label: '영업',   data: 'SALES' },
+                                { label: '설계',   data: 'DESIGN' },
+                                { label: '원가',   data: 'COST' },
+                                { label: '품질',   data: 'QA' },
+                                { label: '생산',   data: 'PROD' },
+                                { label: '구매',   data: 'PURCH' }
+                            ],
+                            roleList: [
+                                { label: 'PM', data: 'PM' },
+                                { label: 'PL', data: 'PL' }
+                            ],
+                            currencyList: [
+                                { label: 'KRW', data: 'KRW' },
+                                { label: 'USD', data: 'USD' },
+                                { label: 'EUR', data: 'EUR' },
+                                { label: 'JPY', data: 'JPY' },
+                                { label: 'CNY', data: 'CNY' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ==============================================================
+               라이프사이클
+               ============================================================== */
+
+            attached: function() {
+                // URL 파라미터에서 tgtPjtCd 추출
+                var params = new URLSearchParams(window.location.search);
+                var pjtCd = params.get('tgtPjtCd') || '';
+                var pjtNm = params.get('pjtNm') || '';
+
+                this.set('tgtPjtCd', pjtCd);
+                this.set('pjtNm', pjtNm);
+                this.set('searchParam', { tgtPjtCd: pjtCd });
+
+                if (pjtCd) {
+                    this._loadTabData(this.activeTab);
+                }
+            },
+
+            /* ==============================================================
+               탭 제어 헬퍼
+               ============================================================== */
+
+            _activeTab: function(activeTab, tabName) {
+                return activeTab === tabName ? 'active' : '';
+            },
+
+            _isTab: function(activeTab, tabName) {
+                return activeTab === tabName;
+            },
+
+            _setTab: function(e) {
+                var tabName = e.currentTarget.getAttribute('data-tab');
+                this.set('activeTab', tabName);
+                this._loadTabData(tabName);
+            },
+
+            _loadTabData: function(tabName) {
+                if (!this.tgtPjtCd) return;
+
+                switch (tabName) {
+                    case 'manager':
+                        this.$.findManagerAjax.generateRequest();
+                        break;
+                    case 'spec':
+                        this.$.findSpecAjax.generateRequest();
+                        break;
+                    case 'price':
+                        this.$.findPriceAjax.generateRequest();
+                        break;
+                    case 'qtyDisc':
+                        this.$.findQtyDiscAjax.generateRequest();
+                        break;
+                    case 'devSchedule':
+                        this.$.findDevScheduleAjax.generateRequest();
+                        break;
+                    case 'setupSchedule':
+                        this.$.findSetupScheduleAjax.generateRequest();
+                        break;
+                }
+            },
+
+            /* ==============================================================
+               TAB 1: 담당자 정보 — 조회 / 행추가 / 삭제 / 저장
+               ============================================================== */
+
+            onFindManager: function() {
+                this.$.findManagerAjax.generateRequest();
+            },
+
+            onFindManagerResponse: function(e) {
+                this.set('managerList', e.detail.response || []);
+            },
+
+            onAddManagerRow: function() {
+                var grid = this.$['managerGrid'] || this.$$('#managerGrid');
+                if (!grid) return;
+
+                var seqNo = (this.managerList ? this.managerList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd: this.tgtPjtCd,
+                    seqNo:    seqNo,
+                    deptDiv:  '',
+                    mgrNm:   '',
+                    position: '',
+                    deptNm:  '',
+                    roleCd:  '',
+                    rmk:     ''
+                });
+            },
+
+            onDeleteManager: function() {
+                var grid = this.$['managerGrid'] || this.$$('#managerGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteManagerParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteManagerAjax.generateRequest();
+                });
+            },
+
+            onDeleteManagerResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData('manager');
+            },
+
+            onSaveManager: function() {
+                var grid = this.$['managerGrid'] || this.$$('#managerGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].mgrNm) {
+                        UT.alert('MSG_COM_00001');
+                        return;
+                    }
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveManagerParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveManagerAjax.generateRequest();
+                });
+            },
+
+            onSaveManagerResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('manager');
+            },
+
+            /* ==============================================================
+               TAB 2: 대표사양 관리 — 조회 / 행추가 / 삭제 / 저장
+               ============================================================== */
+
+            onFindSpec: function() {
+                this.$.findSpecAjax.generateRequest();
+            },
+
+            onFindSpecResponse: function(e) {
+                this.set('specList', e.detail.response || []);
+            },
+
+            onAddSpecRow: function() {
+                var grid = this.$['specGrid'] || this.$$('#specGrid');
+                if (!grid) return;
+
+                var seqNo = (this.specList ? this.specList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd:  this.tgtPjtCd,
+                    seqNo:     seqNo,
+                    pjtCd:     this.tgtPjtCd,
+                    ecCostCd:  '',
+                    tgtCostCd: '',
+                    prodGrpNm: '',
+                    carType:   '',
+                    oemNm:     '',
+                    specDesc:  '',
+                    selYn:     'N'
+                });
+            },
+
+            onDeleteSpec: function() {
+                var grid = this.$['specGrid'] || this.$$('#specGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteSpecParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteSpecAjax.generateRequest();
+                });
+            },
+
+            onDeleteSpecResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData('spec');
+            },
+
+            onSaveSpec: function() {
+                var grid = this.$['specGrid'] || this.$$('#specGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveSpecParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveSpecAjax.generateRequest();
+                });
+            },
+
+            onSaveSpecResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('spec');
+            },
+
+            /* ==============================================================
+               TAB 3: 판가정보 — 조회 / 행추가 / 삭제 / 저장
+               ============================================================== */
+
+            onFindPrice: function() {
+                this.$.findPriceAjax.generateRequest();
+            },
+
+            onFindPriceResponse: function(e) {
+                this.set('priceList', e.detail.response || []);
+            },
+
+            onAddPriceRow: function() {
+                var grid = this.$['priceGrid'] || this.$$('#priceGrid');
+                if (!grid) return;
+
+                var seqNo = (this.priceList ? this.priceList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd:     this.tgtPjtCd,
+                    seqNo:        seqNo,
+                    specDesc:     '',
+                    tgtCostCd:    '',
+                    currency:     'KRW',
+                    estSellPrice: 0,
+                    sopYm:        '',
+                    eopYm:        ''
+                });
+            },
+
+            onDeletePrice: function() {
+                var grid = this.$['priceGrid'] || this.$$('#priceGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deletePriceParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deletePriceAjax.generateRequest();
+                });
+            },
+
+            onDeletePriceResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData('price');
+            },
+
+            onSavePrice: function() {
+                var grid = this.$['priceGrid'] || this.$$('#priceGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('savePriceParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.savePriceAjax.generateRequest();
+                });
+            },
+
+            onSavePriceResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('price');
+            },
+
+            /* ==============================================================
+               TAB 4: 수량/할인율 — 조회 / 행추가 / 삭제 / 저장
+               ============================================================== */
+
+            onFindQtyDisc: function() {
+                this.$.findQtyDiscAjax.generateRequest();
+            },
+
+            onFindQtyDiscResponse: function(e) {
+                this.set('qtyDiscList', e.detail.response || []);
+            },
+
+            onAddQtyDiscRow: function() {
+                var grid = this.$['qtyDiscGrid'] || this.$$('#qtyDiscGrid');
+                if (!grid) return;
+
+                var seqNo = (this.qtyDiscList ? this.qtyDiscList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd:  this.tgtPjtCd,
+                    seqNo:     seqNo,
+                    specDesc:  '',
+                    tgtCostCd: '',
+                    yearVal:   '',
+                    qty:       0,
+                    discRate:  0
+                });
+            },
+
+            onDeleteQtyDisc: function() {
+                var grid = this.$['qtyDiscGrid'] || this.$$('#qtyDiscGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteQtyDiscParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteQtyDiscAjax.generateRequest();
+                });
+            },
+
+            onDeleteQtyDiscResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData('qtyDisc');
+            },
+
+            onSaveQtyDisc: function() {
+                var grid = this.$['qtyDiscGrid'] || this.$$('#qtyDiscGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveQtyDiscParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveQtyDiscAjax.generateRequest();
+                });
+            },
+
+            onSaveQtyDiscResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('qtyDisc');
+            },
+
+            /* ==============================================================
+               TAB 5: 개발/평가일정 — 조회 / 행추가 / 삭제 / 저장
+               ============================================================== */
+
+            onFindDevSchedule: function() {
+                this.$.findDevScheduleAjax.generateRequest();
+            },
+
+            onFindDevScheduleResponse: function(e) {
+                this.set('devScheduleList', e.detail.response || []);
+            },
+
+            onAddDevScheduleRow: function() {
+                var grid = this.$['devScheduleGrid'] || this.$$('#devScheduleGrid');
+                if (!grid) return;
+
+                var seqNo = (this.devScheduleList ? this.devScheduleList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd:    this.tgtPjtCd,
+                    seqNo:       seqNo,
+                    schedType:   '',
+                    schedNm:     '',
+                    planStartDt: '',
+                    planEndDt:   '',
+                    evalRound:   '',
+                    evalPeriod:  '',
+                    rmk:         ''
+                });
+            },
+
+            onDeleteDevSchedule: function() {
+                var grid = this.$['devScheduleGrid'] || this.$$('#devScheduleGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteDevScheduleParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteDevScheduleAjax.generateRequest();
+                });
+            },
+
+            onDeleteDevScheduleResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData('devSchedule');
+            },
+
+            onSaveDevSchedule: function() {
+                var grid = this.$['devScheduleGrid'] || this.$$('#devScheduleGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveDevScheduleParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveDevScheduleAjax.generateRequest();
+                });
+            },
+
+            onSaveDevScheduleResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('devSchedule');
+            },
+
+            /* ==============================================================
+               TAB 6: 목표수립일정 — 조회 / 행추가 / 삭제 / 저장
+               ============================================================== */
+
+            onFindSetupSchedule: function() {
+                this.$.findSetupScheduleAjax.generateRequest();
+            },
+
+            onFindSetupScheduleResponse: function(e) {
+                this.set('setupScheduleList', e.detail.response || []);
+            },
+
+            onAddSetupScheduleRow: function() {
+                var grid = this.$['setupScheduleGrid'] || this.$$('#setupScheduleGrid');
+                if (!grid) return;
+
+                var seqNo = (this.setupScheduleList ? this.setupScheduleList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd:  this.tgtPjtCd,
+                    seqNo:     seqNo,
+                    deptNm:    '',
+                    startDt:   '',
+                    endDt:     '',
+                    actEndDt:  '',
+                    procYn:    'N',
+                    delayDays: 0,
+                    emailSent: 'N'
+                });
+            },
+
+            onDeleteSetupSchedule: function() {
+                var grid = this.$['setupScheduleGrid'] || this.$$('#setupScheduleGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteSetupScheduleParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteSetupScheduleAjax.generateRequest();
+                });
+            },
+
+            onDeleteSetupScheduleResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData('setupSchedule');
+            },
+
+            onSaveSetupSchedule: function() {
+                var grid = this.$['setupScheduleGrid'] || this.$$('#setupScheduleGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveSetupScheduleParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveSetupScheduleAjax.generateRequest();
+                });
+            },
+
+            onSaveSetupScheduleResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('setupSchedule');
+            }
+        });
+    </script>
+</dom-module>

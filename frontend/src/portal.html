@@ -164,6 +164,7 @@
     .lnb-group__icon--ec   { background: #F3F2FF; color: #6954FE; }
     .lnb-group__icon--tc   { background: #FFF1F3; color: #F04438; }
     .lnb-group__icon--cc   { background: #FFF6ED; color: #F79009; }
+    .lnb-group__icon--master { background: #E8F5E9; color: #2E7D32; }
     .lnb-group__icon--sys  { background: #F0F1F5; color: #565E73; }
 
     .lnb-group__arrow {
@@ -393,6 +394,7 @@
       <button class="gnb__item is-active" data-menu="ec">견적원가 관리</button>
       <button class="gnb__item" data-menu="tc">목표원가 관리</button>
       <button class="gnb__item" data-menu="cc">현상원가 관리</button>
+      <button class="gnb__item" data-menu="master">기준정보 관리</button>
       <button class="gnb__item" data-menu="sys">시스템 관리</button>
     </nav>
 
@@ -415,14 +417,35 @@
         <span class="lnb-group__arrow">&#9654;</span>
       </button>
       <div class="lnb-items">
-        <a class="lnb-item" data-url="viewer.html?view=es-project-list" data-title="견적 프로젝트 관리" onclick="openTab(this)">
-          견적 프로젝트 관리
+        <a class="lnb-item" data-url="viewer.html?view=es-project-list" data-title="프로젝트 관리" onclick="openTab(this)">
+          프로젝트 관리
         </a>
-        <a class="lnb-item" data-url="viewer.html?view=es-ec-bom-list" data-title="견적BOM 및 단가 관리" onclick="openTab(this)">
-          견적BOM 및 단가 관리
+        <a class="lnb-item" data-url="viewer.html?view=es-ec-detail" data-title="견적정보 등록" onclick="openTab(this)">
+          견적정보 등록
         </a>
-        <a class="lnb-item" data-url="viewer.html?view=es-ec-profit-mgt" data-title="견적기준가 및 수익성 분석" onclick="openTab(this)">
-          견적기준가 및 수익성 분석
+        <a class="lnb-item" data-url="viewer.html?view=es-ec-bom-list" data-title="재료비 관리" onclick="openTab(this)">
+          재료비 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-invest-mgt" data-title="투자비 관리" onclick="openTab(this)">
+          투자비 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-mfg-cost-calc" data-title="제조경비 계산" onclick="openTab(this)">
+          제조경비 계산
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-sga-cost-calc" data-title="판매관리비 계산" onclick="openTab(this)">
+          판매관리비 계산
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-pl-statement" data-title="견적원가 손익계산서" onclick="openTab(this)">
+          견적원가 손익계산서
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-sensitivity" data-title="민감도 분석" onclick="openTab(this)">
+          민감도 분석
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-ec-profit-mgt" data-title="수익성 Factor/WACC 산출" onclick="openTab(this)">
+          수익성 Factor/WACC 산출
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=es-npv-analysis" data-title="수익성 분석 (NPV)" onclick="openTab(this)">
+          수익성 분석 (NPV)
         </a>
       </div>
     </div>
@@ -435,11 +458,20 @@
         <span class="lnb-group__arrow">&#9654;</span>
       </button>
       <div class="lnb-items">
-        <a class="lnb-item" data-url="viewer.html?view=es-target-cost-project-list" data-title="목표원가 프로젝트 등록" onclick="openTab(this)">
-          목표원가 프로젝트 등록
+        <a class="lnb-item" data-url="viewer.html?view=es-target-cost-project-list" data-title="목표원가관리 프로젝트" onclick="openTab(this)">
+          목표원가관리 프로젝트
         </a>
         <a class="lnb-item" data-url="viewer.html?view=es-target-cost-guide-list" data-title="부문별 목표 Guide 산출" onclick="openTab(this)">
           부문별 목표 Guide 산출
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=tc-calc" data-title="목표원가 산출" onclick="openTab(this)">
+          목표원가 산출
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=tc-recalc" data-title="목표원가 재산출" onclick="openTab(this)">
+          목표원가 재산출
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=tc-achievement-status" data-title="목표달성 현황" onclick="openTab(this)">
+          목표달성 현황
         </a>
       </div>
     </div>
@@ -452,11 +484,76 @@
         <span class="lnb-group__arrow">&#9654;</span>
       </button>
       <div class="lnb-items">
-        <a class="lnb-item" data-url="viewer.html?view=es-current-cost-project-list" data-title="현상원가 프로젝트 등록" onclick="openTab(this)">
-          현상원가 프로젝트 등록
+        <a class="lnb-item" data-url="viewer.html?view=es-current-cost-project-list" data-title="현상원가 정보 등록" onclick="openTab(this)">
+          현상원가 정보 등록
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-material-cost" data-title="재료비 관리" onclick="openTab(this)">
+          재료비 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-invest-mgt" data-title="투자비 관리" onclick="openTab(this)">
+          투자비 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-mfg-cost" data-title="제조경비 계산" onclick="openTab(this)">
+          제조경비 계산
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-sga-cost" data-title="판매관리비 계산" onclick="openTab(this)">
+          판매관리비 계산
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-pl-statement" data-title="현상원가 손익계산서" onclick="openTab(this)">
+          현상원가 손익계산서
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-diff-analysis" data-title="차이분석" onclick="openTab(this)">
+          차이분석
         </a>
         <a class="lnb-item" data-url="viewer.html?view=es-achievement-eval-list" data-title="달성도 평가" onclick="openTab(this)">
           달성도 평가
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=cc-actual-eval" data-title="실적 달성도 평가" onclick="openTab(this)">
+          실적 달성도 평가
+        </a>
+      </div>
+    </div>
+
+    <!-- ── 기준정보 관리 (Master) ── -->
+    <div class="lnb-group" data-group="master">
+      <button class="lnb-group__header" onclick="toggleGroup(this)">
+        <span class="lnb-group__icon lnb-group__icon--master">MS</span>
+        기준정보 관리
+        <span class="lnb-group__arrow">&#9654;</span>
+      </button>
+      <div class="lnb-items">
+        <a class="lnb-item" data-url="viewer.html?view=ms-code-mgt" data-title="기준정보 코드관리" onclick="openTab(this)">
+          기준정보 코드관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-corp-tax-wacc" data-title="법인세율/CRP/WACC" onclick="openTab(this)">
+          법인세율/CRP/WACC
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-pl-item" data-title="손익 항목 관리" onclick="openTab(this)">
+          손익 항목 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-exchange-rate" data-title="환율 관리" onclick="openTab(this)">
+          환율 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-raise-rate" data-title="인상율 관리" onclick="openTab(this)">
+          인상율 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-biz-perf-rate" data-title="사업 실적 비율" onclick="openTab(this)">
+          사업 실적 비율
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-prod-line" data-title="기존 생산라인 관리" onclick="openTab(this)">
+          기존 생산라인 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-std-schedule" data-title="표준 일정 관리" onclick="openTab(this)">
+          표준 일정 관리
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-cost-redu-type" data-title="원가 절감 활동 유형" onclick="openTab(this)">
+          원가 절감 활동 유형
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-erp-acct-map" data-title="ERP 제조원가 계정 매핑" onclick="openTab(this)">
+          ERP 제조원가 계정 매핑
+        </a>
+        <a class="lnb-item" data-url="viewer.html?view=ms-redu-tgt-dept" data-title="절감대상 원가항목 및 담당부서" onclick="openTab(this)">
+          절감대상 원가항목 및 담당부서
         </a>
       </div>
     </div>
@@ -530,14 +627,14 @@
           <div class="quick-card__icon lnb-group__icon--tc">TC</div>
           <div>
             <div class="quick-card__text">목표원가</div>
-            <div class="quick-card__desc">프로젝트 / Guide 산출</div>
+            <div class="quick-card__desc">프로젝트 / 산출 / 재산출 / 달성현황</div>
           </div>
         </div>
         <div class="quick-card" onclick="quickOpen('cc','viewer.html?view=es-current-cost-project-list','현상원가 프로젝트 등록')">
           <div class="quick-card__icon lnb-group__icon--cc">CC</div>
           <div>
             <div class="quick-card__text">현상원가</div>
-            <div class="quick-card__desc">프로젝트 / 달성도</div>
+            <div class="quick-card__desc">정보등록 / 재료비 / 투자비 / 손익</div>
           </div>
         </div>
       </div>
@@ -762,8 +859,8 @@
 
     /* ── 숫자 포맷: 원본 (테이블용) ── */
     function formatNumber(n) {
-      if (n == null) return '0';
-      return Number(n).toLocaleString('ko-KR');
+      if (n == null) return 'KRW 0';
+      return 'KRW ' + Number(n).toLocaleString('ko-KR');
     }
 
     /* ── 숫자 포맷: 가독성 단위 변환 (차트/KPI용) ── */

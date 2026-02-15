@@ -1,0 +1,167 @@
+<dom-module id="ms-exchange-rate">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부 — 환율
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/master/data/findListExchRate.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+        <sc-ajax id="saveListAjax"
+                 url="/bp/master/data/saveListExchRate.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveListResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/master/data/deleteListExchRate.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteListResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역
+             ============================================================ -->
+        <sc-search-container on-search="onFindList">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/>
+                    <col/>
+                    <col style="width:120px"/>
+                    <col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="적용년도"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.applyYear}}"
+                                       on-enter="onFindList"
+                                       placeholder="적용년도">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="From통화"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.fromCur}}"
+                                       on-enter="onFindList"
+                                       placeholder="From통화">
+                        </sc-text-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             데이터 그리드 — 환율 관리
+             ============================================================ -->
+        <sc-grid id="gridPanel"
+                 data-provider="{{resultList}}"
+                 editable="true"
+                 class="flex">
+
+            <sc-toolbar>
+                <sc-button text="조회" on-click="onFindList"></sc-button>
+                <sc-button text="추가" on-click="onAddRow"></sc-button>
+                <span class="vt-seperator"></span>
+                <sc-button text="삭제" on-click="onDeleteList"></sc-button>
+                <sc-button text="저장" on-click="onSaveList"></sc-button>
+            </sc-toolbar>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="applyYear"
+                                header-text="적용년도"
+                                width="100"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="fromCur"
+                                header-text="From통화"
+                                width="100"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="toCur"
+                                header-text="To통화"
+                                width="100"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="exchRate"
+                                header-text="환율"
+                                width="130"
+                                editable="true"
+                                text-align="right"
+                                data-type="number">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'ms-exchange-rate',
+
+            properties: {
+                searchParam:  { type: Object, value: function() { return {}; } },
+                resultList:   { type: Array,  value: function() { return []; } },
+                saveParam:    { type: Object, value: function() { return {}; } },
+                deleteParam:  { type: Object, value: function() { return {}; } }
+            },
+
+            /* ── 조회 ── */
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            onFindListResponse: function(e) {
+                this.set('resultList', e.detail.response);
+            },
+
+            /* ── 추가 ── */
+            onAddRow: function() {
+                this.$.gridPanel.addRow({
+                    applyYear: '', fromCur: '', toCur: '', exchRate: 0,
+                    _rowStatus: 'C'
+                });
+            },
+
+            /* ── 저장 ── */
+            onSaveList: function() {
+                var grid = this.$.gridPanel;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveParam', { saveList: modifiedRows });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+
+            onSaveListResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindList();
+            },
+
+            /* ── 삭제 ── */
+            onDeleteList: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteParam', { deleteList: selectedRows });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+
+            onDeleteListResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindList();
+            }
+        });
+    </script>
+</dom-module>

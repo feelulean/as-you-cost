@@ -1,0 +1,725 @@
+<dom-module id="cc-achievement-eval-detail">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+                font-size: 12px;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+            .info-bar {
+                display: flex;
+                gap: 16px;
+                padding: 6px 12px;
+                background: #f8f9fc;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                font-size: 12px;
+            }
+            .info-bar .info-item {
+                display: flex;
+                gap: 4px;
+            }
+            .info-bar .info-item label {
+                font-weight: 600;
+                color: #555;
+            }
+            .info-bar .info-item span {
+                color: #30374F;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+
+        <!-- 프로젝트 정보 조회 -->
+        <sc-ajax id="findPjtInfoAjax"
+                 url="/bp/cost/cc/findCurrentCostPjt.do"
+                 body="{{pjtInfoParam}}"
+                 on-response="onFindPjtInfoResponse">
+        </sc-ajax>
+
+        <!-- 부문별 달성도 조회 -->
+        <sc-ajax id="findDeptAchvAjax"
+                 url="/bp/cost/cc/detail/findListCcDeptAchv.do"
+                 body="{{deptSearchParam}}"
+                 on-response="onFindDeptAchvResponse">
+        </sc-ajax>
+
+        <!-- 부문별 달성도 생성 -->
+        <sc-ajax id="createDeptAchvAjax"
+                 url="/bp/cost/cc/detail/createCcDeptAchv.do"
+                 body="{{createDeptParam}}"
+                 on-response="onCreateDeptAchvResponse">
+        </sc-ajax>
+
+        <!-- 부문별 달성도 저장 -->
+        <sc-ajax id="saveDeptAchvAjax"
+                 url="/bp/cost/cc/detail/saveListCcDeptAchv.do"
+                 body="{{saveDeptParam}}"
+                 on-response="onSaveDeptAchvResponse">
+        </sc-ajax>
+
+        <!-- 부문 및 원가항목별 달성도 조회 -->
+        <sc-ajax id="findItemAchvAjax"
+                 url="/bp/cost/cc/detail/findListCcItemAchv.do"
+                 body="{{itemSearchParam}}"
+                 on-response="onFindItemAchvResponse">
+        </sc-ajax>
+
+        <!-- 부문 및 원가항목별 달성도 생성 -->
+        <sc-ajax id="createItemAchvAjax"
+                 url="/bp/cost/cc/detail/createCcItemAchv.do"
+                 body="{{createItemParam}}"
+                 on-response="onCreateItemAchvResponse">
+        </sc-ajax>
+
+        <!-- 부문 및 원가항목별 달성도 저장 -->
+        <sc-ajax id="saveItemAchvAjax"
+                 url="/bp/cost/cc/detail/saveListCcItemAchv.do"
+                 body="{{saveItemParam}}"
+                 on-response="onSaveItemAchvResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             프로젝트 정보 표시 영역
+             ============================================================ -->
+        <div class="section-title">프로젝트 정보</div>
+        <table class="detail-form-table" style="margin-bottom:12px;">
+            <colgroup>
+                <col style="width:120px"/><col/>
+                <col style="width:120px"/><col/>
+                <col style="width:120px"/><col/>
+            </colgroup>
+            <tr>
+                <th><sc-label text="프로젝트코드"></sc-label></th>
+                <td>{{pjtInfo.ccPjtCd}}</td>
+                <th><sc-label text="프로젝트명"></sc-label></th>
+                <td>{{pjtInfo.pjtNm}}</td>
+                <th><sc-label text="현상차수"></sc-label></th>
+                <td>{{pjtInfo.ccRev}}</td>
+            </tr>
+            <tr>
+                <th><sc-label text="사업부"></sc-label></th>
+                <td>{{pjtInfo.bizUnit}}</td>
+                <th><sc-label text="고객사"></sc-label></th>
+                <td>{{pjtInfo.custNm}}</td>
+                <th><sc-label text="차종"></sc-label></th>
+                <td>{{pjtInfo.carType}}</td>
+            </tr>
+        </table>
+
+        <!-- ============================================================
+             탭 바
+             ============================================================ -->
+        <div class="tab-bar">
+            <button class$="tab-btn {{_activeTab(activeTab,'DEPT')}}"
+                    on-click="_setTab" data-tab="DEPT">부문별 달성도</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'ITEM')}}"
+                    on-click="_setTab" data-tab="ITEM">부문 및 원가항목별 달성도</button>
+        </div>
+
+        <!-- ============================================================
+             TAB 1: 부문별 달성도 (DEPT)
+             ============================================================ -->
+        <template is="dom-if" if="{{_isTab(activeTab,'DEPT')}}">
+            <sc-grid id="deptAchvGrid"
+                     data-provider="{{deptAchvList}}"
+                     editable="true"
+                     class="flex"
+                     on-cell-value-changed="_onDeptCellChanged">
+
+                <sc-toolbar>
+                    <sc-button text="조회"         on-click="onFindDeptAchv"    auth-code="V"></sc-button>
+                    <sc-button text="생성"         on-click="onCreateDeptAchv"  auth-code="S"></sc-button>
+                    <sc-button text="저장"         on-click="onSaveDeptAchv"    auth-code="S"></sc-button>
+                    <sc-button text="엑셀다운로드" on-click="onExcelDeptAchv"   auth-code="V"></sc-button>
+                </sc-toolbar>
+
+                <sc-grid-columns>
+                    <sc-data-column data-field="deptNm"
+                                    header-text="부문"
+                                    width="140"
+                                    text-align="left"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="ecCostAmt"
+                                    header-text="견적원가"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="tgtCostAmt"
+                                    header-text="목표원가"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="saveTgtAmt"
+                                    header-text="절감목표"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="ccCostAmt"
+                                    header-text="현상원가"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="true">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="saveActAmt"
+                                    header-text="절감실적"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="achvRate"
+                                    header-text="달성률(%)"
+                                    width="100"
+                                    text-align="right"
+                                    data-type="number"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="achvYn"
+                                    header-text="달성여부"
+                                    width="80"
+                                    text-align="center"
+                                    editable="false">
+                    </sc-data-column>
+                </sc-grid-columns>
+
+                <sc-grid-fields>
+                    <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                    <sc-grid-field data-field="ccRev"></sc-grid-field>
+                    <sc-grid-field data-field="deptCd"></sc-grid-field>
+                </sc-grid-fields>
+            </sc-grid>
+        </template>
+
+        <!-- ============================================================
+             TAB 2: 부문 및 원가항목별 달성도 (ITEM)
+             ============================================================ -->
+        <template is="dom-if" if="{{_isTab(activeTab,'ITEM')}}">
+            <sc-grid id="itemAchvGrid"
+                     data-provider="{{itemAchvList}}"
+                     editable="true"
+                     class="flex"
+                     on-cell-value-changed="_onItemCellChanged">
+
+                <sc-toolbar>
+                    <sc-button text="조회"         on-click="onFindItemAchv"    auth-code="V"></sc-button>
+                    <sc-button text="생성"         on-click="onCreateItemAchv"  auth-code="S"></sc-button>
+                    <sc-button text="저장"         on-click="onSaveItemAchv"    auth-code="S"></sc-button>
+                    <sc-button text="엑셀다운로드" on-click="onExcelItemAchv"   auth-code="V"></sc-button>
+                </sc-toolbar>
+
+                <sc-grid-columns>
+                    <sc-data-column data-field="deptNm"
+                                    header-text="부문"
+                                    width="120"
+                                    text-align="left"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="itemNm"
+                                    header-text="원가항목"
+                                    width="150"
+                                    text-align="left"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="ecCostAmt"
+                                    header-text="견적원가"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="tgtCostAmt"
+                                    header-text="목표원가"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="saveTgtAmt"
+                                    header-text="절감목표"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="ccCostAmt"
+                                    header-text="현상원가"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="true">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="saveActAmt"
+                                    header-text="절감실적"
+                                    width="120"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="achvRate"
+                                    header-text="달성률(%)"
+                                    width="100"
+                                    text-align="right"
+                                    data-type="number"
+                                    editable="false">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="achvYn"
+                                    header-text="달성여부"
+                                    width="80"
+                                    text-align="center"
+                                    editable="false">
+                    </sc-data-column>
+                </sc-grid-columns>
+
+                <sc-grid-fields>
+                    <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                    <sc-grid-field data-field="ccRev"></sc-grid-field>
+                    <sc-grid-field data-field="deptCd"></sc-grid-field>
+                    <sc-grid-field data-field="itemCd"></sc-grid-field>
+                </sc-grid-fields>
+            </sc-grid>
+        </template>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'cc-achievement-eval-detail',
+
+            properties: {
+                /* ── URL 파라미터 ── */
+                ccPjtCd: {
+                    type: String,
+                    value: ''
+                },
+                ccRev: {
+                    type: String,
+                    value: ''
+                },
+
+                /* ── 프로젝트 정보 ── */
+                pjtInfo: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ── 활성 탭 ── */
+                activeTab: {
+                    type: String,
+                    value: 'DEPT'
+                },
+
+                /* ── 부문별 달성도 데이터 ── */
+                deptAchvList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                /* ── 부문 및 원가항목별 달성도 데이터 ── */
+                itemAchvList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                /* ── Ajax 파라미터 ── */
+                pjtInfoParam:    { type: Object, value: function() { return {}; } },
+                deptSearchParam: { type: Object, value: function() { return {}; } },
+                itemSearchParam: { type: Object, value: function() { return {}; } },
+                createDeptParam: { type: Object, value: function() { return {}; } },
+                createItemParam: { type: Object, value: function() { return {}; } },
+                saveDeptParam:   { type: Object, value: function() { return {}; } },
+                saveItemParam:   { type: Object, value: function() { return {}; } }
+            },
+
+            /* ==============================================================
+               라이프사이클 — 초기화
+               ============================================================== */
+
+            attached: function() {
+                if (this.ccPjtCd) {
+                    this._loadPjtInfo();
+                    this._loadDeptAchv();
+                }
+            },
+
+            /* ==============================================================
+               탭 제어 헬퍼
+               ============================================================== */
+
+            _activeTab: function(activeTab, tabName) {
+                return activeTab === tabName ? 'active' : '';
+            },
+
+            _isTab: function(activeTab, tabName) {
+                return activeTab === tabName;
+            },
+
+            _setTab: function(e) {
+                var tabName = e.currentTarget.getAttribute('data-tab');
+                this.set('activeTab', tabName);
+                this._loadTabData(tabName);
+            },
+
+            _loadTabData: function(tabName) {
+                switch (tabName) {
+                    case 'DEPT':
+                        this._loadDeptAchv();
+                        break;
+                    case 'ITEM':
+                        this._loadItemAchv();
+                        break;
+                }
+            },
+
+            /* ==============================================================
+               프로젝트 정보 조회
+               ============================================================== */
+
+            _loadPjtInfo: function() {
+                this.set('pjtInfoParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findPjtInfoAjax.generateRequest();
+            },
+
+            onFindPjtInfoResponse: function(e) {
+                var data = e.detail.response;
+                if (data) {
+                    this.set('pjtInfo', data);
+                }
+            },
+
+            /* ==============================================================
+               TAB 1: 부문별 달성도 — 조회 / 생성 / 저장
+               ============================================================== */
+
+            onFindDeptAchv: function() {
+                this._loadDeptAchv();
+            },
+
+            _loadDeptAchv: function() {
+                this.set('deptSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findDeptAchvAjax.generateRequest();
+            },
+
+            onFindDeptAchvResponse: function(e) {
+                var data = e.detail.response;
+                if (data && Array.isArray(data)) {
+                    this.set('deptAchvList', data);
+                } else if (data && data.achvList) {
+                    this.set('deptAchvList', data.achvList);
+                } else {
+                    this.set('deptAchvList', []);
+                }
+            },
+
+            /**
+             * 부문별 달성도 데이터 생성
+             * EC(견적)/TC(목표)/CC(현상) 데이터를 조인하여 부문별 초기 데이터를 구성
+             */
+            onCreateDeptAchv: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 코드가 지정되지 않았습니다.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('부문별 달성도 평가 데이터를 생성하시겠습니까?', function() {
+                    me.set('createDeptParam', {
+                        ccPjtCd: me.ccPjtCd,
+                        ccRev:   me.ccRev
+                    });
+                    me.$.createDeptAchvAjax.generateRequest();
+                });
+            },
+
+            onCreateDeptAchvResponse: function(e) {
+                UT.alert('부문별 달성도 평가 데이터가 생성되었습니다.');
+                this._loadDeptAchv();
+            },
+
+            /**
+             * 부문별 달성도 — 현상원가 셀 변경 시 자동 계산
+             * 절감실적 = 견적원가 - 현상원가
+             * 달성률(%) = (절감실적 / 절감목표) * 100
+             * 달성여부: 달성률 >= 100 ? 'Y' : 'N'
+             */
+            _onDeptCellChanged: function(e) {
+                var field = e.detail.dataField;
+                if (field === 'ccCostAmt') {
+                    var grid = this.$$('#deptAchvGrid') || this.$['deptAchvGrid'];
+                    if (!grid) return;
+                    var rowIndex = e.detail.rowIndex;
+
+                    var ecCost  = Number(grid.getCellData(rowIndex, 'ecCostAmt'))  || 0;
+                    var tgtCost = Number(grid.getCellData(rowIndex, 'tgtCostAmt')) || 0;
+                    var ccCost  = Number(grid.getCellData(rowIndex, 'ccCostAmt'))  || 0;
+
+                    // 절감목표 = 견적원가 - 목표원가
+                    var saveTgt = ecCost - tgtCost;
+                    grid.setCellData(rowIndex, 'saveTgtAmt', saveTgt);
+
+                    // 절감실적 = 견적원가 - 현상원가
+                    var saveAct = ecCost - ccCost;
+                    grid.setCellData(rowIndex, 'saveActAmt', saveAct);
+
+                    // 달성률(%) = (절감실적 / 절감목표) * 100
+                    var achvRate = 0;
+                    if (saveTgt !== 0) {
+                        achvRate = Math.round(saveAct / saveTgt * 10000) / 100;
+                    }
+                    grid.setCellData(rowIndex, 'achvRate', achvRate);
+
+                    // 달성여부
+                    var achvYn = achvRate >= 100 ? 'Y' : 'N';
+                    grid.setCellData(rowIndex, 'achvYn', achvYn);
+                }
+            },
+
+            onSaveDeptAchv: function() {
+                var grid = this.$$('#deptAchvGrid') || this.$['deptAchvGrid'];
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveDeptParam', {
+                        ccPjtCd:  me.ccPjtCd,
+                        ccRev:    me.ccRev,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveDeptAchvAjax.generateRequest();
+                });
+            },
+
+            onSaveDeptAchvResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadDeptAchv();
+            },
+
+            onExcelDeptAchv: function() {
+                var grid = this.$$('#deptAchvGrid') || this.$['deptAchvGrid'];
+                if (!grid) return;
+
+                grid.exportToExcel({
+                    fileName: '부문별_달성도_' + (this.ccPjtCd || '') + '.xlsx'
+                });
+            },
+
+            /* ==============================================================
+               TAB 2: 부문 및 원가항목별 달성도 — 조회 / 생성 / 저장
+               ============================================================== */
+
+            onFindItemAchv: function() {
+                this._loadItemAchv();
+            },
+
+            _loadItemAchv: function() {
+                this.set('itemSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findItemAchvAjax.generateRequest();
+            },
+
+            onFindItemAchvResponse: function(e) {
+                var data = e.detail.response;
+                if (data && Array.isArray(data)) {
+                    this.set('itemAchvList', data);
+                } else if (data && data.achvList) {
+                    this.set('itemAchvList', data.achvList);
+                } else {
+                    this.set('itemAchvList', []);
+                }
+            },
+
+            /**
+             * 부문 및 원가항목별 달성도 데이터 생성
+             */
+            onCreateItemAchv: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 코드가 지정되지 않았습니다.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('부문 및 원가항목별 달성도 평가 데이터를 생성하시겠습니까?', function() {
+                    me.set('createItemParam', {
+                        ccPjtCd: me.ccPjtCd,
+                        ccRev:   me.ccRev
+                    });
+                    me.$.createItemAchvAjax.generateRequest();
+                });
+            },
+
+            onCreateItemAchvResponse: function(e) {
+                UT.alert('부문 및 원가항목별 달성도 평가 데이터가 생성되었습니다.');
+                this._loadItemAchv();
+            },
+
+            /**
+             * 부문 및 원가항목별 달성도 — 현상원가 셀 변경 시 자동 계산
+             */
+            _onItemCellChanged: function(e) {
+                var field = e.detail.dataField;
+                if (field === 'ccCostAmt') {
+                    var grid = this.$$('#itemAchvGrid') || this.$['itemAchvGrid'];
+                    if (!grid) return;
+                    var rowIndex = e.detail.rowIndex;
+
+                    var ecCost  = Number(grid.getCellData(rowIndex, 'ecCostAmt'))  || 0;
+                    var tgtCost = Number(grid.getCellData(rowIndex, 'tgtCostAmt')) || 0;
+                    var ccCost  = Number(grid.getCellData(rowIndex, 'ccCostAmt'))  || 0;
+
+                    // 절감목표 = 견적원가 - 목표원가
+                    var saveTgt = ecCost - tgtCost;
+                    grid.setCellData(rowIndex, 'saveTgtAmt', saveTgt);
+
+                    // 절감실적 = 견적원가 - 현상원가
+                    var saveAct = ecCost - ccCost;
+                    grid.setCellData(rowIndex, 'saveActAmt', saveAct);
+
+                    // 달성률(%) = (절감실적 / 절감목표) * 100
+                    var achvRate = 0;
+                    if (saveTgt !== 0) {
+                        achvRate = Math.round(saveAct / saveTgt * 10000) / 100;
+                    }
+                    grid.setCellData(rowIndex, 'achvRate', achvRate);
+
+                    // 달성여부
+                    var achvYn = achvRate >= 100 ? 'Y' : 'N';
+                    grid.setCellData(rowIndex, 'achvYn', achvYn);
+                }
+            },
+
+            onSaveItemAchv: function() {
+                var grid = this.$$('#itemAchvGrid') || this.$['itemAchvGrid'];
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveItemParam', {
+                        ccPjtCd:  me.ccPjtCd,
+                        ccRev:    me.ccRev,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveItemAchvAjax.generateRequest();
+                });
+            },
+
+            onSaveItemAchvResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadItemAchv();
+            },
+
+            onExcelItemAchv: function() {
+                var grid = this.$$('#itemAchvGrid') || this.$['itemAchvGrid'];
+                if (!grid) return;
+
+                grid.exportToExcel({
+                    fileName: '부문_원가항목별_달성도_' + (this.ccPjtCd || '') + '.xlsx'
+                });
+            }
+        });
+    </script>
+</dom-module>

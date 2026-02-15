@@ -277,8 +277,8 @@
 
                 // CFT 확정 금액이 입력된 경우, 총 절감액과 일치 여부 확인
                 if (totalCft > 0 && totalCft !== totalGuide) {
-                    UT.alert('CFT 확정 금액의 합계(' + totalCft.toLocaleString()
-                             + ')가 목표 Guide 총액(' + totalGuide.toLocaleString()
+                    UT.alert('CFT 확정 금액의 합계(KRW ' + totalCft.toLocaleString()
+                             + ')가 목표 Guide 총액(KRW ' + totalGuide.toLocaleString()
                              + ')과 일치하지 않습니다.');
                     return;
                 }

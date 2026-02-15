@@ -1,0 +1,513 @@
+<dom-module id="ms-corp-tax-wacc">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부 — 법인세율
+             ============================================================ -->
+        <sc-ajax id="findCorpTaxAjax"
+                 url="/bp/master/data/findListCorpTax.do"
+                 body="{{corpTaxSearchParam}}"
+                 on-response="onFindCorpTaxResponse">
+        </sc-ajax>
+        <sc-ajax id="saveCorpTaxAjax"
+                 url="/bp/master/data/saveListCorpTax.do"
+                 body="{{saveCorpTaxParam}}"
+                 on-response="onSaveCorpTaxResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteCorpTaxAjax"
+                 url="/bp/master/data/deleteListCorpTax.do"
+                 body="{{deleteCorpTaxParam}}"
+                 on-response="onDeleteCorpTaxResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             Ajax 선언부 — CRP
+             ============================================================ -->
+        <sc-ajax id="findCrpAjax"
+                 url="/bp/master/data/findListCrp.do"
+                 body="{{crpSearchParam}}"
+                 on-response="onFindCrpResponse">
+        </sc-ajax>
+        <sc-ajax id="saveCrpAjax"
+                 url="/bp/master/data/saveListCrp.do"
+                 body="{{saveCrpParam}}"
+                 on-response="onSaveCrpResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteCrpAjax"
+                 url="/bp/master/data/deleteListCrp.do"
+                 body="{{deleteCrpParam}}"
+                 on-response="onDeleteCrpResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             Ajax 선언부 — Betau
+             ============================================================ -->
+        <sc-ajax id="findBetauAjax"
+                 url="/bp/master/data/findListBetau.do"
+                 body="{{betauSearchParam}}"
+                 on-response="onFindBetauResponse">
+        </sc-ajax>
+        <sc-ajax id="saveBetauAjax"
+                 url="/bp/master/data/saveListBetau.do"
+                 body="{{saveBetauParam}}"
+                 on-response="onSaveBetauResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteBetauAjax"
+                 url="/bp/master/data/deleteListBetau.do"
+                 body="{{deleteBetauParam}}"
+                 on-response="onDeleteBetauResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             상/하 3분할 레이아웃
+             ============================================================ -->
+        <div style="display:flex; flex-direction:column; height:100%; gap:8px;">
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 상단: 수익성 분석(법인세율) 관리
+                 ═══════════════════════════════════════════════════════════ -->
+            <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+                <sc-search-container on-search="onFindCorpTax">
+                    <table>
+                        <colgroup>
+                            <col style="width:120px"/><col/>
+                        </colgroup>
+                        <tr>
+                            <th><sc-label text="국가명"></sc-label></th>
+                            <td>
+                                <sc-combobox-field value="{{corpTaxSearchParam.countryNm}}"
+                                                   items="{{codes.countryList}}"
+                                                   display-field="label"
+                                                   value-field="data"
+                                                   placeholder="전체">
+                                </sc-combobox-field>
+                            </td>
+                        </tr>
+                    </table>
+                </sc-search-container>
+
+                <sc-grid id="corpTaxGrid"
+                         data-provider="{{corpTaxList}}"
+                         editable="true"
+                         selection-mode="checkbox"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-label text="수익성 분석(법인세율) 관리" style="font-weight:600; margin-right:auto;"></sc-label>
+                        <sc-button text="추가" on-click="onAddCorpTax"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteCorpTax"></sc-button>
+                        <span class="vt-seperator"></span>
+                        <sc-button text="저장" on-click="onSaveCorpTax"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-combobox-column data-field="countryNm"
+                                           header-text="국가명"
+                                           width="150"
+                                           editable="true"
+                                           items="{{codes.countryList}}"
+                                           display-field="label"
+                                           value-field="data">
+                        </sc-combobox-column>
+                        <sc-data-column data-field="baseYear"
+                                        header-text="기준연도"
+                                        width="100"
+                                        editable="true"
+                                        text-align="center"
+                                        data-type="number">
+                        </sc-data-column>
+                        <sc-data-column data-field="applyYear"
+                                        header-text="적용연도"
+                                        width="100"
+                                        editable="true"
+                                        text-align="center"
+                                        data-type="number">
+                        </sc-data-column>
+                        <sc-data-column data-field="taxRate"
+                                        header-text="세율(%)"
+                                        width="100"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number">
+                        </sc-data-column>
+                        <sc-data-column data-field="modrId"
+                                        header-text="변경자"
+                                        width="100"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+                        <sc-data-column data-field="modDttm"
+                                        header-text="변경일자"
+                                        width="140"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 하단: CRP (좌) / Betau (우) 좌우 분할
+                 ═══════════════════════════════════════════════════════════ -->
+            <div style="flex:1; display:flex; gap:8px; min-height:0;">
+
+                <!-- ─── 하단 좌측: 수익성 분석(CRP) 관리 ─── -->
+                <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+                    <sc-search-container on-search="onFindCrp">
+                        <table>
+                            <colgroup>
+                                <col style="width:120px"/><col/>
+                            </colgroup>
+                            <tr>
+                                <th><sc-label text="국가명"></sc-label></th>
+                                <td>
+                                    <sc-combobox-field value="{{crpSearchParam.countryNm}}"
+                                                       items="{{codes.countryList}}"
+                                                       display-field="label"
+                                                       value-field="data"
+                                                       placeholder="전체">
+                                    </sc-combobox-field>
+                                </td>
+                            </tr>
+                        </table>
+                    </sc-search-container>
+
+                    <sc-grid id="crpGrid"
+                             data-provider="{{crpList}}"
+                             editable="true"
+                             selection-mode="checkbox"
+                             class="flex">
+
+                        <sc-toolbar>
+                            <sc-label text="수익성 분석(CRP) 관리" style="font-weight:600; margin-right:auto;"></sc-label>
+                            <sc-button text="추가" on-click="onAddCrp"></sc-button>
+                            <sc-button text="삭제" on-click="onDeleteCrp"></sc-button>
+                            <span class="vt-seperator"></span>
+                            <sc-button text="저장" on-click="onSaveCrp"></sc-button>
+                        </sc-toolbar>
+
+                        <sc-grid-columns>
+                            <sc-combobox-column data-field="countryNm"
+                                               header-text="국가명"
+                                               width="130"
+                                               editable="true"
+                                               items="{{codes.countryList}}"
+                                               display-field="label"
+                                               value-field="data">
+                            </sc-combobox-column>
+                            <sc-data-column data-field="baseYear"
+                                            header-text="기준연도"
+                                            width="90"
+                                            editable="true"
+                                            text-align="center"
+                                            data-type="number">
+                            </sc-data-column>
+                            <sc-data-column data-field="crpVal"
+                                            header-text="CRP(%)"
+                                            width="100"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+                            <sc-data-column data-field="modrId"
+                                            header-text="변경자"
+                                            width="90"
+                                            editable="false"
+                                            text-align="center">
+                            </sc-data-column>
+                            <sc-data-column data-field="modDttm"
+                                            header-text="변경일자"
+                                            width="130"
+                                            editable="false"
+                                            text-align="center">
+                            </sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </div>
+
+                <!-- ─── 하단 우측: WACC 기초정보(Betau) 관리 ─── -->
+                <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+                    <sc-search-container on-search="onFindBetau">
+                        <table>
+                            <colgroup>
+                                <col style="width:120px"/><col/>
+                            </colgroup>
+                            <tr>
+                                <th><sc-label text="기준연도"></sc-label></th>
+                                <td>
+                                    <sc-text-field value="{{betauSearchParam.baseYear}}"
+                                                   on-enter="onFindBetau"
+                                                   placeholder="기준연도">
+                                    </sc-text-field>
+                                </td>
+                            </tr>
+                        </table>
+                    </sc-search-container>
+
+                    <sc-grid id="betauGrid"
+                             data-provider="{{betauList}}"
+                             editable="true"
+                             selection-mode="checkbox"
+                             class="flex">
+
+                        <sc-toolbar>
+                            <sc-label text="WACC 기초정보(Betau) 관리" style="font-weight:600; margin-right:auto;"></sc-label>
+                            <sc-button text="추가" on-click="onAddBetau"></sc-button>
+                            <sc-button text="삭제" on-click="onDeleteBetau"></sc-button>
+                            <span class="vt-seperator"></span>
+                            <sc-button text="저장" on-click="onSaveBetau"></sc-button>
+                        </sc-toolbar>
+
+                        <sc-grid-columns>
+                            <sc-data-column data-field="baseYear"
+                                            header-text="기준연도"
+                                            width="90"
+                                            editable="true"
+                                            text-align="center"
+                                            data-type="number">
+                            </sc-data-column>
+                            <sc-combobox-column data-field="bizUnit"
+                                               header-text="사업부"
+                                               width="120"
+                                               editable="true"
+                                               items="{{codes.bizUnitList}}"
+                                               display-field="label"
+                                               value-field="data">
+                            </sc-combobox-column>
+                            <sc-data-column data-field="betauVal"
+                                            header-text="Betau"
+                                            width="100"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+                            <sc-data-column data-field="modrId"
+                                            header-text="변경자"
+                                            width="90"
+                                            editable="false"
+                                            text-align="center">
+                            </sc-data-column>
+                            <sc-data-column data-field="modDttm"
+                                            header-text="변경일자"
+                                            width="130"
+                                            editable="false"
+                                            text-align="center">
+                            </sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'ms-corp-tax-wacc',
+
+            properties: {
+                corpTaxSearchParam: { type: Object, value: function() { return {}; } },
+                crpSearchParam:     { type: Object, value: function() { return {}; } },
+                betauSearchParam:   { type: Object, value: function() { return {}; } },
+                corpTaxList:        { type: Array,  value: function() { return []; } },
+                crpList:            { type: Array,  value: function() { return []; } },
+                betauList:          { type: Array,  value: function() { return []; } },
+                saveCorpTaxParam:   { type: Object, value: function() { return {}; } },
+                deleteCorpTaxParam: { type: Object, value: function() { return {}; } },
+                saveCrpParam:       { type: Object, value: function() { return {}; } },
+                deleteCrpParam:     { type: Object, value: function() { return {}; } },
+                saveBetauParam:     { type: Object, value: function() { return {}; } },
+                deleteBetauParam:   { type: Object, value: function() { return {}; } },
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            countryList: [
+                                { label: '한국',   data: '한국' },
+                                { label: '미국',   data: '미국' },
+                                { label: '중국',   data: '중국' },
+                                { label: '일본',   data: '일본' },
+                                { label: '독일',   data: '독일' },
+                                { label: '인도',   data: '인도' },
+                                { label: '체코',   data: '체코' },
+                                { label: '브라질', data: '브라질' },
+                                { label: '멕시코', data: '멕시코' },
+                                { label: '터키',   data: '터키' }
+                            ],
+                            bizUnitList: [
+                                { label: 'SEAT', data: 'SEAT' },
+                                { label: 'PT',   data: 'PT' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ================================================================
+               법인세율 CRUD
+               ================================================================ */
+            onFindCorpTax: function() {
+                this.$.findCorpTaxAjax.generateRequest();
+            },
+
+            onFindCorpTaxResponse: function(e) {
+                this.set('corpTaxList', e.detail.response);
+            },
+
+            onAddCorpTax: function() {
+                this.$.corpTaxGrid.addRow({
+                    countryNm: '', baseYear: '', applyYear: '', taxRate: 0,
+                    _rowStatus: 'C'
+                });
+            },
+
+            onSaveCorpTax: function() {
+                var grid = this.$.corpTaxGrid;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveCorpTaxParam', { saveList: modifiedRows });
+                    me.$.saveCorpTaxAjax.generateRequest();
+                });
+            },
+
+            onSaveCorpTaxResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindCorpTax();
+            },
+
+            onDeleteCorpTax: function() {
+                var grid = this.$.corpTaxGrid;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteCorpTaxParam', { deleteList: selectedRows });
+                    me.$.deleteCorpTaxAjax.generateRequest();
+                });
+            },
+
+            onDeleteCorpTaxResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindCorpTax();
+            },
+
+            /* ================================================================
+               CRP CRUD
+               ================================================================ */
+            onFindCrp: function() {
+                this.$.findCrpAjax.generateRequest();
+            },
+
+            onFindCrpResponse: function(e) {
+                this.set('crpList', e.detail.response);
+            },
+
+            onAddCrp: function() {
+                this.$.crpGrid.addRow({
+                    countryNm: '', baseYear: '', crpVal: 0,
+                    _rowStatus: 'C'
+                });
+            },
+
+            onSaveCrp: function() {
+                var grid = this.$.crpGrid;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveCrpParam', { saveList: modifiedRows });
+                    me.$.saveCrpAjax.generateRequest();
+                });
+            },
+
+            onSaveCrpResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindCrp();
+            },
+
+            onDeleteCrp: function() {
+                var grid = this.$.crpGrid;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteCrpParam', { deleteList: selectedRows });
+                    me.$.deleteCrpAjax.generateRequest();
+                });
+            },
+
+            onDeleteCrpResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindCrp();
+            },
+
+            /* ================================================================
+               Betau CRUD
+               ================================================================ */
+            onFindBetau: function() {
+                this.$.findBetauAjax.generateRequest();
+            },
+
+            onFindBetauResponse: function(e) {
+                this.set('betauList', e.detail.response);
+            },
+
+            onAddBetau: function() {
+                this.$.betauGrid.addRow({
+                    baseYear: '', bizUnit: '', betauVal: 0,
+                    _rowStatus: 'C'
+                });
+            },
+
+            onSaveBetau: function() {
+                var grid = this.$.betauGrid;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveBetauParam', { saveList: modifiedRows });
+                    me.$.saveBetauAjax.generateRequest();
+                });
+            },
+
+            onSaveBetauResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindBetau();
+            },
+
+            onDeleteBetau: function() {
+                var grid = this.$.betauGrid;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteBetauParam', { deleteList: selectedRows });
+                    me.$.deleteBetauAjax.generateRequest();
+                });
+            },
+
+            onDeleteBetauResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindBetau();
+            }
+        });
+    </script>
+</dom-module>

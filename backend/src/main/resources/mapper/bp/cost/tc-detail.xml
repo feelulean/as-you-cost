@@ -1,0 +1,797 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="smartcost.app.bp.cost.tcdetail.TcDetailRepository">
+
+    <!-- ═══════════════════════════════════════════
+         목표원가 상세 (PCM_TGT_PJT_MSTR)
+         ═══════════════════════════════════════════ -->
+    <select id="findTcDetail" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD        AS "tgtPjtCd",
+               A.PJT_NM            AS "pjtNm",
+               A.BIZ_UNIT          AS "bizUnit",
+               A.CUST_NM           AS "custNm",
+               A.CAR_TYPE          AS "carType",
+               A.OEM_NM            AS "oemNm",
+               A.PROD_GRP          AS "prodGrp",
+               A.EC_PJT_CD         AS "ecPjtCd",
+               A.RMK               AS "rmk",
+               A.STS               AS "sts"
+          FROM PCM_TGT_PJT_MSTR A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+    </select>
+
+    <select id="countTcDetail" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_PJT_MSTR A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+    </select>
+
+    <!-- ═══════════════════════════════════════════
+         담당자 (PCM_TGT_MANAGER)
+         ═══════════════════════════════════════════ -->
+    <select id="findListManager" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
+               A.MGR_SEQ     AS "mgrSeq",
+               A.DEPT_DIV    AS "deptDiv",
+               A.MGR_NM      AS "mgrNm",
+               A.POSITION    AS "position",
+               A.DEPT_NM     AS "deptNm",
+               A.ROLE_CD     AS "roleCd",
+               A.EMAIL       AS "email",
+               A.RMK         AS "rmk",
+               A.STS         AS "sts"
+          FROM PCM_TGT_MANAGER A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.MGR_SEQ
+    </select>
+
+    <select id="countManager" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_MANAGER A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.MGR_SEQ     = #{p.mgrSeq}
+    </select>
+
+    <insert id="insertManager" parameterType="map">
+        INSERT INTO PCM_TGT_MANAGER (
+            TEN_ID, TGT_PJT_CD, MGR_SEQ, DEPT_DIV, MGR_NM,
+            POSITION, DEPT_NM, ROLE_CD, EMAIL, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.mgrSeq}, #{p.deptDiv}, #{p.mgrNm},
+            #{p.position}, #{p.deptNm}, #{p.roleCd}, #{p.email}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateManager" parameterType="map">
+        UPDATE PCM_TGT_MANAGER
+           SET DEPT_DIV  = #{p.deptDiv},
+               MGR_NM    = #{p.mgrNm},
+               POSITION  = #{p.position},
+               DEPT_NM   = #{p.deptNm},
+               ROLE_CD   = #{p.roleCd},
+               EMAIL     = #{p.email},
+               RMK       = #{p.rmk},
+               STS       = #{p.sts},
+               MODR_ID   = #{g.username},
+               MOD_DTTM  = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND MGR_SEQ     = #{p.mgrSeq}
+    </update>
+
+    <delete id="deleteManager" parameterType="map">
+        DELETE FROM PCM_TGT_MANAGER
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND MGR_SEQ     = #{p.mgrSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         사양 (PCM_TGT_SPEC)
+         ═══════════════════════════════════════════ -->
+    <select id="findListSpec" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
+               A.SPEC_SEQ    AS "specSeq",
+               A.EC_PJT_CD   AS "ecPjtCd",
+               A.TGT_COST_CD AS "tgtCostCd",
+               A.PROD_GRP    AS "prodGrp",
+               A.CAR_TYPE    AS "carType",
+               A.OEM_NM      AS "oemNm",
+               A.SPEC_DESC   AS "specDesc",
+               A.SEL_YN      AS "selYn",
+               A.RMK         AS "rmk",
+               A.STS         AS "sts"
+          FROM PCM_TGT_SPEC A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.SPEC_SEQ
+    </select>
+
+    <select id="countSpec" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_SPEC A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.SPEC_SEQ    = #{p.specSeq}
+    </select>
+
+    <insert id="insertSpec" parameterType="map">
+        INSERT INTO PCM_TGT_SPEC (
+            TEN_ID, TGT_PJT_CD, SPEC_SEQ, EC_PJT_CD, TGT_COST_CD,
+            PROD_GRP, CAR_TYPE, OEM_NM, SPEC_DESC, SEL_YN,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.specSeq}, #{p.ecPjtCd}, #{p.tgtCostCd},
+            #{p.prodGrp}, #{p.carType}, #{p.oemNm}, #{p.specDesc}, #{p.selYn},
+            #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateSpec" parameterType="map">
+        UPDATE PCM_TGT_SPEC
+           SET EC_PJT_CD   = #{p.ecPjtCd},
+               TGT_COST_CD = #{p.tgtCostCd},
+               PROD_GRP    = #{p.prodGrp},
+               CAR_TYPE    = #{p.carType},
+               OEM_NM      = #{p.oemNm},
+               SPEC_DESC   = #{p.specDesc},
+               SEL_YN      = #{p.selYn},
+               RMK         = #{p.rmk},
+               STS         = #{p.sts},
+               MODR_ID     = #{g.username},
+               MOD_DTTM    = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND SPEC_SEQ    = #{p.specSeq}
+    </update>
+
+    <delete id="deleteSpec" parameterType="map">
+        DELETE FROM PCM_TGT_SPEC
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND SPEC_SEQ    = #{p.specSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         판가 (PCM_TGT_PRICE)
+         ═══════════════════════════════════════════ -->
+    <select id="findListPrice" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD    AS "tgtPjtCd",
+               A.PRICE_SEQ     AS "priceSeq",
+               A.SPEC_DESC     AS "specDesc",
+               A.TGT_COST_CD   AS "tgtCostCd",
+               A.CURRENCY      AS "currency",
+               A.EST_SELL_PRICE AS "estSellPrice",
+               A.SOP_YM        AS "sopYm",
+               A.EOP_YM        AS "eopYm",
+               A.RMK           AS "rmk",
+               A.STS           AS "sts"
+          FROM PCM_TGT_PRICE A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.PRICE_SEQ
+    </select>
+
+    <select id="countPrice" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_PRICE A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.PRICE_SEQ   = #{p.priceSeq}
+    </select>
+
+    <insert id="insertPrice" parameterType="map">
+        INSERT INTO PCM_TGT_PRICE (
+            TEN_ID, TGT_PJT_CD, PRICE_SEQ, SPEC_DESC, TGT_COST_CD,
+            CURRENCY, EST_SELL_PRICE, SOP_YM, EOP_YM,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.priceSeq}, #{p.specDesc}, #{p.tgtCostCd},
+            #{p.currency}, #{p.estSellPrice}, #{p.sopYm}, #{p.eopYm},
+            #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updatePrice" parameterType="map">
+        UPDATE PCM_TGT_PRICE
+           SET SPEC_DESC      = #{p.specDesc},
+               TGT_COST_CD    = #{p.tgtCostCd},
+               CURRENCY       = #{p.currency},
+               EST_SELL_PRICE = #{p.estSellPrice},
+               SOP_YM         = #{p.sopYm},
+               EOP_YM         = #{p.eopYm},
+               RMK            = #{p.rmk},
+               STS            = #{p.sts},
+               MODR_ID        = #{g.username},
+               MOD_DTTM       = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND PRICE_SEQ   = #{p.priceSeq}
+    </update>
+
+    <delete id="deletePrice" parameterType="map">
+        DELETE FROM PCM_TGT_PRICE
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND PRICE_SEQ   = #{p.priceSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         수량/할인율 (PCM_TGT_QTY_DISC)
+         ═══════════════════════════════════════════ -->
+    <select id="findListQtyDisc" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
+               A.QTY_SEQ     AS "qtySeq",
+               A.SPEC_DESC   AS "specDesc",
+               A.TGT_COST_CD AS "tgtCostCd",
+               A.YEAR_VAL    AS "yearVal",
+               A.QTY         AS "qty",
+               A.DISC_RATE   AS "discRate",
+               A.RMK         AS "rmk",
+               A.STS         AS "sts"
+          FROM PCM_TGT_QTY_DISC A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.QTY_SEQ
+    </select>
+
+    <select id="countQtyDisc" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_QTY_DISC A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.QTY_SEQ     = #{p.qtySeq}
+    </select>
+
+    <insert id="insertQtyDisc" parameterType="map">
+        INSERT INTO PCM_TGT_QTY_DISC (
+            TEN_ID, TGT_PJT_CD, QTY_SEQ, SPEC_DESC, TGT_COST_CD,
+            YEAR_VAL, QTY, DISC_RATE, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.qtySeq}, #{p.specDesc}, #{p.tgtCostCd},
+            #{p.yearVal}, #{p.qty}, #{p.discRate}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateQtyDisc" parameterType="map">
+        UPDATE PCM_TGT_QTY_DISC
+           SET SPEC_DESC   = #{p.specDesc},
+               TGT_COST_CD = #{p.tgtCostCd},
+               YEAR_VAL    = #{p.yearVal},
+               QTY         = #{p.qty},
+               DISC_RATE   = #{p.discRate},
+               RMK         = #{p.rmk},
+               STS         = #{p.sts},
+               MODR_ID     = #{g.username},
+               MOD_DTTM    = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND QTY_SEQ     = #{p.qtySeq}
+    </update>
+
+    <delete id="deleteQtyDisc" parameterType="map">
+        DELETE FROM PCM_TGT_QTY_DISC
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND QTY_SEQ     = #{p.qtySeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         개발일정 (PCM_TGT_DEV_SCHEDULE)
+         ═══════════════════════════════════════════ -->
+    <select id="findListDevSchedule" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD    AS "tgtPjtCd",
+               A.SCHED_SEQ     AS "schedSeq",
+               A.SCHED_TYPE    AS "schedType",
+               A.SCHED_NM      AS "schedNm",
+               A.PLAN_START_DT AS "planStartDt",
+               A.PLAN_END_DT   AS "planEndDt",
+               A.ACT_END_DT    AS "actEndDt",
+               A.EVAL_ROUND    AS "evalRound",
+               A.EVAL_PERIOD   AS "evalPeriod",
+               A.DELAY_DAYS    AS "delayDays",
+               A.PROC_YN       AS "procYn",
+               A.SORT_ORDER    AS "sortOrder",
+               A.RMK           AS "rmk",
+               A.STS           AS "sts"
+          FROM PCM_TGT_DEV_SCHEDULE A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.SORT_ORDER
+    </select>
+
+    <select id="countDevSchedule" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_DEV_SCHEDULE A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.SCHED_SEQ   = #{p.schedSeq}
+    </select>
+
+    <insert id="insertDevSchedule" parameterType="map">
+        INSERT INTO PCM_TGT_DEV_SCHEDULE (
+            TEN_ID, TGT_PJT_CD, SCHED_SEQ, SCHED_TYPE, SCHED_NM,
+            PLAN_START_DT, PLAN_END_DT, ACT_END_DT,
+            EVAL_ROUND, EVAL_PERIOD, DELAY_DAYS, PROC_YN,
+            SORT_ORDER, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.schedSeq}, #{p.schedType}, #{p.schedNm},
+            #{p.planStartDt}, #{p.planEndDt}, #{p.actEndDt},
+            #{p.evalRound}, #{p.evalPeriod}, #{p.delayDays}, #{p.procYn},
+            #{p.sortOrder}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateDevSchedule" parameterType="map">
+        UPDATE PCM_TGT_DEV_SCHEDULE
+           SET SCHED_TYPE    = #{p.schedType},
+               SCHED_NM      = #{p.schedNm},
+               PLAN_START_DT = #{p.planStartDt},
+               PLAN_END_DT   = #{p.planEndDt},
+               ACT_END_DT    = #{p.actEndDt},
+               EVAL_ROUND    = #{p.evalRound},
+               EVAL_PERIOD   = #{p.evalPeriod},
+               DELAY_DAYS    = #{p.delayDays},
+               PROC_YN       = #{p.procYn},
+               SORT_ORDER    = #{p.sortOrder},
+               RMK           = #{p.rmk},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND SCHED_SEQ   = #{p.schedSeq}
+    </update>
+
+    <delete id="deleteDevSchedule" parameterType="map">
+        DELETE FROM PCM_TGT_DEV_SCHEDULE
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND SCHED_SEQ   = #{p.schedSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         양산일정 (PCM_TGT_SETUP_SCHEDULE)
+         ═══════════════════════════════════════════ -->
+    <select id="findListSetupSchedule" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
+               A.SETUP_SEQ   AS "setupSeq",
+               A.DEPT_NM     AS "deptNm",
+               A.START_DT    AS "startDt",
+               A.END_DT      AS "endDt",
+               A.ACT_END_DT  AS "actEndDt",
+               A.PROC_YN     AS "procYn",
+               A.DELAY_DAYS  AS "delayDays",
+               A.EMAIL_SENT  AS "emailSent",
+               A.RMK         AS "rmk",
+               A.STS         AS "sts"
+          FROM PCM_TGT_SETUP_SCHEDULE A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.SETUP_SEQ
+    </select>
+
+    <select id="countSetupSchedule" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_SETUP_SCHEDULE A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.SETUP_SEQ   = #{p.setupSeq}
+    </select>
+
+    <insert id="insertSetupSchedule" parameterType="map">
+        INSERT INTO PCM_TGT_SETUP_SCHEDULE (
+            TEN_ID, TGT_PJT_CD, SETUP_SEQ, DEPT_NM,
+            START_DT, END_DT, ACT_END_DT, PROC_YN,
+            DELAY_DAYS, EMAIL_SENT, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.setupSeq}, #{p.deptNm},
+            #{p.startDt}, #{p.endDt}, #{p.actEndDt}, #{p.procYn},
+            #{p.delayDays}, #{p.emailSent}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateSetupSchedule" parameterType="map">
+        UPDATE PCM_TGT_SETUP_SCHEDULE
+           SET DEPT_NM    = #{p.deptNm},
+               START_DT   = #{p.startDt},
+               END_DT     = #{p.endDt},
+               ACT_END_DT = #{p.actEndDt},
+               PROC_YN    = #{p.procYn},
+               DELAY_DAYS = #{p.delayDays},
+               EMAIL_SENT = #{p.emailSent},
+               RMK        = #{p.rmk},
+               STS        = #{p.sts},
+               MODR_ID    = #{g.username},
+               MOD_DTTM   = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND SETUP_SEQ   = #{p.setupSeq}
+    </update>
+
+    <delete id="deleteSetupSchedule" parameterType="map">
+        DELETE FROM PCM_TGT_SETUP_SCHEDULE
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND SETUP_SEQ   = #{p.setupSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         원가등록 (PCM_TGT_COST_REG)
+         ═══════════════════════════════════════════ -->
+    <select id="findListCostReg" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD    AS "tgtPjtCd",
+               A.COST_SEQ      AS "costSeq",
+               A.COST_ITEM_CD  AS "costItemCd",
+               A.COST_ITEM_NM  AS "costItemNm",
+               A.DEPT_CD       AS "deptCd",
+               A.DEPT_NM       AS "deptNm",
+               A.EC_COST_AMT   AS "ecCostAmt",
+               A.GUIDE_AMT     AS "guideAmt",
+               A.FINAL_TGT_AMT AS "finalTgtAmt",
+               A.DIFF_AMT      AS "diffAmt",
+               A.ADJ_REASON    AS "adjReason",
+               A.SAVE_TGT_AMT  AS "saveTgtAmt",
+               A.CONFIRM_YN    AS "confirmYn",
+               A.VIEW_MODE     AS "viewMode",
+               A.RMK           AS "rmk",
+               A.STS           AS "sts"
+          FROM PCM_TGT_COST_REG A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+        <if test="p.costItemCd != null and p.costItemCd != ''">
+           AND A.COST_ITEM_CD = #{p.costItemCd}
+        </if>
+         ORDER BY A.COST_SEQ
+    </select>
+
+    <select id="countCostReg" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_COST_REG A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.COST_SEQ    = #{p.costSeq}
+    </select>
+
+    <insert id="insertCostReg" parameterType="map">
+        INSERT INTO PCM_TGT_COST_REG (
+            TEN_ID, TGT_PJT_CD, COST_SEQ, COST_ITEM_CD, COST_ITEM_NM,
+            DEPT_CD, DEPT_NM, EC_COST_AMT, GUIDE_AMT, FINAL_TGT_AMT,
+            DIFF_AMT, ADJ_REASON, SAVE_TGT_AMT, CONFIRM_YN, VIEW_MODE,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.costSeq}, #{p.costItemCd}, #{p.costItemNm},
+            #{p.deptCd}, #{p.deptNm}, #{p.ecCostAmt}, #{p.guideAmt}, #{p.finalTgtAmt},
+            #{p.diffAmt}, #{p.adjReason}, #{p.saveTgtAmt}, #{p.confirmYn}, #{p.viewMode},
+            #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateCostReg" parameterType="map">
+        UPDATE PCM_TGT_COST_REG
+           SET COST_ITEM_CD  = #{p.costItemCd},
+               COST_ITEM_NM  = #{p.costItemNm},
+               DEPT_CD       = #{p.deptCd},
+               DEPT_NM       = #{p.deptNm},
+               EC_COST_AMT   = #{p.ecCostAmt},
+               GUIDE_AMT     = #{p.guideAmt},
+               FINAL_TGT_AMT = #{p.finalTgtAmt},
+               DIFF_AMT      = #{p.diffAmt},
+               ADJ_REASON    = #{p.adjReason},
+               SAVE_TGT_AMT  = #{p.saveTgtAmt},
+               CONFIRM_YN    = #{p.confirmYn},
+               VIEW_MODE     = #{p.viewMode},
+               RMK           = #{p.rmk},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND COST_SEQ    = #{p.costSeq}
+    </update>
+
+    <delete id="deleteCostReg" parameterType="map">
+        DELETE FROM PCM_TGT_COST_REG
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND COST_SEQ    = #{p.costSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         달성계획 (PCM_TGT_ACHV_PLAN)
+         ═══════════════════════════════════════════ -->
+    <select id="findListAchvPlan" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD    AS "tgtPjtCd",
+               A.PLAN_SEQ      AS "planSeq",
+               A.COST_ITEM_CD  AS "costItemCd",
+               A.COST_ITEM_NM  AS "costItemNm",
+               A.EC_COST_AMT   AS "ecCostAmt",
+               A.TGT_COST_AMT  AS "tgtCostAmt",
+               A.SAVE_TGT_AMT  AS "saveTgtAmt",
+               A.SAVE_PLAN_AMT AS "savePlanAmt",
+               A.CONFIRM_YN    AS "confirmYn",
+               A.RMK           AS "rmk",
+               A.STS           AS "sts"
+          FROM PCM_TGT_ACHV_PLAN A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+        <if test="p.costItemCd != null and p.costItemCd != ''">
+           AND A.COST_ITEM_CD = #{p.costItemCd}
+        </if>
+         ORDER BY A.PLAN_SEQ
+    </select>
+
+    <select id="countAchvPlan" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_ACHV_PLAN A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.PLAN_SEQ    = #{p.planSeq}
+    </select>
+
+    <insert id="insertAchvPlan" parameterType="map">
+        INSERT INTO PCM_TGT_ACHV_PLAN (
+            TEN_ID, TGT_PJT_CD, PLAN_SEQ, COST_ITEM_CD, COST_ITEM_NM,
+            EC_COST_AMT, TGT_COST_AMT, SAVE_TGT_AMT, SAVE_PLAN_AMT,
+            CONFIRM_YN, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.planSeq}, #{p.costItemCd}, #{p.costItemNm},
+            #{p.ecCostAmt}, #{p.tgtCostAmt}, #{p.saveTgtAmt}, #{p.savePlanAmt},
+            #{p.confirmYn}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateAchvPlan" parameterType="map">
+        UPDATE PCM_TGT_ACHV_PLAN
+           SET COST_ITEM_CD  = #{p.costItemCd},
+               COST_ITEM_NM  = #{p.costItemNm},
+               EC_COST_AMT   = #{p.ecCostAmt},
+               TGT_COST_AMT  = #{p.tgtCostAmt},
+               SAVE_TGT_AMT  = #{p.saveTgtAmt},
+               SAVE_PLAN_AMT = #{p.savePlanAmt},
+               CONFIRM_YN    = #{p.confirmYn},
+               RMK           = #{p.rmk},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND PLAN_SEQ    = #{p.planSeq}
+    </update>
+
+    <delete id="deleteAchvPlan" parameterType="map">
+        DELETE FROM PCM_TGT_ACHV_PLAN
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND PLAN_SEQ    = #{p.planSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         달성계획 상세 (PCM_TGT_ACHV_PLAN_DTL)
+         ═══════════════════════════════════════════ -->
+    <select id="findListAchvPlanDtl" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
+               A.PLAN_SEQ    AS "planSeq",
+               A.DTL_SEQ     AS "dtlSeq",
+               A.LEVEL1      AS "level1",
+               A.LEVEL2      AS "level2",
+               A.LEVEL3      AS "level3",
+               A.SAVE_AMT    AS "saveAmt",
+               A.FILE_NM     AS "fileNm",
+               A.FILE_PATH   AS "filePath",
+               A.RMK         AS "rmk",
+               A.STS         AS "sts"
+          FROM PCM_TGT_ACHV_PLAN_DTL A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+        <if test="p.planSeq != null and p.planSeq != ''">
+           AND A.PLAN_SEQ    = #{p.planSeq}
+        </if>
+         ORDER BY A.PLAN_SEQ, A.DTL_SEQ
+    </select>
+
+    <select id="countAchvPlanDtl" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_ACHV_PLAN_DTL A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.PLAN_SEQ    = #{p.planSeq}
+           AND A.DTL_SEQ     = #{p.dtlSeq}
+    </select>
+
+    <insert id="insertAchvPlanDtl" parameterType="map">
+        INSERT INTO PCM_TGT_ACHV_PLAN_DTL (
+            TEN_ID, TGT_PJT_CD, PLAN_SEQ, DTL_SEQ,
+            LEVEL1, LEVEL2, LEVEL3, SAVE_AMT,
+            FILE_NM, FILE_PATH, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.planSeq}, #{p.dtlSeq},
+            #{p.level1}, #{p.level2}, #{p.level3}, #{p.saveAmt},
+            #{p.fileNm}, #{p.filePath}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateAchvPlanDtl" parameterType="map">
+        UPDATE PCM_TGT_ACHV_PLAN_DTL
+           SET LEVEL1    = #{p.level1},
+               LEVEL2    = #{p.level2},
+               LEVEL3    = #{p.level3},
+               SAVE_AMT  = #{p.saveAmt},
+               FILE_NM   = #{p.fileNm},
+               FILE_PATH = #{p.filePath},
+               RMK       = #{p.rmk},
+               STS       = #{p.sts},
+               MODR_ID   = #{g.username},
+               MOD_DTTM  = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND PLAN_SEQ    = #{p.planSeq}
+           AND DTL_SEQ     = #{p.dtlSeq}
+    </update>
+
+    <delete id="deleteAchvPlanDtl" parameterType="map">
+        DELETE FROM PCM_TGT_ACHV_PLAN_DTL
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND PLAN_SEQ    = #{p.planSeq}
+           AND DTL_SEQ     = #{p.dtlSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         재산출 (PCM_TGT_RECALC)
+         ═══════════════════════════════════════════ -->
+    <select id="findListRecalc" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD          AS "tgtPjtCd",
+               A.RECALC_SEQ          AS "recalcSeq",
+               A.CC_GRP_CD           AS "ccGrpCd",
+               A.CC_ROUND            AS "ccRound",
+               A.TGT_PROFIT_RATE     AS "tgtProfitRate",
+               A.FINAL_TGT_PROFIT_RATE AS "finalTgtProfitRate",
+               A.RMK                 AS "rmk",
+               A.STS                 AS "sts"
+          FROM PCM_TGT_RECALC A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+         ORDER BY A.RECALC_SEQ
+    </select>
+
+    <select id="countRecalc" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_RECALC A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND A.RECALC_SEQ  = #{p.recalcSeq}
+    </select>
+
+    <insert id="insertRecalc" parameterType="map">
+        INSERT INTO PCM_TGT_RECALC (
+            TEN_ID, TGT_PJT_CD, RECALC_SEQ, CC_GRP_CD, CC_ROUND,
+            TGT_PROFIT_RATE, FINAL_TGT_PROFIT_RATE,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.recalcSeq}, #{p.ccGrpCd}, #{p.ccRound},
+            #{p.tgtProfitRate}, #{p.finalTgtProfitRate},
+            #{p.rmk}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateRecalc" parameterType="map">
+        UPDATE PCM_TGT_RECALC
+           SET CC_GRP_CD             = #{p.ccGrpCd},
+               CC_ROUND              = #{p.ccRound},
+               TGT_PROFIT_RATE       = #{p.tgtProfitRate},
+               FINAL_TGT_PROFIT_RATE = #{p.finalTgtProfitRate},
+               RMK                   = #{p.rmk},
+               STS                   = #{p.sts},
+               MODR_ID               = #{g.username},
+               MOD_DTTM              = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND RECALC_SEQ  = #{p.recalcSeq}
+    </update>
+
+    <delete id="deleteRecalc" parameterType="map">
+        DELETE FROM PCM_TGT_RECALC
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+           AND RECALC_SEQ  = #{p.recalcSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         달성현황 (PCM_TGT_ACHV_STATUS)
+         ═══════════════════════════════════════════ -->
+    <select id="findListAchvStatus" parameterType="map" resultType="map">
+        SELECT A.TGT_PJT_CD    AS "tgtPjtCd",
+               A.PJT_NM        AS "pjtNm",
+               A.BIZ_UNIT      AS "bizUnit",
+               A.PROD_GRP      AS "prodGrp",
+               A.OEM_NM        AS "oemNm",
+               A.CAR_TYPE      AS "carType",
+               A.EC_TOTAL_AMT  AS "ecTotalAmt",
+               A.TGT_TOTAL_AMT AS "tgtTotalAmt",
+               A.CUR_TOTAL_AMT AS "curTotalAmt",
+               A.SAVE_TGT_AMT  AS "saveTgtAmt",
+               A.SAVE_ACT_AMT  AS "saveActAmt",
+               A.ACHV_RATE     AS "achvRate",
+               A.ACHV_YN       AS "achvYn",
+               A.STS           AS "sts"
+          FROM PCM_TGT_ACHV_STATUS A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+    </select>
+
+    <select id="countAchvStatus" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_TGT_ACHV_STATUS A
+         WHERE A.TEN_ID      = #{g.tenant}
+           AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
+    </select>
+
+    <insert id="insertAchvStatus" parameterType="map">
+        INSERT INTO PCM_TGT_ACHV_STATUS (
+            TEN_ID, TGT_PJT_CD, PJT_NM, BIZ_UNIT, PROD_GRP,
+            OEM_NM, CAR_TYPE, EC_TOTAL_AMT, TGT_TOTAL_AMT, CUR_TOTAL_AMT,
+            SAVE_TGT_AMT, SAVE_ACT_AMT, ACHV_RATE, ACHV_YN, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.pjtNm}, #{p.bizUnit}, #{p.prodGrp},
+            #{p.oemNm}, #{p.carType}, #{p.ecTotalAmt}, #{p.tgtTotalAmt}, #{p.curTotalAmt},
+            #{p.saveTgtAmt}, #{p.saveActAmt}, #{p.achvRate}, #{p.achvYn}, COALESCE(#{p.sts}, 'T'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateAchvStatus" parameterType="map">
+        UPDATE PCM_TGT_ACHV_STATUS
+           SET PJT_NM        = #{p.pjtNm},
+               BIZ_UNIT      = #{p.bizUnit},
+               PROD_GRP      = #{p.prodGrp},
+               OEM_NM        = #{p.oemNm},
+               CAR_TYPE      = #{p.carType},
+               EC_TOTAL_AMT  = #{p.ecTotalAmt},
+               TGT_TOTAL_AMT = #{p.tgtTotalAmt},
+               CUR_TOTAL_AMT = #{p.curTotalAmt},
+               SAVE_TGT_AMT  = #{p.saveTgtAmt},
+               SAVE_ACT_AMT  = #{p.saveActAmt},
+               ACHV_RATE     = #{p.achvRate},
+               ACHV_YN       = #{p.achvYn},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+    </update>
+
+    <delete id="deleteAchvStatus" parameterType="map">
+        DELETE FROM PCM_TGT_ACHV_STATUS
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+    </delete>
+
+</mapper>

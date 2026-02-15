@@ -170,10 +170,11 @@
     this.appendChild(wrap);
   };
 
-  /** 숫자 포맷 (콤마) */
-  function formatNumber(val) {
+  /** 숫자 포맷 (콤마) — format='amt'이면 통화(KRW) 접두 */
+  function formatNumber(val, format) {
     var n = Number(val);
     if (isNaN(n)) return val;
+    if (format === 'amt') return 'KRW ' + n.toLocaleString();
     return n.toLocaleString();
   }
 
@@ -234,7 +235,7 @@
         td.appendChild(inp);
       } else {
         if (col.format === 'amt' || col.format === '#,###') {
-          val = formatNumber(val);
+          val = formatNumber(val, col.format);
         }
         if (col.tag === 'sc-checkbox-column') {
           val = (String(val) === 'Y') ? 'Y' : 'N';
@@ -283,7 +284,7 @@
         td.style.textAlign = col.align;
         var val = row[col.field];
         if (val == null) val = '';
-        if (col.format === 'amt' || col.format === '#,###') val = formatNumber(val);
+        if (col.format === 'amt' || col.format === '#,###') val = formatNumber(val, col.format);
         if (col.field === this._treeField) {
           var indent = depth * 20;
           var prefix = (row.children && row.children.length > 0) ? '\u25BC ' : '  \u2022 ';
@@ -349,7 +350,7 @@
         } else {
           var col = this._columns[c];
           var displayVal = val;
-          if (col.format === 'amt' || col.format === '#,###') displayVal = formatNumber(val);
+          if (col.format === 'amt' || col.format === '#,###') displayVal = formatNumber(val, col.format);
           var link = td.querySelector('a');
           if (link) {
             link.textContent = displayVal == null ? '' : displayVal;

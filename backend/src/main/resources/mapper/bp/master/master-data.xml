@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    기준정보 관리 Mapper
+    테이블: PCM_CORP_TAX, PCM_CRP, PCM_BETAU, PCM_PROD_LINE, PCM_PL_ITEM,
+           PCM_BIZ_PERF_RATE, PCM_EXCH_RATE, PCM_RAISE_RATE, PCM_STD_SCHEDULE,
+           PCM_COST_REDU_TYPE, PCM_ERP_ACCT_MAP, PCM_REDU_TGT_DEPT
+-->
+<mapper namespace="smartcost.app.bp.master.MasterDataRepository">
+
+    <!-- ================================================================
+         1. 법인세율 (PCM_CORP_TAX)
+         ================================================================ -->
+    <select id="findListCorpTax" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , COUNTRY_NM   AS "countryNm"
+              , BASE_YEAR    AS "baseYear"
+              , APPLY_YEAR   AS "applyYear"
+              , TAX_RATE     AS "taxRate"
+              , RMK          AS "rmk"
+              , MODR_ID      AS "modrId"
+              , TO_CHAR(MOD_DTTM, 'YYYY-MM-DD HH24:MI') AS "modDttm"
+          FROM  PCM_CORP_TAX
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.countryNm != null and p.countryNm != ''">
+           AND  COUNTRY_NM = #{p.countryNm}
+        </if>
+        <if test="p.baseYear != null and p.baseYear != ''">
+           AND  BASE_YEAR = #{p.baseYear}
+        </if>
+         ORDER BY BASE_YEAR DESC, COUNTRY_NM, APPLY_YEAR
+    </select>
+
+    <insert id="insertCorpTax" parameterType="map">
+        INSERT INTO PCM_CORP_TAX (TEN_ID, COUNTRY_NM, BASE_YEAR, APPLY_YEAR, TAX_RATE, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.countryNm}, #{p.baseYear}, #{p.applyYear}, #{p.taxRate}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateCorpTax" parameterType="map">
+        UPDATE PCM_CORP_TAX
+           SET COUNTRY_NM = #{p.countryNm}
+             , BASE_YEAR  = #{p.baseYear}
+             , APPLY_YEAR = #{p.applyYear}
+             , TAX_RATE   = #{p.taxRate}
+             , RMK        = #{p.rmk}
+             , MODR_ID    = #{g.username}
+             , MOD_DTTM   = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteCorpTax" parameterType="map">
+        DELETE FROM PCM_CORP_TAX
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         2. CRP (PCM_CRP)
+         ================================================================ -->
+    <select id="findListCrp" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , COUNTRY_NM   AS "countryNm"
+              , BASE_YEAR    AS "baseYear"
+              , CRP_VAL      AS "crpVal"
+              , RMK          AS "rmk"
+              , MODR_ID      AS "modrId"
+              , TO_CHAR(MOD_DTTM, 'YYYY-MM-DD HH24:MI') AS "modDttm"
+          FROM  PCM_CRP
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.countryNm != null and p.countryNm != ''">
+           AND  COUNTRY_NM = #{p.countryNm}
+        </if>
+        <if test="p.baseYear != null and p.baseYear != ''">
+           AND  BASE_YEAR = #{p.baseYear}
+        </if>
+         ORDER BY BASE_YEAR DESC, COUNTRY_NM
+    </select>
+
+    <insert id="insertCrp" parameterType="map">
+        INSERT INTO PCM_CRP (TEN_ID, COUNTRY_NM, BASE_YEAR, CRP_VAL, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.countryNm}, #{p.baseYear}, #{p.crpVal}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateCrp" parameterType="map">
+        UPDATE PCM_CRP
+           SET COUNTRY_NM = #{p.countryNm}
+             , BASE_YEAR  = #{p.baseYear}
+             , CRP_VAL    = #{p.crpVal}
+             , RMK        = #{p.rmk}
+             , MODR_ID    = #{g.username}
+             , MOD_DTTM   = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteCrp" parameterType="map">
+        DELETE FROM PCM_CRP
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         3. BETAU (PCM_BETAU)
+         ================================================================ -->
+    <select id="findListBetau" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , BASE_YEAR    AS "baseYear"
+              , BIZ_UNIT     AS "bizUnit"
+              , BETAU_VAL    AS "betauVal"
+              , RMK          AS "rmk"
+              , MODR_ID      AS "modrId"
+              , TO_CHAR(MOD_DTTM, 'YYYY-MM-DD HH24:MI') AS "modDttm"
+          FROM  PCM_BETAU
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.baseYear != null and p.baseYear != ''">
+           AND  BASE_YEAR = #{p.baseYear}
+        </if>
+         ORDER BY BASE_YEAR DESC, BIZ_UNIT
+    </select>
+
+    <insert id="insertBetau" parameterType="map">
+        INSERT INTO PCM_BETAU (TEN_ID, BASE_YEAR, BIZ_UNIT, BETAU_VAL, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.baseYear}, #{p.bizUnit}, #{p.betauVal}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateBetau" parameterType="map">
+        UPDATE PCM_BETAU
+           SET BASE_YEAR = #{p.baseYear}
+             , BIZ_UNIT  = #{p.bizUnit}
+             , BETAU_VAL = #{p.betauVal}
+             , RMK       = #{p.rmk}
+             , MODR_ID   = #{g.username}
+             , MOD_DTTM  = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteBetau" parameterType="map">
+        DELETE FROM PCM_BETAU
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         4. 생산라인 (PCM_PROD_LINE)
+         ================================================================ -->
+    <select id="findListProdLine" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , BASE_YEAR    AS "baseYear"
+              , PLANT_CD     AS "plantCd"
+              , LINE_NM      AS "lineNm"
+              , PROD_NM      AS "prodNm"
+              , CAPACITY     AS "capacity"
+              , RMK          AS "rmk"
+          FROM  PCM_PROD_LINE
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.baseYear != null and p.baseYear != ''">
+           AND  BASE_YEAR = #{p.baseYear}
+        </if>
+        <if test="p.plantCd != null and p.plantCd != ''">
+           AND  PLANT_CD = #{p.plantCd}
+        </if>
+         ORDER BY BASE_YEAR DESC, PLANT_CD, LINE_NM
+    </select>
+
+    <insert id="insertProdLine" parameterType="map">
+        INSERT INTO PCM_PROD_LINE (TEN_ID, BASE_YEAR, PLANT_CD, LINE_NM, PROD_NM, CAPACITY, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.baseYear}, #{p.plantCd}, #{p.lineNm}, #{p.prodNm}, #{p.capacity}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateProdLine" parameterType="map">
+        UPDATE PCM_PROD_LINE
+           SET BASE_YEAR = #{p.baseYear}
+             , PLANT_CD  = #{p.plantCd}
+             , LINE_NM   = #{p.lineNm}
+             , PROD_NM   = #{p.prodNm}
+             , CAPACITY  = #{p.capacity}
+             , RMK       = #{p.rmk}
+             , MODR_ID   = #{g.username}
+             , MOD_DTTM  = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteProdLine" parameterType="map">
+        DELETE FROM PCM_PROD_LINE
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         5. P/L 항목 (PCM_PL_ITEM) - ITEM_CD가 PK, SEQ_NO 없음
+         ================================================================ -->
+    <select id="findListPlItem" parameterType="map" resultType="map">
+        SELECT  ITEM_CD      AS "itemCd"
+              , ITEM_NM      AS "itemNm"
+              , UP_ITEM_CD   AS "upItemCd"
+              , ITEM_TYPE    AS "itemType"
+              , LVL          AS "lvl"
+              , SORT_NO      AS "sortNo"
+              , RMK          AS "rmk"
+          FROM  PCM_PL_ITEM
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.itemCd != null and p.itemCd != ''">
+           AND  ITEM_CD LIKE '%' || #{p.itemCd} || '%'
+        </if>
+        <if test="p.itemNm != null and p.itemNm != ''">
+           AND  ITEM_NM LIKE '%' || #{p.itemNm} || '%'
+        </if>
+         ORDER BY SORT_NO, ITEM_CD
+    </select>
+
+    <insert id="insertPlItem" parameterType="map">
+        INSERT INTO PCM_PL_ITEM (TEN_ID, ITEM_CD, ITEM_NM, UP_ITEM_CD, ITEM_TYPE, LVL, SORT_NO, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.itemCd}, #{p.itemNm}, #{p.upItemCd}, #{p.itemType}, #{p.lvl}, #{p.sortNo}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updatePlItem" parameterType="map">
+        UPDATE PCM_PL_ITEM
+           SET ITEM_NM    = #{p.itemNm}
+             , UP_ITEM_CD = #{p.upItemCd}
+             , ITEM_TYPE  = #{p.itemType}
+             , LVL        = #{p.lvl}
+             , SORT_NO    = #{p.sortNo}
+             , RMK        = #{p.rmk}
+             , MODR_ID    = #{g.username}
+             , MOD_DTTM   = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND ITEM_CD = #{p.itemCd}
+    </update>
+
+    <delete id="deletePlItem" parameterType="map">
+        DELETE FROM PCM_PL_ITEM
+         WHERE TEN_ID = #{g.tenant}
+           AND ITEM_CD = #{p.itemCd}
+    </delete>
+
+    <!-- ================================================================
+         6. 사업실적비율 (PCM_BIZ_PERF_RATE)
+         ================================================================ -->
+    <select id="findListBizPerfRate" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , BASE_YEAR    AS "baseYear"
+              , CORP_CD      AS "corpCd"
+              , BIZ_UNIT     AS "bizUnit"
+              , ITEM_CD      AS "itemCd"
+              , PERF_RATE    AS "perfRate"
+              , RMK          AS "rmk"
+          FROM  PCM_BIZ_PERF_RATE
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.baseYear != null and p.baseYear != ''">
+           AND  BASE_YEAR = #{p.baseYear}
+        </if>
+        <if test="p.corpCd != null and p.corpCd != ''">
+           AND  CORP_CD = #{p.corpCd}
+        </if>
+        <if test="p.bizUnit != null and p.bizUnit != ''">
+           AND  BIZ_UNIT = #{p.bizUnit}
+        </if>
+         ORDER BY BASE_YEAR DESC, CORP_CD, BIZ_UNIT, ITEM_CD
+    </select>
+
+    <insert id="insertBizPerfRate" parameterType="map">
+        INSERT INTO PCM_BIZ_PERF_RATE (TEN_ID, BASE_YEAR, CORP_CD, BIZ_UNIT, ITEM_CD, PERF_RATE, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.baseYear}, #{p.corpCd}, #{p.bizUnit}, #{p.itemCd}, #{p.perfRate}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateBizPerfRate" parameterType="map">
+        UPDATE PCM_BIZ_PERF_RATE
+           SET BASE_YEAR = #{p.baseYear}
+             , CORP_CD   = #{p.corpCd}
+             , BIZ_UNIT  = #{p.bizUnit}
+             , ITEM_CD   = #{p.itemCd}
+             , PERF_RATE = #{p.perfRate}
+             , RMK       = #{p.rmk}
+             , MODR_ID   = #{g.username}
+             , MOD_DTTM  = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteBizPerfRate" parameterType="map">
+        DELETE FROM PCM_BIZ_PERF_RATE
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         7. 환율 (PCM_EXCH_RATE)
+         ================================================================ -->
+    <select id="findListExchRate" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , APPLY_YEAR   AS "applyYear"
+              , FROM_CUR     AS "fromCur"
+              , TO_CUR       AS "toCur"
+              , EXCH_RATE    AS "exchRate"
+              , RMK          AS "rmk"
+          FROM  PCM_EXCH_RATE
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.applyYear != null and p.applyYear != ''">
+           AND  APPLY_YEAR = #{p.applyYear}
+        </if>
+        <if test="p.fromCur != null and p.fromCur != ''">
+           AND  FROM_CUR = #{p.fromCur}
+        </if>
+         ORDER BY APPLY_YEAR DESC, FROM_CUR, TO_CUR
+    </select>
+
+    <insert id="insertExchRate" parameterType="map">
+        INSERT INTO PCM_EXCH_RATE (TEN_ID, APPLY_YEAR, FROM_CUR, TO_CUR, EXCH_RATE, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.applyYear}, #{p.fromCur}, #{p.toCur}, #{p.exchRate}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateExchRate" parameterType="map">
+        UPDATE PCM_EXCH_RATE
+           SET APPLY_YEAR = #{p.applyYear}
+             , FROM_CUR   = #{p.fromCur}
+             , TO_CUR     = #{p.toCur}
+             , EXCH_RATE  = #{p.exchRate}
+             , RMK        = #{p.rmk}
+             , MODR_ID    = #{g.username}
+             , MOD_DTTM   = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteExchRate" parameterType="map">
+        DELETE FROM PCM_EXCH_RATE
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         8. 인상률 (PCM_RAISE_RATE)
+         ================================================================ -->
+    <select id="findListRaiseRate" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , APPLY_YEAR   AS "applyYear"
+              , CORP_CD      AS "corpCd"
+              , PLANT_CD     AS "plantCd"
+              , ITEM_CD      AS "itemCd"
+              , RAISE_RATE   AS "raiseRate"
+              , RMK          AS "rmk"
+          FROM  PCM_RAISE_RATE
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.applyYear != null and p.applyYear != ''">
+           AND  APPLY_YEAR = #{p.applyYear}
+        </if>
+        <if test="p.corpCd != null and p.corpCd != ''">
+           AND  CORP_CD = #{p.corpCd}
+        </if>
+        <if test="p.plantCd != null and p.plantCd != ''">
+           AND  PLANT_CD = #{p.plantCd}
+        </if>
+        <if test="p.itemCd != null and p.itemCd != ''">
+           AND  ITEM_CD = #{p.itemCd}
+        </if>
+         ORDER BY APPLY_YEAR DESC, CORP_CD, PLANT_CD, ITEM_CD
+    </select>
+
+    <insert id="insertRaiseRate" parameterType="map">
+        INSERT INTO PCM_RAISE_RATE (TEN_ID, APPLY_YEAR, CORP_CD, PLANT_CD, ITEM_CD, RAISE_RATE, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.applyYear}, #{p.corpCd}, #{p.plantCd}, #{p.itemCd}, #{p.raiseRate}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateRaiseRate" parameterType="map">
+        UPDATE PCM_RAISE_RATE
+           SET APPLY_YEAR = #{p.applyYear}
+             , CORP_CD    = #{p.corpCd}
+             , PLANT_CD   = #{p.plantCd}
+             , ITEM_CD    = #{p.itemCd}
+             , RAISE_RATE = #{p.raiseRate}
+             , RMK        = #{p.rmk}
+             , MODR_ID    = #{g.username}
+             , MOD_DTTM   = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteRaiseRate" parameterType="map">
+        DELETE FROM PCM_RAISE_RATE
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         9. 표준일정 (PCM_STD_SCHEDULE)
+         ================================================================ -->
+    <select id="findListStdSchedule" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , TASK_NM      AS "taskNm"
+              , LEAD_DAYS    AS "leadDays"
+              , DEPT_CD      AS "deptCd"
+              , RMK          AS "rmk"
+          FROM  PCM_STD_SCHEDULE
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.taskNm != null and p.taskNm != ''">
+           AND  TASK_NM LIKE '%' || #{p.taskNm} || '%'
+        </if>
+        <if test="p.deptCd != null and p.deptCd != ''">
+           AND  DEPT_CD = #{p.deptCd}
+        </if>
+         ORDER BY SEQ_NO
+    </select>
+
+    <insert id="insertStdSchedule" parameterType="map">
+        INSERT INTO PCM_STD_SCHEDULE (TEN_ID, TASK_NM, LEAD_DAYS, DEPT_CD, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.taskNm}, #{p.leadDays}, #{p.deptCd}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateStdSchedule" parameterType="map">
+        UPDATE PCM_STD_SCHEDULE
+           SET TASK_NM   = #{p.taskNm}
+             , LEAD_DAYS = #{p.leadDays}
+             , DEPT_CD   = #{p.deptCd}
+             , RMK       = #{p.rmk}
+             , MODR_ID   = #{g.username}
+             , MOD_DTTM  = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteStdSchedule" parameterType="map">
+        DELETE FROM PCM_STD_SCHEDULE
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         10. 원가절감유형 (PCM_COST_REDU_TYPE)
+         ================================================================ -->
+    <select id="findListCostReduType" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , ITEM_CD      AS "itemCd"
+              , CLASS1       AS "class1"
+              , CLASS2       AS "class2"
+              , CLASS3       AS "class3"
+              , RMK          AS "rmk"
+          FROM  PCM_COST_REDU_TYPE
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.class1 != null and p.class1 != ''">
+           AND  CLASS1 LIKE '%' || #{p.class1} || '%'
+        </if>
+         ORDER BY ITEM_CD, CLASS1, CLASS2, CLASS3
+    </select>
+
+    <insert id="insertCostReduType" parameterType="map">
+        INSERT INTO PCM_COST_REDU_TYPE (TEN_ID, ITEM_CD, CLASS1, CLASS2, CLASS3, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.itemCd}, #{p.class1}, #{p.class2}, #{p.class3}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateCostReduType" parameterType="map">
+        UPDATE PCM_COST_REDU_TYPE
+           SET ITEM_CD = #{p.itemCd}
+             , CLASS1  = #{p.class1}
+             , CLASS2  = #{p.class2}
+             , CLASS3  = #{p.class3}
+             , RMK     = #{p.rmk}
+             , MODR_ID = #{g.username}
+             , MOD_DTTM = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteCostReduType" parameterType="map">
+        DELETE FROM PCM_COST_REDU_TYPE
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         11. ERP 계정매핑 (PCM_ERP_ACCT_MAP)
+         ================================================================ -->
+    <select id="findListErpAcctMap" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , FROM_CD      AS "fromCd"
+              , TO_CD        AS "toCd"
+              , ITEM_NM      AS "itemNm"
+              , RMK          AS "rmk"
+          FROM  PCM_ERP_ACCT_MAP
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.fromCd != null and p.fromCd != ''">
+           AND  FROM_CD LIKE '%' || #{p.fromCd} || '%'
+        </if>
+        <if test="p.toCd != null and p.toCd != ''">
+           AND  TO_CD LIKE '%' || #{p.toCd} || '%'
+        </if>
+         ORDER BY FROM_CD, TO_CD
+    </select>
+
+    <insert id="insertErpAcctMap" parameterType="map">
+        INSERT INTO PCM_ERP_ACCT_MAP (TEN_ID, FROM_CD, TO_CD, ITEM_NM, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.fromCd}, #{p.toCd}, #{p.itemNm}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateErpAcctMap" parameterType="map">
+        UPDATE PCM_ERP_ACCT_MAP
+           SET FROM_CD = #{p.fromCd}
+             , TO_CD   = #{p.toCd}
+             , ITEM_NM = #{p.itemNm}
+             , RMK     = #{p.rmk}
+             , MODR_ID = #{g.username}
+             , MOD_DTTM = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteErpAcctMap" parameterType="map">
+        DELETE FROM PCM_ERP_ACCT_MAP
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+    <!-- ================================================================
+         12. 절감대상부서 (PCM_REDU_TGT_DEPT)
+         ================================================================ -->
+    <select id="findListReduTgtDept" parameterType="map" resultType="map">
+        SELECT  SEQ_NO       AS "seqNo"
+              , ITEM_NM      AS "itemNm"
+              , DTL_ITEM_NM  AS "dtlItemNm"
+              , DEPT_CD      AS "deptCd"
+              , RESP_RATE    AS "respRate"
+              , RMK          AS "rmk"
+          FROM  PCM_REDU_TGT_DEPT
+         WHERE  TEN_ID = #{g.tenant}
+        <if test="p.itemNm != null and p.itemNm != ''">
+           AND  ITEM_NM LIKE '%' || #{p.itemNm} || '%'
+        </if>
+        <if test="p.dtlItemNm != null and p.dtlItemNm != ''">
+           AND  DTL_ITEM_NM LIKE '%' || #{p.dtlItemNm} || '%'
+        </if>
+        <if test="p.deptCd != null and p.deptCd != ''">
+           AND  DEPT_CD = #{p.deptCd}
+        </if>
+         ORDER BY ITEM_NM, DTL_ITEM_NM, DEPT_CD
+    </select>
+
+    <insert id="insertReduTgtDept" parameterType="map">
+        INSERT INTO PCM_REDU_TGT_DEPT (TEN_ID, ITEM_NM, DTL_ITEM_NM, DEPT_CD, RESP_RATE, RMK, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        VALUES (#{g.tenant}, #{p.itemNm}, #{p.dtlItemNm}, #{p.deptCd}, #{p.respRate}, #{p.rmk}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+    </insert>
+
+    <update id="updateReduTgtDept" parameterType="map">
+        UPDATE PCM_REDU_TGT_DEPT
+           SET ITEM_NM     = #{p.itemNm}
+             , DTL_ITEM_NM = #{p.dtlItemNm}
+             , DEPT_CD     = #{p.deptCd}
+             , RESP_RATE   = #{p.respRate}
+             , RMK         = #{p.rmk}
+             , MODR_ID     = #{g.username}
+             , MOD_DTTM    = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </update>
+
+    <delete id="deleteReduTgtDept" parameterType="map">
+        DELETE FROM PCM_REDU_TGT_DEPT
+         WHERE TEN_ID = #{g.tenant}
+           AND SEQ_NO = #{p.seqNo}
+    </delete>
+
+</mapper>

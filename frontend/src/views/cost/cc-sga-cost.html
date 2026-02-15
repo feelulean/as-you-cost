@@ -1,0 +1,333 @@
+<dom-module id="cc-sga-cost">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+
+        <!-- 판매관리비 데이터 조회 -->
+        <sc-ajax id="findSgaCostAjax"
+                 url="/bp/cost/cc/detail/findListCcSgaCost.do"
+                 body="{{sgaSearchParam}}"
+                 on-response="onFindSgaCostResponse">
+        </sc-ajax>
+
+        <!-- 판매관리비 계산 요청 -->
+        <sc-ajax id="calculateSgaCostAjax"
+                 url="/bp/cost/cc/detail/calculateCcSgaCost.do"
+                 body="{{calcParam}}"
+                 on-response="onCalculateSgaCostResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             상단: 비율 입력 폼
+             ============================================================ -->
+        <div class="section-title">판매관리비 비율 입력 (SG&A Rate)</div>
+
+        <sc-toolbar>
+            <sc-button text="계산"      on-click="onCalculateSgaCost" auth-code="S"></sc-button>
+            <sc-button text="계산완료"   on-click="onCompleteSgaCost"  auth-code="S"></sc-button>
+        </sc-toolbar>
+
+        <table class="detail-form-table">
+            <colgroup>
+                <col style="width:140px"/><col/>
+                <col style="width:140px"/><col/>
+            </colgroup>
+            <tr>
+                <th><sc-label text="판매인건비(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.salesLaborRate}}"></sc-number-field>
+                </td>
+                <th><sc-label text="운반비(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.transportRate}}"></sc-number-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="수출비(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.exportRate}}"></sc-number-field>
+                </td>
+                <th><sc-label text="품질보증비(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.warrantyRate}}"></sc-number-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="광고선전비(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.advertisingRate}}"></sc-number-field>
+                </td>
+                <th><sc-label text="연구비(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.researchRate}}"></sc-number-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="자산비용(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.assetCostRate}}"></sc-number-field>
+                </td>
+                <th><sc-label text="인적비용(%)"></sc-label></th>
+                <td>
+                    <sc-number-field value="{{sgaData.hrCostRate}}"></sc-number-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="기타관련비(%)"></sc-label></th>
+                <td colspan="3">
+                    <sc-number-field value="{{sgaData.etcRate}}"></sc-number-field>
+                </td>
+            </tr>
+        </table>
+
+        <!-- ============================================================
+             하단: 판매관리비 계산 결과 그리드
+             ============================================================ -->
+        <div class="section-title" style="margin-top:12px;">판매관리비 계산 결과</div>
+
+        <sc-grid id="sgaResultGrid"
+                 data-provider="{{sgaResultList}}"
+                 editable="false"
+                 class="flex">
+
+            <sc-grid-columns>
+                <sc-data-column data-field="itemNm"
+                                header-text="원가항목"
+                                width="200"
+                                text-align="left">
+                </sc-data-column>
+
+                <sc-data-column data-field="rate"
+                                header-text="비율(%)"
+                                width="100"
+                                text-align="right"
+                                data-type="number"
+                                format="#,##0.00">
+                </sc-data-column>
+
+                <sc-data-column data-field="amt"
+                                header-text="금액(원)"
+                                width="160"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'cc-sga-cost',
+
+            properties: {
+                /* ─── URL 파라미터 ─── */
+                ccPjtCd: { type: String, value: '' },
+                ccRev:   { type: String, value: '' },
+
+                /* ─── SGA 비율 입력 데이터 ─── */
+                sgaData: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            salesLaborRate:  0,
+                            transportRate:   0,
+                            exportRate:      0,
+                            warrantyRate:    0,
+                            advertisingRate: 0,
+                            researchRate:    0,
+                            assetCostRate:   0,
+                            hrCostRate:      0,
+                            etcRate:         0
+                        };
+                    }
+                },
+
+                /* ─── SGA 계산 결과 그리드 데이터 ─── */
+                sgaResultList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                /* ─── Ajax 파라미터 ─── */
+                sgaSearchParam: { type: Object, value: function() { return {}; } },
+                calcParam:      { type: Object, value: function() { return {}; } }
+            },
+
+            /* ==============================================================
+               라이프사이클
+               ============================================================== */
+
+            attached: function() {
+                var param = UT.getParameter();
+                if (param) {
+                    this.ccPjtCd = param.ccPjtCd || '';
+                    this.ccRev   = param.ccRev   || '';
+                }
+                if (this.ccPjtCd) {
+                    this.set('sgaSearchParam', {
+                        ccPjtCd: this.ccPjtCd,
+                        ccRev:   this.ccRev
+                    });
+                    this.$.findSgaCostAjax.generateRequest();
+                }
+            },
+
+            /* ==============================================================
+               판매관리비 데이터 조회 응답
+               ============================================================== */
+
+            onFindSgaCostResponse: function(e) {
+                var data = e.detail.response;
+                if (data && data.sgaData) {
+                    this.set('sgaData', data.sgaData);
+                } else {
+                    this.set('sgaData', {
+                        salesLaborRate:  0,
+                        transportRate:   0,
+                        exportRate:      0,
+                        warrantyRate:    0,
+                        advertisingRate: 0,
+                        researchRate:    0,
+                        assetCostRate:   0,
+                        hrCostRate:      0,
+                        etcRate:         0
+                    });
+                }
+                if (data && data.sgaResultList) {
+                    this.set('sgaResultList', data.sgaResultList);
+                } else {
+                    this.set('sgaResultList', []);
+                }
+            },
+
+            /* ==============================================================
+               판매관리비 계산
+               ============================================================== */
+
+            onCalculateSgaCost: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 정보가 없습니다.');
+                    return;
+                }
+
+                this.set('calcParam', {
+                    ccPjtCd:         this.ccPjtCd,
+                    ccRev:           this.ccRev,
+                    salesLaborRate:  this.sgaData.salesLaborRate,
+                    transportRate:   this.sgaData.transportRate,
+                    exportRate:      this.sgaData.exportRate,
+                    warrantyRate:    this.sgaData.warrantyRate,
+                    advertisingRate: this.sgaData.advertisingRate,
+                    researchRate:    this.sgaData.researchRate,
+                    assetCostRate:   this.sgaData.assetCostRate,
+                    hrCostRate:      this.sgaData.hrCostRate,
+                    etcRate:         this.sgaData.etcRate
+                });
+                this.$.calculateSgaCostAjax.generateRequest();
+            },
+
+            onCalculateSgaCostResponse: function(e) {
+                var data = e.detail.response;
+                if (data && data.sgaResultList) {
+                    this.set('sgaResultList', data.sgaResultList);
+                }
+                UT.alert('판매관리비 계산이 완료되었습니다.');
+            },
+
+            /* ==============================================================
+               계산완료 (상태 확정)
+               ============================================================== */
+
+            onCompleteSgaCost: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 정보가 없습니다.');
+                    return;
+                }
+
+                if (!this.sgaResultList || this.sgaResultList.length === 0) {
+                    UT.alert('먼저 판매관리비 계산을 수행해 주세요.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('판매관리비 계산을 완료 처리하시겠습니까?', function() {
+                    me.set('calcParam', {
+                        ccPjtCd:         me.ccPjtCd,
+                        ccRev:           me.ccRev,
+                        completeYn:      'Y',
+                        salesLaborRate:  me.sgaData.salesLaborRate,
+                        transportRate:   me.sgaData.transportRate,
+                        exportRate:      me.sgaData.exportRate,
+                        warrantyRate:    me.sgaData.warrantyRate,
+                        advertisingRate: me.sgaData.advertisingRate,
+                        researchRate:    me.sgaData.researchRate,
+                        assetCostRate:   me.sgaData.assetCostRate,
+                        hrCostRate:      me.sgaData.hrCostRate,
+                        etcRate:         me.sgaData.etcRate
+                    });
+                    me.$.calculateSgaCostAjax.generateRequest();
+                });
+            }
+        });
+    </script>
+</dom-module>

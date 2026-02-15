@@ -1,0 +1,869 @@
+<dom-module id="cc-material-cost">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+            .cost-code-list {
+                width: 100%;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                overflow-y: auto;
+            }
+            .cost-code-item {
+                padding: 8px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                border-bottom: 1px solid #f0f0f0;
+                transition: background 0.15s;
+            }
+            .cost-code-item:hover {
+                background: #f5f5ff;
+            }
+            .cost-code-item.selected {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .cost-code-item .code {
+                font-weight: 600;
+            }
+            .cost-code-item .desc {
+                font-size: 11px;
+                color: #888;
+                margin-top: 2px;
+            }
+            .cost-code-item.selected .desc {
+                color: #d0d0ff;
+            }
+            .split-panel {
+                display: flex;
+                flex: 1;
+                gap: 10px;
+                overflow: hidden;
+            }
+            .left-panel {
+                width: 220px;
+                min-width: 180px;
+                display: flex;
+                flex-direction: column;
+            }
+            .right-panel {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+
+        <!-- 원가코드 목록 조회 -->
+        <sc-ajax id="findCostCodeListAjax"
+                 url="/bp/cost/cc/detail/findListCcCostCode.do"
+                 body="{{searchParam}}"
+                 on-response="onFindCostCodeListResponse">
+        </sc-ajax>
+
+        <!-- BOM 등록 조회 -->
+        <sc-ajax id="findBomAjax"
+                 url="/bp/cost/cc/detail/findListCcBom.do"
+                 body="{{bomSearchParam}}"
+                 on-response="onFindBomResponse">
+        </sc-ajax>
+
+        <!-- BOM 등록 저장 -->
+        <sc-ajax id="saveBomAjax"
+                 url="/bp/cost/cc/detail/saveListCcBom.do"
+                 body="{{bomSaveParam}}"
+                 on-response="onSaveBomResponse">
+        </sc-ajax>
+
+        <!-- BOM 등록 삭제 -->
+        <sc-ajax id="deleteBomAjax"
+                 url="/bp/cost/cc/detail/deleteListCcBom.do"
+                 body="{{bomDeleteParam}}"
+                 on-response="onDeleteBomResponse">
+        </sc-ajax>
+
+        <!-- BOM 맵핑 - 대상BOM 조회 -->
+        <sc-ajax id="findBomMapTargetAjax"
+                 url="/bp/cost/cc/detail/findListCcBomMapTarget.do"
+                 body="{{bomMapSearchParam}}"
+                 on-response="onFindBomMapTargetResponse">
+        </sc-ajax>
+
+        <!-- BOM 맵핑 - 이전BOM 조회 -->
+        <sc-ajax id="findBomMapPrevAjax"
+                 url="/bp/cost/cc/detail/findListCcBomMapPrev.do"
+                 body="{{bomMapSearchParam}}"
+                 on-response="onFindBomMapPrevResponse">
+        </sc-ajax>
+
+        <!-- BOM 맵핑 저장 -->
+        <sc-ajax id="saveBomMapAjax"
+                 url="/bp/cost/cc/detail/saveListCcBomMap.do"
+                 body="{{bomMapSaveParam}}"
+                 on-response="onSaveBomMapResponse">
+        </sc-ajax>
+
+        <!-- 부품단가 등록 조회 -->
+        <sc-ajax id="findPartPriceAjax"
+                 url="/bp/cost/cc/detail/findListCcPartPrice.do"
+                 body="{{partPriceSearchParam}}"
+                 on-response="onFindPartPriceResponse">
+        </sc-ajax>
+
+        <!-- 부품단가 등록 저장 -->
+        <sc-ajax id="savePartPriceAjax"
+                 url="/bp/cost/cc/detail/saveListCcPartPrice.do"
+                 body="{{partPriceSaveParam}}"
+                 on-response="onSavePartPriceResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             탭 버튼 바
+             ============================================================ -->
+        <div class="tab-bar">
+            <button class$="tab-btn {{_activeTab(activeTab,'bom')}}"
+                    on-click="_setTab" data-tab="bom">BOM 등록</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'bomMap')}}"
+                    on-click="_setTab" data-tab="bomMap">BOM 맵핑</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'partPrice')}}"
+                    on-click="_setTab" data-tab="partPrice">부품단가 등록</button>
+        </div>
+
+        <!-- 탭 콘텐츠 영역 -->
+        <div style="flex:1; overflow:auto; display:flex; flex-direction:column;">
+
+            <!-- ======================================================
+                 TAB 1: BOM 등록
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'bom')}}">
+                <div class="split-panel">
+                    <!-- 좌측: 원가코드 목록 -->
+                    <div class="left-panel">
+                        <div class="section-title">원가코드 목록</div>
+                        <div class="cost-code-list">
+                            <template is="dom-repeat" items="{{costCodeList}}">
+                                <div class$="cost-code-item {{_selectedCostCode(item.costCd, selectedCostCd)}}"
+                                     on-click="_onCostCodeClick">
+                                    <div class="code">{{item.costCd}}</div>
+                                    <div class="desc">{{item.prodDesc}}</div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 우측: BOM 그리드 -->
+                    <div class="right-panel">
+                        <sc-grid id="bomGrid"
+                                 data-provider="{{bomList}}"
+                                 editable="true"
+                                 selection-mode="checkbox"
+                                 class="flex">
+
+                            <sc-toolbar>
+                                <sc-button text="추가"       on-click="onAddBomRow"     auth-code="S"></sc-button>
+                                <sc-button text="삭제"       on-click="onDeleteBom"     auth-code="S"></sc-button>
+                                <sc-button text="임시저장"   on-click="onSaveBom"       auth-code="S"></sc-button>
+                                <sc-button text="등록완료"   on-click="onCompleteBom"   auth-code="S"></sc-button>
+                            </sc-toolbar>
+
+                            <sc-grid-columns>
+                                <sc-data-column data-field="seqNo"
+                                                header-text="순번"
+                                                width="60"
+                                                text-align="center"
+                                                editable="false">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partNo"
+                                                header-text="품번"
+                                                width="140"
+                                                editable="true"
+                                                required="true">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partNm"
+                                                header-text="품명"
+                                                width="180"
+                                                editable="true"
+                                                required="true">
+                                </sc-data-column>
+
+                                <sc-combobox-column data-field="partDiv"
+                                                   header-text="구분"
+                                                   width="100"
+                                                   editable="true"
+                                                   items="{{codes.partDivList}}"
+                                                   display-field="label"
+                                                   value-field="data">
+                                </sc-combobox-column>
+
+                                <sc-data-column data-field="qty"
+                                                header-text="수량"
+                                                width="80"
+                                                editable="true"
+                                                text-align="right"
+                                                data-type="number"
+                                                format="#,###">
+                                </sc-data-column>
+
+                                <sc-checkbox-column data-field="recvUnitYn"
+                                                    header-text="입고단위여부"
+                                                    width="100"
+                                                    checked-value="Y"
+                                                    un-checked-value="N"
+                                                    editable="true">
+                                </sc-checkbox-column>
+                            </sc-grid-columns>
+
+                            <sc-grid-fields>
+                                <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                                <sc-grid-field data-field="ccRev"></sc-grid-field>
+                                <sc-grid-field data-field="costCd"></sc-grid-field>
+                                <sc-grid-field data-field="bomSeq"></sc-grid-field>
+                            </sc-grid-fields>
+                        </sc-grid>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ======================================================
+                 TAB 2: BOM 맵핑
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'bomMap')}}">
+                <sc-toolbar>
+                    <sc-button text="임시저장"   on-click="onSaveBomMap"     auth-code="S"></sc-button>
+                    <sc-button text="작성완료"   on-click="onCompleteBomMap" auth-code="S"></sc-button>
+                </sc-toolbar>
+
+                <div class="hbox flex">
+                    <!-- 좌측: 대상BOM -->
+                    <div class="vbox flex-5">
+                        <div class="section-title">대상BOM</div>
+                        <sc-grid id="bomMapTargetGrid"
+                                 data-provider="{{bomMapTargetList}}"
+                                 editable="false"
+                                 selection-mode="radio"
+                                 class="flex"
+                                 on-item-click="onBomMapTargetClick">
+
+                            <sc-grid-columns>
+                                <sc-data-column data-field="partNo"
+                                                header-text="품번"
+                                                width="140"
+                                                text-align="left">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partNm"
+                                                header-text="품명"
+                                                width="180"
+                                                text-align="left">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partDiv"
+                                                header-text="구분"
+                                                width="80"
+                                                text-align="center">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="mappedPartNo"
+                                                header-text="맵핑품번"
+                                                width="140"
+                                                text-align="left">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="mappedPartNm"
+                                                header-text="맵핑품명"
+                                                width="180"
+                                                text-align="left">
+                                </sc-data-column>
+                            </sc-grid-columns>
+
+                            <sc-grid-fields>
+                                <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                                <sc-grid-field data-field="ccRev"></sc-grid-field>
+                                <sc-grid-field data-field="bomMapSeq"></sc-grid-field>
+                            </sc-grid-fields>
+                        </sc-grid>
+                    </div>
+
+                    <div class="hspace-10"></div>
+
+                    <!-- 우측: 이전BOM -->
+                    <div class="vbox flex-5">
+                        <div class="section-title">이전BOM</div>
+                        <sc-grid id="bomMapPrevGrid"
+                                 data-provider="{{bomMapPrevList}}"
+                                 editable="false"
+                                 selection-mode="radio"
+                                 class="flex"
+                                 on-item-click="onBomMapPrevClick">
+
+                            <sc-grid-columns>
+                                <sc-data-column data-field="partNo"
+                                                header-text="품번"
+                                                width="140"
+                                                text-align="left">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partNm"
+                                                header-text="품명"
+                                                width="180"
+                                                text-align="left">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partDiv"
+                                                header-text="구분"
+                                                width="80"
+                                                text-align="center">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="unitPrice"
+                                                header-text="단가"
+                                                width="120"
+                                                text-align="right"
+                                                data-type="number"
+                                                format-type="amt">
+                                </sc-data-column>
+                            </sc-grid-columns>
+                        </sc-grid>
+                    </div>
+                </div>
+            </template>
+
+            <!-- ======================================================
+                 TAB 3: 부품단가 등록
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'partPrice')}}">
+                <div class="split-panel">
+                    <!-- 좌측: 원가코드 목록 -->
+                    <div class="left-panel">
+                        <div class="section-title">원가코드 목록</div>
+                        <div class="cost-code-list">
+                            <template is="dom-repeat" items="{{costCodeList}}">
+                                <div class$="cost-code-item {{_selectedCostCode(item.costCd, selectedPriceCostCd)}}"
+                                     on-click="_onPriceCostCodeClick">
+                                    <div class="code">{{item.costCd}}</div>
+                                    <div class="desc">{{item.prodDesc}}</div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 우측: 부품단가 그리드 -->
+                    <div class="right-panel">
+                        <sc-grid id="partPriceGrid"
+                                 data-provider="{{partPriceList}}"
+                                 editable="true"
+                                 selection-mode="checkbox"
+                                 class="flex">
+
+                            <sc-toolbar>
+                                <sc-button text="임시저장"   on-click="onSavePartPrice"     auth-code="S"></sc-button>
+                                <sc-button text="등록완료"   on-click="onCompletePartPrice" auth-code="S"></sc-button>
+                            </sc-toolbar>
+
+                            <sc-grid-columns>
+                                <sc-data-column data-field="seqNo"
+                                                header-text="순번"
+                                                width="60"
+                                                text-align="center"
+                                                editable="false">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partNo"
+                                                header-text="품번"
+                                                width="130"
+                                                editable="false">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partNm"
+                                                header-text="품명"
+                                                width="160"
+                                                editable="false">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="partDiv"
+                                                header-text="구분"
+                                                width="80"
+                                                editable="false"
+                                                text-align="center">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="pimsPrice"
+                                                header-text="PIMS단가"
+                                                width="120"
+                                                editable="false"
+                                                text-align="right"
+                                                data-type="number"
+                                                format-type="amt">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="designCostPrice"
+                                                header-text="설계원가"
+                                                width="120"
+                                                editable="true"
+                                                text-align="right"
+                                                data-type="number"
+                                                format-type="amt">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="purchaseEstPrice"
+                                                header-text="구매추정가"
+                                                width="120"
+                                                editable="true"
+                                                text-align="right"
+                                                data-type="number"
+                                                format-type="amt">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="confirmedPrice"
+                                                header-text="확정단가"
+                                                width="120"
+                                                editable="true"
+                                                text-align="right"
+                                                data-type="number"
+                                                format-type="amt">
+                                </sc-data-column>
+
+                                <sc-data-column data-field="lossRate"
+                                                header-text="Loss율(%)"
+                                                width="100"
+                                                editable="true"
+                                                text-align="right"
+                                                data-type="number"
+                                                format="#,##0.0">
+                                </sc-data-column>
+                            </sc-grid-columns>
+
+                            <sc-grid-fields>
+                                <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                                <sc-grid-field data-field="ccRev"></sc-grid-field>
+                                <sc-grid-field data-field="costCd"></sc-grid-field>
+                                <sc-grid-field data-field="partPriceSeq"></sc-grid-field>
+                            </sc-grid-fields>
+                        </sc-grid>
+                    </div>
+                </div>
+            </template>
+
+        </div><!-- /탭 콘텐츠 영역 -->
+    </template>
+
+    <script>
+        Polymer({
+            is: 'cc-material-cost',
+
+            properties: {
+                /* ─── URL 파라미터 ─── */
+                ccPjtCd: { type: String, value: '' },
+                ccRev:   { type: String, value: '' },
+
+                /* ─── 활성 탭 ─── */
+                activeTab: { type: String, value: 'bom' },
+
+                /* ─── 원가코드 목록 (좌측 패널 공통) ─── */
+                costCodeList: { type: Array, value: function() { return []; } },
+
+                /* ─── TAB 1: BOM 등록 ─── */
+                selectedCostCd: { type: String, value: '' },
+                bomList:        { type: Array, value: function() { return []; } },
+
+                /* ─── TAB 2: BOM 맵핑 ─── */
+                bomMapTargetList: { type: Array, value: function() { return []; } },
+                bomMapPrevList:   { type: Array, value: function() { return []; } },
+                selectedTargetRow: { type: Object, value: function() { return {}; } },
+
+                /* ─── TAB 3: 부품단가 등록 ─── */
+                selectedPriceCostCd: { type: String, value: '' },
+                partPriceList:       { type: Array, value: function() { return []; } },
+
+                /* ─── Ajax 파라미터 ─── */
+                searchParam:         { type: Object, value: function() { return {}; } },
+                bomSearchParam:      { type: Object, value: function() { return {}; } },
+                bomSaveParam:        { type: Object, value: function() { return {}; } },
+                bomDeleteParam:      { type: Object, value: function() { return {}; } },
+                bomMapSearchParam:   { type: Object, value: function() { return {}; } },
+                bomMapSaveParam:     { type: Object, value: function() { return {}; } },
+                partPriceSearchParam:{ type: Object, value: function() { return {}; } },
+                partPriceSaveParam:  { type: Object, value: function() { return {}; } },
+
+                /* ─── 공통코드 ─── */
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            partDivList: [
+                                { label: 'C/O',  data: 'CO' },
+                                { label: '신규', data: 'NEW' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ==============================================================
+               라이프사이클
+               ============================================================== */
+
+            attached: function() {
+                var param = UT.getParameter();
+                if (param) {
+                    this.ccPjtCd = param.ccPjtCd || '';
+                    this.ccRev   = param.ccRev   || '';
+                }
+                if (this.ccPjtCd) {
+                    this.set('searchParam', {
+                        ccPjtCd: this.ccPjtCd,
+                        ccRev:   this.ccRev
+                    });
+                    this.$.findCostCodeListAjax.generateRequest();
+                }
+            },
+
+            /* ==============================================================
+               탭 제어 헬퍼
+               ============================================================== */
+
+            _activeTab: function(activeTab, tabName) {
+                return activeTab === tabName ? 'active' : '';
+            },
+
+            _isTab: function(activeTab, tabName) {
+                return activeTab === tabName;
+            },
+
+            _setTab: function(e) {
+                var tabName = e.currentTarget.getAttribute('data-tab');
+                this.set('activeTab', tabName);
+                this._loadTabData(tabName);
+            },
+
+            _selectedCostCode: function(costCd, selected) {
+                return costCd === selected ? 'selected' : '';
+            },
+
+            _loadTabData: function(tabName) {
+                if (!this.ccPjtCd) return;
+
+                if (tabName === 'bom' && this.selectedCostCd) {
+                    this._loadBomData();
+                } else if (tabName === 'bomMap') {
+                    this._loadBomMapData();
+                } else if (tabName === 'partPrice' && this.selectedPriceCostCd) {
+                    this._loadPartPriceData();
+                }
+            },
+
+            /* ==============================================================
+               원가코드 목록 조회
+               ============================================================== */
+
+            onFindCostCodeListResponse: function(e) {
+                this.set('costCodeList', e.detail.response || []);
+            },
+
+            /* ==============================================================
+               TAB 1: BOM 등록
+               ============================================================== */
+
+            _onCostCodeClick: function(e) {
+                var item = e.model.item;
+                this.set('selectedCostCd', item.costCd);
+                this._loadBomData();
+            },
+
+            _loadBomData: function() {
+                this.set('bomSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev,
+                    costCd:  this.selectedCostCd
+                });
+                this.$.findBomAjax.generateRequest();
+            },
+
+            onFindBomResponse: function(e) {
+                this.set('bomList', e.detail.response || []);
+            },
+
+            onAddBomRow: function() {
+                if (!this.selectedCostCd) {
+                    UT.alert('좌측에서 원가코드를 선택해 주세요.');
+                    return;
+                }
+                var grid = this.$$('#bomGrid');
+                if (!grid) return;
+
+                var seqNo = (this.bomList ? this.bomList.length : 0) + 1;
+                grid.insertRow(0, {
+                    ccPjtCd:    this.ccPjtCd,
+                    ccRev:      this.ccRev,
+                    costCd:     this.selectedCostCd,
+                    seqNo:      seqNo,
+                    partNo:     '',
+                    partNm:     '',
+                    partDiv:    'CO',
+                    qty:        0,
+                    recvUnitYn: 'N'
+                });
+            },
+
+            onDeleteBom: function() {
+                var grid = this.$$('#bomGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('bomDeleteParam', {
+                        ccPjtCd:    me.ccPjtCd,
+                        ccRev:      me.ccRev,
+                        costCd:     me.selectedCostCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteBomAjax.generateRequest();
+                });
+            },
+
+            onDeleteBomResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadBomData();
+            },
+
+            onSaveBom: function() {
+                this._saveBomData(false);
+            },
+
+            onCompleteBom: function() {
+                this._saveBomData(true);
+            },
+
+            _saveBomData: function(isComplete) {
+                if (!this.selectedCostCd) {
+                    UT.alert('좌측에서 원가코드를 선택해 주세요.');
+                    return;
+                }
+                var grid = this.$$('#bomGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                // 필수값 검증
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].partNo || !modifiedRows[i].partNm) {
+                        UT.alert('MSG_COM_00001');
+                        return;
+                    }
+                }
+
+                var me = this;
+                var msg = isComplete ? 'BOM 등록을 완료하시겠습니까?' : 'MSG_COM_00002';
+                UT.confirm(msg, function() {
+                    me.set('bomSaveParam', {
+                        ccPjtCd:    me.ccPjtCd,
+                        ccRev:      me.ccRev,
+                        costCd:     me.selectedCostCd,
+                        completeYn: isComplete ? 'Y' : 'N',
+                        saveList:   modifiedRows
+                    });
+                    me.$.saveBomAjax.generateRequest();
+                });
+            },
+
+            onSaveBomResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadBomData();
+            },
+
+            /* ==============================================================
+               TAB 2: BOM 맵핑
+               ============================================================== */
+
+            _loadBomMapData: function() {
+                this.set('bomMapSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findBomMapTargetAjax.generateRequest();
+                this.$.findBomMapPrevAjax.generateRequest();
+            },
+
+            onFindBomMapTargetResponse: function(e) {
+                this.set('bomMapTargetList', e.detail.response || []);
+            },
+
+            onFindBomMapPrevResponse: function(e) {
+                this.set('bomMapPrevList', e.detail.response || []);
+            },
+
+            onBomMapTargetClick: function(e) {
+                var row = e.detail.data;
+                if (row) {
+                    this.set('selectedTargetRow', row);
+                }
+            },
+
+            onBomMapPrevClick: function(e) {
+                var row = e.detail.data;
+                if (!row || !this.selectedTargetRow || !this.selectedTargetRow.partNo) {
+                    UT.alert('좌측 대상BOM에서 맵핑할 항목을 먼저 선택해 주세요.');
+                    return;
+                }
+                // 맵핑 설정: 대상BOM의 mappedPartNo/Nm에 이전BOM 값 세팅
+                var grid = this.$$('#bomMapTargetGrid');
+                if (grid) {
+                    var selectedRows = grid.getSelectedRows();
+                    if (selectedRows && selectedRows.length > 0) {
+                        var idx = this.bomMapTargetList.indexOf(selectedRows[0]);
+                        if (idx >= 0) {
+                            this.set('bomMapTargetList.' + idx + '.mappedPartNo', row.partNo);
+                            this.set('bomMapTargetList.' + idx + '.mappedPartNm', row.partNm);
+                        }
+                    }
+                }
+            },
+
+            onSaveBomMap: function() {
+                this._saveBomMapData(false);
+            },
+
+            onCompleteBomMap: function() {
+                this._saveBomMapData(true);
+            },
+
+            _saveBomMapData: function(isComplete) {
+                if (!this.bomMapTargetList || this.bomMapTargetList.length === 0) {
+                    UT.alert('맵핑 대상 데이터가 없습니다.');
+                    return;
+                }
+
+                var me = this;
+                var msg = isComplete ? 'BOM 맵핑을 완료하시겠습니까?' : 'MSG_COM_00002';
+                UT.confirm(msg, function() {
+                    me.set('bomMapSaveParam', {
+                        ccPjtCd:    me.ccPjtCd,
+                        ccRev:      me.ccRev,
+                        completeYn: isComplete ? 'Y' : 'N',
+                        saveList:   me.bomMapTargetList
+                    });
+                    me.$.saveBomMapAjax.generateRequest();
+                });
+            },
+
+            onSaveBomMapResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadBomMapData();
+            },
+
+            /* ==============================================================
+               TAB 3: 부품단가 등록
+               ============================================================== */
+
+            _onPriceCostCodeClick: function(e) {
+                var item = e.model.item;
+                this.set('selectedPriceCostCd', item.costCd);
+                this._loadPartPriceData();
+            },
+
+            _loadPartPriceData: function() {
+                this.set('partPriceSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev,
+                    costCd:  this.selectedPriceCostCd
+                });
+                this.$.findPartPriceAjax.generateRequest();
+            },
+
+            onFindPartPriceResponse: function(e) {
+                this.set('partPriceList', e.detail.response || []);
+            },
+
+            onSavePartPrice: function() {
+                this._savePartPriceData(false);
+            },
+
+            onCompletePartPrice: function() {
+                this._savePartPriceData(true);
+            },
+
+            _savePartPriceData: function(isComplete) {
+                if (!this.selectedPriceCostCd) {
+                    UT.alert('좌측에서 원가코드를 선택해 주세요.');
+                    return;
+                }
+                var grid = this.$$('#partPriceGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                var msg = isComplete ? '부품단가 등록을 완료하시겠습니까?' : 'MSG_COM_00002';
+                UT.confirm(msg, function() {
+                    me.set('partPriceSaveParam', {
+                        ccPjtCd:    me.ccPjtCd,
+                        ccRev:      me.ccRev,
+                        costCd:     me.selectedPriceCostCd,
+                        completeYn: isComplete ? 'Y' : 'N',
+                        saveList:   modifiedRows
+                    });
+                    me.$.savePartPriceAjax.generateRequest();
+                });
+            },
+
+            onSavePartPriceResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadPartPriceData();
+            }
+        });
+    </script>
+</dom-module>

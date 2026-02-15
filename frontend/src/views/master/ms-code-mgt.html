@@ -1,0 +1,321 @@
+<dom-module id="ms-code-mgt">
+    <template>
+        <!-- Ajax -->
+        <sc-ajax id="findGrpAjax"
+                 url="/bp/master/code/findListGrpCd.do"
+                 body="{}"
+                 on-response="onFindGrpResponse">
+        </sc-ajax>
+        <sc-ajax id="saveGrpAjax"
+                 url="/bp/master/code/saveListGrpCd.do"
+                 body="{{saveGrpParam}}"
+                 on-response="onSaveGrpResponse">
+        </sc-ajax>
+        <sc-ajax id="findDtlAjax"
+                 url="/bp/master/code/findListDtlCd.do"
+                 body="{{dtlSearchParam}}"
+                 on-response="onFindDtlResponse">
+        </sc-ajax>
+        <sc-ajax id="saveDtlAjax"
+                 url="/bp/master/code/saveListDtlCd.do"
+                 body="{{saveDtlParam}}"
+                 on-response="onSaveDtlResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteDtlAjax"
+                 url="/bp/master/code/deleteListDtlCd.do"
+                 body="{{deleteDtlParam}}"
+                 on-response="onDeleteDtlResponse">
+        </sc-ajax>
+
+        <!-- 좌우 분할 레이아웃 -->
+        <div style="display:flex; gap:12px; height:100%; min-height:0;">
+
+            <!-- ===== 좌측: 그룹코드 목록 ===== -->
+            <div style="width:340px; flex-shrink:0; display:flex; flex-direction:column;">
+                <sc-grid id="grpGrid"
+                         data-provider="{{grpList}}"
+                         editable="true"
+                         selection-mode="radio"
+                         class="flex"
+                         on-item-click="onGrpRowClick">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindGrpList"></sc-button>
+                        <sc-button text="추가" on-click="onAddGrp"></sc-button>
+                        <sc-button text="저장" on-click="onSaveGrpList"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="grpCd"
+                                        header-text="그룹코드"
+                                        width="80"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+                        <sc-data-column data-field="grpNm"
+                                        header-text="그룹코드명"
+                                        width="140"
+                                        editable="true">
+                        </sc-data-column>
+                        <sc-checkbox-column data-field="useYn"
+                                            header-text="사용"
+                                            width="50"
+                                            text-align="center"
+                                            true-value="Y"
+                                            false-value="N">
+                        </sc-checkbox-column>
+                        <sc-data-column data-field="sortNo"
+                                        header-text="정렬"
+                                        width="50"
+                                        editable="true"
+                                        text-align="center"
+                                        data-type="number">
+                        </sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </div>
+
+            <!-- ===== 우측: 상세코드 목록 ===== -->
+            <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+                <sc-grid id="dtlGrid"
+                         data-provider="{{dtlList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-label id="dtlTitle" text="상세코드 목록" style="font-weight:600; margin-right:auto;"></sc-label>
+                        <sc-button text="추가" on-click="onAddDtl"></sc-button>
+                        <sc-button text="삭제" on-click="onDeleteDtl"></sc-button>
+                        <sc-button text="저장" on-click="onSaveDtlList"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="dtlCd"
+                                        header-text="상세코드"
+                                        width="100"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+                        <sc-data-column data-field="cdNm"
+                                        header-text="코드명"
+                                        width="180"
+                                        editable="true">
+                        </sc-data-column>
+                        <sc-data-column data-field="attr1"
+                                        header-text="속성1"
+                                        width="100"
+                                        editable="true"
+                                        visible="false">
+                        </sc-data-column>
+                        <sc-data-column data-field="attr2"
+                                        header-text="속성2"
+                                        width="100"
+                                        editable="true"
+                                        visible="false">
+                        </sc-data-column>
+                        <sc-data-column data-field="attr3"
+                                        header-text="속성3"
+                                        width="100"
+                                        editable="true"
+                                        visible="false">
+                        </sc-data-column>
+                        <sc-data-column data-field="sortNo"
+                                        header-text="정렬"
+                                        width="60"
+                                        editable="true"
+                                        text-align="center"
+                                        data-type="number">
+                        </sc-data-column>
+                        <sc-checkbox-column data-field="useYn"
+                                            header-text="사용"
+                                            width="50"
+                                            text-align="center"
+                                            true-value="Y"
+                                            false-value="N">
+                        </sc-checkbox-column>
+                        <sc-data-column data-field="rmk"
+                                        header-text="비고"
+                                        width="200"
+                                        editable="true">
+                        </sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'ms-code-mgt',
+
+            properties: {
+                grpList: { type: Array, value: function() { return []; } },
+                dtlList: { type: Array, value: function() { return []; } },
+                dtlSearchParam: { type: Object, value: function() { return {}; } },
+                saveGrpParam: { type: Object, value: function() { return {}; } },
+                saveDtlParam: { type: Object, value: function() { return {}; } },
+                deleteDtlParam: { type: Object, value: function() { return {}; } },
+                selectedGrpCd: { type: String, value: '' },
+                selectedGrpNm: { type: String, value: '' },
+                /* 그룹별 속성 컬럼 헤더 매핑 */
+                grpAttrConfig: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            'CUST':  { attr1: '가산율(%)', attr2: null, attr3: null },
+                            'T015':  { attr1: '법인코드', attr2: '법인명', attr3: null },
+                            'T019':  { attr1: '사업실적비율', attr2: 'ERP제조원가', attr3: '절감대상화면' },
+                            'T023':  { attr1: '가산율(%)', attr2: null, attr3: null }
+                        };
+                    }
+                }
+            },
+
+            attached: function() {
+                this.onFindGrpList();
+            },
+
+            /* ── 그룹코드 조회 ── */
+            onFindGrpList: function() {
+                this.$.findGrpAjax.generateRequest();
+            },
+
+            onFindGrpResponse: function(e) {
+                this.set('grpList', e.detail.response);
+            },
+
+            /* ── 그룹코드 추가 ── */
+            onAddGrp: function() {
+                var grid = this.$.grpGrid;
+                grid.addRow({ grpCd: '', grpNm: '', useYn: 'Y', sortNo: 0, _rowStatus: 'C' });
+            },
+
+            /* ── 그룹코드 저장 ── */
+            onSaveGrpList: function() {
+                var grid = this.$.grpGrid;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveGrpParam', { saveList: modifiedRows });
+                    me.$.saveGrpAjax.generateRequest();
+                });
+            },
+
+            onSaveGrpResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindGrpList();
+            },
+
+            /* ── 그룹코드 행 클릭 → 상세코드 조회 ── */
+            onGrpRowClick: function(e) {
+                var row = e.detail.row;
+                if (!row || !row.grpCd) return;
+                this.selectedGrpCd = row.grpCd;
+                this.selectedGrpNm = row.grpNm || row.grpCd;
+
+                /* 타이틀 업데이트 */
+                var titleEl = this.querySelector('#dtlTitle');
+                if (titleEl) titleEl.textContent = '상세코드 목록 — ' + this.selectedGrpNm + ' (' + this.selectedGrpCd + ')';
+
+                /* 속성 컬럼 표시/숨김 */
+                this._updateAttrColumns(row.grpCd);
+
+                /* 상세코드 조회 */
+                this.set('dtlSearchParam', { grpCd: row.grpCd });
+                this.$.findDtlAjax.generateRequest();
+            },
+
+            _updateAttrColumns: function(grpCd) {
+                var config = this.grpAttrConfig[grpCd];
+                var grid = this.$.dtlGrid;
+                if (!grid || !grid._columns) return;
+
+                for (var i = 0; i < grid._columns.length; i++) {
+                    var col = grid._columns[i];
+                    if (col.field === 'attr1' || col.field === 'attr2' || col.field === 'attr3') {
+                        if (config && config[col.field]) {
+                            col.visible = true;
+                            col.header = config[col.field];
+                        } else {
+                            col.visible = !config ? false : !config[col.field] ? false : true;
+                            if (!config || !config[col.field]) col.visible = false;
+                        }
+                    }
+                }
+                grid._renderGrid();
+            },
+
+            onFindDtlResponse: function(e) {
+                this.set('dtlList', e.detail.response);
+            },
+
+            /* ── 상세코드 추가 ── */
+            onAddDtl: function() {
+                if (!this.selectedGrpCd) {
+                    UT.alert('그룹코드를 먼저 선택하세요.');
+                    return;
+                }
+                var grid = this.$.dtlGrid;
+                grid.addRow({
+                    grpCd: this.selectedGrpCd, dtlCd: '', cdNm: '',
+                    sortNo: 0, useYn: 'Y', attr1: '', attr2: '', attr3: '', rmk: '',
+                    _rowStatus: 'C'
+                });
+            },
+
+            /* ── 상세코드 삭제 ── */
+            onDeleteDtl: function() {
+                var grid = this.$.dtlGrid;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteDtlParam', { deleteList: selectedRows });
+                    me.$.deleteDtlAjax.generateRequest();
+                });
+            },
+
+            onDeleteDtlResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.set('dtlSearchParam', { grpCd: this.selectedGrpCd });
+                this.$.findDtlAjax.generateRequest();
+            },
+
+            /* ── 상세코드 저장 ── */
+            onSaveDtlList: function() {
+                if (!this.selectedGrpCd) {
+                    UT.alert('그룹코드를 먼저 선택하세요.');
+                    return;
+                }
+                var grid = this.$.dtlGrid;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                /* 각 행에 grpCd 주입 */
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    modifiedRows[i].grpCd = this.selectedGrpCd;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveDtlParam', { saveList: modifiedRows });
+                    me.$.saveDtlAjax.generateRequest();
+                });
+            },
+
+            onSaveDtlResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.set('dtlSearchParam', { grpCd: this.selectedGrpCd });
+                this.$.findDtlAjax.generateRequest();
+            }
+        });
+    </script>
+</dom-module>

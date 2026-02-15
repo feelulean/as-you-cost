@@ -1,0 +1,586 @@
+<dom-module id="cc-pl-statement">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+            .filter-bar {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                padding: 8px 0;
+                margin-bottom: 4px;
+            }
+            .filter-bar .filter-label {
+                font-size: 12px;
+                font-weight: 600;
+                color: #30374F;
+            }
+            .info-bar {
+                display: flex;
+                gap: 16px;
+                padding: 6px 12px;
+                background: #f8f9fc;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                font-size: 12px;
+            }
+            .info-bar .info-item {
+                display: flex;
+                gap: 4px;
+            }
+            .info-bar .info-item label {
+                font-weight: 600;
+                color: #555;
+            }
+            .info-bar .info-item span {
+                color: #30374F;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+        <sc-ajax id="findPjtInfoAjax"
+                 url="/bp/cost/cc/findCurrentCostPjt.do"
+                 body="{{pjtInfoParam}}"
+                 on-response="onFindPjtInfoResponse">
+        </sc-ajax>
+
+        <sc-ajax id="findPlStmtAjax"
+                 url="/bp/cost/cc/detail/findListCcPlStmt.do"
+                 body="{{plSearchParam}}"
+                 on-response="onFindPlStmtResponse">
+        </sc-ajax>
+
+        <sc-ajax id="calculatePlStmtAjax"
+                 url="/bp/cost/cc/detail/calculateCcPlStmt.do"
+                 body="{{calcParam}}"
+                 on-response="onCalculatePlStmtResponse">
+        </sc-ajax>
+
+        <sc-ajax id="findCostGrpListAjax"
+                 url="/bp/cost/cc/detail/findListCcCostGrp.do"
+                 body="{{grpSearchParam}}"
+                 on-response="onFindCostGrpListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="findCostCodeListAjax"
+                 url="/bp/cost/cc/detail/findListCcCostCode.do"
+                 body="{{codeSearchParam}}"
+                 on-response="onFindCostCodeListResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             프로젝트 정보 표시 영역
+             ============================================================ -->
+        <div class="info-bar">
+            <div class="info-item">
+                <label>프로젝트코드:</label>
+                <span>{{pjtInfo.ccPjtCd}}</span>
+            </div>
+            <div class="info-item">
+                <label>프로젝트명:</label>
+                <span>{{pjtInfo.pjtNm}}</span>
+            </div>
+            <div class="info-item">
+                <label>현상차수:</label>
+                <span>{{pjtInfo.ccRev}}</span>
+            </div>
+            <div class="info-item">
+                <label>사업부:</label>
+                <span>{{pjtInfo.bizUnit}}</span>
+            </div>
+            <div class="info-item">
+                <label>고객사:</label>
+                <span>{{pjtInfo.custNm}}</span>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             유형/기준 선택 + 조회 버튼 영역
+             ============================================================ -->
+        <sc-toolbar>
+            <div class="filter-bar">
+                <span class="filter-label">유형</span>
+                <sc-combobox-field value="{{plParam.viewType}}"
+                                  items="{{codes.viewTypeList}}"
+                                  display-field="label"
+                                  value-field="data"
+                                  width="140"
+                                  on-value-changed="_onViewTypeChanged">
+                </sc-combobox-field>
+
+                <!-- 원가그룹 선택 (유형=GRP일 때 표시) -->
+                <template is="dom-if" if="{{_isViewType(plParam.viewType, 'GRP')}}">
+                    <span class="filter-label">원가그룹</span>
+                    <sc-combobox-field value="{{plParam.costGrpCd}}"
+                                      items="{{codes.costGrpList}}"
+                                      display-field="label"
+                                      value-field="data"
+                                      width="160"
+                                      placeholder="원가그룹 선택">
+                    </sc-combobox-field>
+                </template>
+
+                <!-- 원가코드 선택 (유형=CODE일 때 표시) -->
+                <template is="dom-if" if="{{_isViewType(plParam.viewType, 'CODE')}}">
+                    <span class="filter-label">원가코드</span>
+                    <sc-combobox-field value="{{plParam.costCd}}"
+                                      items="{{codes.costCodeList}}"
+                                      display-field="label"
+                                      value-field="data"
+                                      width="160"
+                                      placeholder="원가코드 선택">
+                    </sc-combobox-field>
+                </template>
+
+                <span class="filter-label">기준</span>
+                <sc-combobox-field value="{{plParam.basisType}}"
+                                  items="{{_getBasisTypeList(plParam.viewType)}}"
+                                  display-field="label"
+                                  value-field="data"
+                                  width="120">
+                </sc-combobox-field>
+            </div>
+
+            <sc-button text="조회"           on-click="onFindPlStmt"       auth-code="V"></sc-button>
+            <sc-button text="현상원가산출"   on-click="onCalculatePlStmt"  auth-code="S"></sc-button>
+            <sc-button text="엑셀다운로드"   on-click="onExcelDownload"    auth-code="V"></sc-button>
+        </sc-toolbar>
+
+        <!-- ============================================================
+             P&L 손익계산서 그리드
+             ============================================================ -->
+        <div class="section-title">현상원가 손익계산서 (P&L Statement)</div>
+
+        <sc-grid id="plGrid"
+                 data-provider="{{plResultList}}"
+                 editable="false"
+                 class="flex"
+                 use-state="false">
+
+            <sc-grid-columns>
+                <sc-data-column data-field="itemNm"
+                                header-text="원가항목"
+                                width="180"
+                                text-align="left"
+                                editable="false">
+                </sc-data-column>
+
+                <sc-data-column data-field="sopYear"
+                                header-text="SOP Year"
+                                width="120"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="y1"
+                                header-text="Y+1"
+                                width="120"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="y2"
+                                header-text="Y+2"
+                                width="120"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="y3"
+                                header-text="Y+3"
+                                width="120"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="y4"
+                                header-text="Y+4"
+                                width="120"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="y5"
+                                header-text="Y+5"
+                                width="120"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+
+                <sc-data-column data-field="totalAmt"
+                                header-text="합계"
+                                width="140"
+                                text-align="right"
+                                data-type="number"
+                                format-type="amt">
+                </sc-data-column>
+            </sc-grid-columns>
+
+            <sc-grid-fields>
+                <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                <sc-grid-field data-field="ccRev"></sc-grid-field>
+                <sc-grid-field data-field="itemCd"></sc-grid-field>
+                <sc-grid-field data-field="itemLevel"></sc-grid-field>
+            </sc-grid-fields>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'cc-pl-statement',
+
+            properties: {
+                /* ── URL 파라미터 ── */
+                ccPjtCd: {
+                    type: String,
+                    value: ''
+                },
+                ccRev: {
+                    type: String,
+                    value: ''
+                },
+
+                /* ── 프로젝트 정보 ── */
+                pjtInfo: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ── P&L 조회 파라미터 ── */
+                plParam: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            viewType:  'PJT',
+                            basisType: 'UNIT',
+                            costGrpCd: '',
+                            costCd:    ''
+                        };
+                    }
+                },
+
+                /* ── P&L 결과 그리드 데이터 ── */
+                plResultList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                /* ── Ajax 파라미터 ── */
+                pjtInfoParam:   { type: Object, value: function() { return {}; } },
+                plSearchParam:  { type: Object, value: function() { return {}; } },
+                calcParam:      { type: Object, value: function() { return {}; } },
+                grpSearchParam: { type: Object, value: function() { return {}; } },
+                codeSearchParam:{ type: Object, value: function() { return {}; } },
+
+                /* ── 공통코드 ── */
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            viewTypeList: [
+                                { label: '프로젝트',  data: 'PJT' },
+                                { label: '원가그룹',  data: 'GRP' },
+                                { label: '원가코드',  data: 'CODE' }
+                            ],
+                            basisTypeList: [
+                                { label: '단위당', data: 'UNIT' },
+                                { label: '총',     data: 'TOTAL' }
+                            ],
+                            basisTypeCodeList: [
+                                { label: '제품단위당', data: 'PROD_UNIT' },
+                                { label: '총',         data: 'TOTAL' }
+                            ],
+                            costGrpList:  [],
+                            costCodeList: []
+                        };
+                    }
+                }
+            },
+
+            /* ==============================================================
+               라이프사이클 — 초기화
+               ============================================================== */
+
+            attached: function() {
+                // URL 파라미터로 전달된 프로젝트 코드/차수 처리
+                if (this.ccPjtCd) {
+                    this._loadPjtInfo();
+                    this._loadCostGrpList();
+                    this._loadCostCodeList();
+                }
+            },
+
+            /* ==============================================================
+               프로젝트 정보 조회
+               ============================================================== */
+
+            _loadPjtInfo: function() {
+                this.set('pjtInfoParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findPjtInfoAjax.generateRequest();
+            },
+
+            onFindPjtInfoResponse: function(e) {
+                var data = e.detail.response;
+                if (data) {
+                    this.set('pjtInfo', data);
+                }
+            },
+
+            /* ==============================================================
+               원가그룹/원가코드 목록 로드
+               ============================================================== */
+
+            _loadCostGrpList: function() {
+                this.set('grpSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findCostGrpListAjax.generateRequest();
+            },
+
+            onFindCostGrpListResponse: function(e) {
+                var list = e.detail.response || [];
+                var items = [];
+                for (var i = 0; i < list.length; i++) {
+                    items.push({
+                        label: list[i].costGrpNm || list[i].costGrpCd,
+                        data:  list[i].costGrpCd
+                    });
+                }
+                this.set('codes.costGrpList', items);
+            },
+
+            _loadCostCodeList: function() {
+                this.set('codeSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findCostCodeListAjax.generateRequest();
+            },
+
+            onFindCostCodeListResponse: function(e) {
+                var list = e.detail.response || [];
+                var items = [];
+                for (var i = 0; i < list.length; i++) {
+                    items.push({
+                        label: list[i].costCdNm || list[i].costCd,
+                        data:  list[i].costCd
+                    });
+                }
+                this.set('codes.costCodeList', items);
+            },
+
+            /* ==============================================================
+               유형 변경 핸들러
+               ============================================================== */
+
+            _onViewTypeChanged: function() {
+                // 유형 변경 시 하위 선택값 초기화
+                this.set('plParam.costGrpCd', '');
+                this.set('plParam.costCd', '');
+
+                // 프로젝트 유형일 때는 기준을 단위당/총으로
+                if (this.plParam.viewType === 'PJT' || this.plParam.viewType === 'GRP') {
+                    this.set('plParam.basisType', 'UNIT');
+                } else {
+                    this.set('plParam.basisType', 'PROD_UNIT');
+                }
+            },
+
+            _isViewType: function(viewType, target) {
+                return viewType === target;
+            },
+
+            /**
+             * 원가코드 유형 선택 시 기준 목록을 제품단위당/총으로 변경
+             */
+            _getBasisTypeList: function(viewType) {
+                if (viewType === 'CODE') {
+                    return this.codes.basisTypeCodeList;
+                }
+                return this.codes.basisTypeList;
+            },
+
+            /* ==============================================================
+               P&L 손익계산서 조회
+               ============================================================== */
+
+            onFindPlStmt: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 코드가 지정되지 않았습니다.');
+                    return;
+                }
+
+                this.set('plSearchParam', {
+                    ccPjtCd:   this.ccPjtCd,
+                    ccRev:     this.ccRev,
+                    viewType:  this.plParam.viewType,
+                    basisType: this.plParam.basisType,
+                    costGrpCd: this.plParam.costGrpCd || '',
+                    costCd:    this.plParam.costCd || ''
+                });
+                this.$.findPlStmtAjax.generateRequest();
+            },
+
+            onFindPlStmtResponse: function(e) {
+                var data = e.detail.response;
+                if (data && data.plList) {
+                    this.set('plResultList', data.plList);
+                } else if (Array.isArray(data)) {
+                    this.set('plResultList', data);
+                } else {
+                    this.set('plResultList', this._getDefaultPlItems());
+                }
+            },
+
+            /**
+             * P&L 기본 항목 구조 반환
+             * 매출액, 재료비, 노무비(직접/간접), 제조경비(세부), 판매관리비, 영업이익, 영업이익률
+             */
+            _getDefaultPlItems: function() {
+                var items = [
+                    { itemNm: '매출액',              itemCd: 'REVENUE',         itemLevel: 0 },
+                    { itemNm: '재료비',              itemCd: 'MAT_COST',        itemLevel: 0 },
+                    { itemNm: '노무비',              itemCd: 'LABOR_COST',      itemLevel: 0 },
+                    { itemNm: '  직접노무비',        itemCd: 'DIRECT_LABOR',    itemLevel: 1 },
+                    { itemNm: '  간접노무비',        itemCd: 'INDIRECT_LABOR',  itemLevel: 1 },
+                    { itemNm: '제조경비',            itemCd: 'MFG_COST',        itemLevel: 0 },
+                    { itemNm: '  생산직접경비',      itemCd: 'PROD_DIRECT',     itemLevel: 1 },
+                    { itemNm: '  인건비성경비',      itemCd: 'LABOR_RELATED',   itemLevel: 1 },
+                    { itemNm: '  기타제조경비',      itemCd: 'ETC_MFG',         itemLevel: 1 },
+                    { itemNm: '  감가상각비(건구축물)', itemCd: 'DEPR_BLDG',    itemLevel: 1 },
+                    { itemNm: '  감가상각비(생산라인)', itemCd: 'DEPR_LINE',    itemLevel: 1 },
+                    { itemNm: '  감가상각비(기타)',    itemCd: 'DEPR_ETC',      itemLevel: 1 },
+                    { itemNm: '  외주가공비',        itemCd: 'OUTSRC_COST',     itemLevel: 1 },
+                    { itemNm: '  금형비',            itemCd: 'MOLD_COST',       itemLevel: 1 },
+                    { itemNm: '  연구개발비',        itemCd: 'RND_COST',        itemLevel: 1 },
+                    { itemNm: '  기타경비',          itemCd: 'ETC_COST',        itemLevel: 1 },
+                    { itemNm: '판매관리비',          itemCd: 'SGA_COST',        itemLevel: 0 },
+                    { itemNm: '영업이익',            itemCd: 'OPER_PROFIT',     itemLevel: 0 },
+                    { itemNm: '영업이익률(%)',        itemCd: 'OPER_MARGIN',     itemLevel: 0 }
+                ];
+                for (var i = 0; i < items.length; i++) {
+                    items[i].sopYear  = 0;
+                    items[i].y1       = 0;
+                    items[i].y2       = 0;
+                    items[i].y3       = 0;
+                    items[i].y4       = 0;
+                    items[i].y5       = 0;
+                    items[i].totalAmt = 0;
+                }
+                return items;
+            },
+
+            /* ==============================================================
+               현상원가 산출
+               ============================================================== */
+
+            onCalculatePlStmt: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 코드가 지정되지 않았습니다.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('현상원가를 산출하시겠습니까?', function() {
+                    me.set('calcParam', {
+                        ccPjtCd:   me.ccPjtCd,
+                        ccRev:     me.ccRev,
+                        viewType:  me.plParam.viewType,
+                        basisType: me.plParam.basisType,
+                        costGrpCd: me.plParam.costGrpCd || '',
+                        costCd:    me.plParam.costCd || ''
+                    });
+                    me.$.calculatePlStmtAjax.generateRequest();
+                });
+            },
+
+            onCalculatePlStmtResponse: function(e) {
+                var data = e.detail.response;
+                if (data && data.plList) {
+                    this.set('plResultList', data.plList);
+                } else if (Array.isArray(data)) {
+                    this.set('plResultList', data);
+                }
+                UT.alert('현상원가 산출이 완료되었습니다.');
+            },
+
+            /* ==============================================================
+               엑셀 다운로드
+               ============================================================== */
+
+            onExcelDownload: function() {
+                var grid = this.$.plGrid;
+                if (!grid) return;
+
+                grid.exportToExcel({
+                    fileName: '현상원가_손익계산서_' + (this.ccPjtCd || '') + '.xlsx'
+                });
+            }
+        });
+    </script>
+</dom-module>

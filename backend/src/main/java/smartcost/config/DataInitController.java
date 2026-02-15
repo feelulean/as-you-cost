@@ -13,12 +13,6 @@ import javax.sql.DataSource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 샘플 데이터 초기화 Controller (개발/테스트 전용)
- *
- * - /init/sample-data 호출 시 sample-data.sql 스크립트를 실행한다.
- * - 운영 환경에서는 비활성화 또는 삭제할 것.
- */
 @RestController
 @RequestMapping("/init")
 public class DataInitController {
@@ -26,25 +20,42 @@ public class DataInitController {
     @Inject
     private DataSource dataSource;
 
+    @RequestMapping("/master-data")
+    public Map<String, Object> initMasterData() {
+        return executeSqlFile("init/master-init.sql", "기준정보 마스터 데이터 초기화 완료");
+    }
+
     @RequestMapping("/sample-data")
     public Map<String, Object> initSampleData() {
+        return executeSqlFile("init/sample-data.sql", "샘플 데이터 초기화 완료 (SEAT 3건 + PT 3건)");
+    }
+
+    @RequestMapping("/estimate-detail")
+    public Map<String, Object> initEstimateDetail() {
+        return executeSqlFile("init/estimate-detail-init.sql", "견적원가 상세 테이블 초기화 완료 (18 Tables)");
+    }
+
+    @RequestMapping("/tc-cc-detail")
+    public Map<String, Object> initTcCcDetail() {
+        return executeSqlFile("init/tc-cc-detail-init.sql", "목표원가/현상원가 상세 테이블 초기화 완료 (31 Tables)");
+    }
+
+    private Map<String, Object> executeSqlFile(String resourcePath, String successMessage) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // SQL 파일 로드
             InputStream is = getClass().getClassLoader()
-                    .getResourceAsStream("init/sample-data.sql");
+                    .getResourceAsStream(resourcePath);
 
             if (is == null) {
                 result.put("resultStatus", "FAIL");
-                result.put("message", "sample-data.sql 파일을 찾을 수 없습니다.");
+                result.put("message", resourcePath + " 파일을 찾을 수 없습니다.");
                 return result;
             }
 
             String sql = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             is.close();
 
-            // 주석 제거 및 구문 분리
             String[] statements = sql.split(";");
             int executed = 0;
             int skipped = 0;
@@ -53,7 +64,6 @@ public class DataInitController {
                  Statement stmt = conn.createStatement()) {
 
                 for (String s : statements) {
-                    // 주석과 빈 줄 제거
                     String trimmed = s.replaceAll("--[^\n]*", "").trim();
                     if (trimmed.isEmpty()) {
                         skipped++;
@@ -68,7 +78,7 @@ public class DataInitController {
             result.put("resultStatus", "SUCCESS");
             result.put("executedStatements", executed);
             result.put("skippedStatements", skipped);
-            result.put("message", "샘플 데이터 초기화 완료 (SEAT 3건 + PT 3건)");
+            result.put("message", successMessage);
 
         } catch (Exception e) {
             result.put("resultStatus", "FAIL");

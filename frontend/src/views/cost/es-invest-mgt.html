@@ -1,0 +1,1000 @@
+<dom-module id="es-invest-mgt">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+        <!-- 좌측: 프로젝트 목록 조회 -->
+        <sc-ajax id="findPjtListAjax"
+                 url="/bp/cost/ec/findListEstimateCostPjt.do"
+                 body="{{searchParam}}"
+                 on-response="onFindPjtListResponse">
+        </sc-ajax>
+
+        <!-- 탭1: 라인투자비 -->
+        <sc-ajax id="findLineInvestAjax"
+                 url="/bp/cost/ec/detail/findListLineInvest.do"
+                 body="{{lineSearchParam}}"
+                 on-response="onFindLineInvestResponse">
+        </sc-ajax>
+        <sc-ajax id="saveLineInvestAjax"
+                 url="/bp/cost/ec/detail/saveListLineInvest.do"
+                 body="{{lineSaveParam}}"
+                 on-response="onSaveLineInvestResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteLineInvestAjax"
+                 url="/bp/cost/ec/detail/deleteListLineInvest.do"
+                 body="{{lineDeleteParam}}"
+                 on-response="onDeleteLineInvestResponse">
+        </sc-ajax>
+
+        <!-- 탭2: 기타투자비 -->
+        <sc-ajax id="findOtherInvestAjax"
+                 url="/bp/cost/ec/detail/findListOtherInvest.do"
+                 body="{{otherSearchParam}}"
+                 on-response="onFindOtherInvestResponse">
+        </sc-ajax>
+        <sc-ajax id="saveOtherInvestAjax"
+                 url="/bp/cost/ec/detail/saveListOtherInvest.do"
+                 body="{{otherSaveParam}}"
+                 on-response="onSaveOtherInvestResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteOtherInvestAjax"
+                 url="/bp/cost/ec/detail/deleteListOtherInvest.do"
+                 body="{{otherDeleteParam}}"
+                 on-response="onDeleteOtherInvestResponse">
+        </sc-ajax>
+
+        <!-- 탭3: 인원계획 -->
+        <sc-ajax id="findManpowerAjax"
+                 url="/bp/cost/ec/detail/findListManpower.do"
+                 body="{{mpSearchParam}}"
+                 on-response="onFindManpowerResponse">
+        </sc-ajax>
+        <sc-ajax id="saveManpowerAjax"
+                 url="/bp/cost/ec/detail/saveListManpower.do"
+                 body="{{mpSaveParam}}"
+                 on-response="onSaveManpowerResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역
+             ============================================================ -->
+        <sc-search-container on-search="onFindPjtList" auth-code="V">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/><col/>
+                    <col style="width:120px"/><col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.pjtCd}}" on-enter="onFindPjtList"></sc-text-field>
+                    </td>
+                    <th><sc-label text="고객사"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.custNm}}"></sc-text-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             좌우 Split 레이아웃
+             ============================================================ -->
+        <div class="hbox flex">
+
+            <!-- ========== 좌측: 프로젝트 목록 (flex-3) ========== -->
+            <sc-grid id="pjtGrid"
+                     data-provider="{{pjtList}}"
+                     on-item-click="onProjectClick"
+                     selection-mode="radio"
+                     class="flex-3"
+                     use-state="false">
+
+                <sc-grid-columns>
+                    <sc-data-column data-field="pjtCd"
+                                    header-text="프로젝트 코드"
+                                    width="130"
+                                    text-align="center">
+                    </sc-data-column>
+                    <sc-data-column data-field="pjtNm"
+                                    header-text="프로젝트명"
+                                    width="200"
+                                    text-align="left">
+                    </sc-data-column>
+                    <sc-data-column data-field="custNm"
+                                    header-text="고객사"
+                                    width="120">
+                    </sc-data-column>
+                    <sc-data-column data-field="stsNm"
+                                    header-text="상태"
+                                    width="80"
+                                    text-align="center">
+                    </sc-data-column>
+                </sc-grid-columns>
+            </sc-grid>
+
+            <div class="hspace-10"></div>
+
+            <!-- ========== 우측: 탭 컨텐츠 (flex-7) ========== -->
+            <div class="vbox flex-7">
+
+                <!-- 탭 버튼 영역 -->
+                <div style="display:flex; border-bottom:2px solid #1976d2; margin-bottom:8px;">
+                    <button type="button"
+                            on-click="_onTabClick"
+                            data-tab="line"
+                            class$="[[_tabBtnClass('line', activeTab)]]"
+                            style="padding:8px 20px; border:1px solid #ccc; border-bottom:none; background:#fff; cursor:pointer; font-size:13px; margin-right:2px; border-radius:4px 4px 0 0;">
+                        라인투자비
+                    </button>
+                    <button type="button"
+                            on-click="_onTabClick"
+                            data-tab="other"
+                            class$="[[_tabBtnClass('other', activeTab)]]"
+                            style="padding:8px 20px; border:1px solid #ccc; border-bottom:none; background:#fff; cursor:pointer; font-size:13px; margin-right:2px; border-radius:4px 4px 0 0;">
+                        기타투자비
+                    </button>
+                    <button type="button"
+                            on-click="_onTabClick"
+                            data-tab="manpower"
+                            class$="[[_tabBtnClass('manpower', activeTab)]]"
+                            style="padding:8px 20px; border:1px solid #ccc; border-bottom:none; background:#fff; cursor:pointer; font-size:13px; border-radius:4px 4px 0 0;">
+                        인원계획
+                    </button>
+                </div>
+
+                <!-- ============================================================
+                     탭1: 라인투자비
+                     ============================================================ -->
+                <template is="dom-if" if="[[_isTab('line', activeTab)]]">
+                    <sc-grid id="lineGrid"
+                             data-provider="{{lineInvestList}}"
+                             editable="true"
+                             selection-mode="checkbox"
+                             class="flex">
+
+                        <sc-toolbar>
+                            <sc-button text="신규추가" on-click="onAddLineInvest"    auth-code="S"></sc-button>
+                            <sc-button text="삭제"     on-click="onDeleteLineInvest" auth-code="S"></sc-button>
+                            <sc-button text="저장"     on-click="onSaveLineInvest"   auth-code="S"></sc-button>
+                        </sc-toolbar>
+
+                        <sc-grid-columns>
+                            <sc-combobox-column data-field="lineType"
+                                                header-text="구분"
+                                                width="90"
+                                                editable="true"
+                                                required="true"
+                                                items="{{codes.lineTypeList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="lineCd"
+                                            header-text="라인코드"
+                                            width="100"
+                                            editable="true"
+                                            text-align="center">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="lineNm"
+                                            header-text="라인명"
+                                            width="150"
+                                            editable="true"
+                                            required="true">
+                            </sc-data-column>
+
+                            <sc-combobox-column data-field="processType"
+                                                header-text="공정"
+                                                width="100"
+                                                editable="true"
+                                                required="true"
+                                                items="{{codes.processTypeList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="acqAmt"
+                                            header-text="취득금액"
+                                            width="130"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number"
+                                            format-type="amt">
+                            </sc-data-column>
+
+                            <sc-combobox-column data-field="currency"
+                                                header-text="통화"
+                                                width="80"
+                                                editable="true"
+                                                items="{{codes.currencyList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="deprStartYm"
+                                            header-text="상각개시연월"
+                                            width="110"
+                                            editable="true"
+                                            text-align="center">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="capa"
+                                            header-text="CAPA"
+                                            width="100"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number"
+                                            format="#,###">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="availRate"
+                                            header-text="사용가능비율(%)"
+                                            width="120"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="useRate"
+                                            header-text="사용비율(%)"
+                                            width="100"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="usefulLife"
+                                            header-text="내용연수"
+                                            width="90"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+                        </sc-grid-columns>
+
+                        <sc-grid-fields>
+                            <sc-grid-field data-field="ecPjtCd"></sc-grid-field>
+                            <sc-grid-field data-field="lineInvestSeq"></sc-grid-field>
+                        </sc-grid-fields>
+                    </sc-grid>
+                </template>
+
+                <!-- ============================================================
+                     탭2: 기타투자비
+                     ============================================================ -->
+                <template is="dom-if" if="[[_isTab('other', activeTab)]]">
+                    <sc-grid id="otherGrid"
+                             data-provider="{{otherInvestList}}"
+                             editable="true"
+                             selection-mode="checkbox"
+                             class="flex">
+
+                        <sc-toolbar>
+                            <sc-button text="신규추가" on-click="onAddOtherInvest"    auth-code="S"></sc-button>
+                            <sc-button text="검색추가" on-click="onSearchAddOtherInvest" auth-code="S"></sc-button>
+                            <sc-button text="삭제"     on-click="onDeleteOtherInvest" auth-code="S"></sc-button>
+                            <sc-button text="저장"     on-click="onSaveOtherInvest"   auth-code="S"></sc-button>
+                        </sc-toolbar>
+
+                        <sc-grid-columns>
+                            <sc-data-column data-field="investNm"
+                                            header-text="투자명"
+                                            width="180"
+                                            editable="true"
+                                            required="true">
+                            </sc-data-column>
+
+                            <sc-combobox-column data-field="investType"
+                                                header-text="투자구분"
+                                                width="120"
+                                                editable="true"
+                                                required="true"
+                                                items="{{codes.investTypeList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-combobox-column data-field="currency"
+                                                header-text="통화"
+                                                width="80"
+                                                editable="true"
+                                                items="{{codes.currencyList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="acqAmt"
+                                            header-text="취득금액"
+                                            width="130"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number"
+                                            format-type="amt">
+                            </sc-data-column>
+
+                            <sc-combobox-column data-field="deprType"
+                                                header-text="감가상각구분"
+                                                width="130"
+                                                editable="true"
+                                                items="{{codes.deprTypeList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="usefulLife"
+                                            header-text="내용연수"
+                                            width="90"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="acqYear"
+                                            header-text="취득연도"
+                                            width="90"
+                                            editable="true"
+                                            text-align="center">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="deprStartYm"
+                                            header-text="상각개시연월"
+                                            width="110"
+                                            editable="true"
+                                            text-align="center">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="availRate"
+                                            header-text="사용가능비율(%)"
+                                            width="120"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="useRate"
+                                            header-text="사용비율(%)"
+                                            width="100"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+                        </sc-grid-columns>
+
+                        <sc-grid-fields>
+                            <sc-grid-field data-field="ecPjtCd"></sc-grid-field>
+                            <sc-grid-field data-field="otherInvestSeq"></sc-grid-field>
+                        </sc-grid-fields>
+                    </sc-grid>
+                </template>
+
+                <!-- ============================================================
+                     탭3: 인원계획
+                     ============================================================ -->
+                <template is="dom-if" if="[[_isTab('manpower', activeTab)]]">
+                    <sc-grid id="mpGrid"
+                             data-provider="{{manpowerList}}"
+                             editable="true"
+                             selection-mode="checkbox"
+                             class="flex">
+
+                        <sc-toolbar>
+                            <sc-button text="추가" on-click="onAddManpower"  auth-code="S"></sc-button>
+                            <sc-button text="저장" on-click="onSaveManpower" auth-code="S"></sc-button>
+                        </sc-toolbar>
+
+                        <sc-grid-columns>
+                            <sc-combobox-column data-field="mpType"
+                                                header-text="인력투자구분"
+                                                width="120"
+                                                editable="true"
+                                                required="true"
+                                                items="{{codes.mpTypeList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="mpNm"
+                                            header-text="인력투자명"
+                                            width="160"
+                                            editable="true"
+                                            required="true">
+                            </sc-data-column>
+
+                            <sc-combobox-column data-field="processType"
+                                                header-text="공정"
+                                                width="100"
+                                                editable="true"
+                                                items="{{codes.processTypeList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-combobox-column data-field="currency"
+                                                header-text="통화"
+                                                width="80"
+                                                editable="true"
+                                                items="{{codes.currencyList}}"
+                                                display-field="label"
+                                                value-field="data">
+                            </sc-combobox-column>
+
+                            <sc-data-column data-field="avgWage"
+                                            header-text="연평균임금"
+                                            width="130"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number"
+                                            format-type="amt">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y1Cnt"
+                                            header-text="Y1"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y2Cnt"
+                                            header-text="Y2"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y3Cnt"
+                                            header-text="Y3"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y4Cnt"
+                                            header-text="Y4"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y5Cnt"
+                                            header-text="Y5"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y6Cnt"
+                                            header-text="Y6"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="y7Cnt"
+                                            header-text="Y7"
+                                            width="70"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+                        </sc-grid-columns>
+
+                        <sc-grid-fields>
+                            <sc-grid-field data-field="ecPjtCd"></sc-grid-field>
+                            <sc-grid-field data-field="mpSeq"></sc-grid-field>
+                        </sc-grid-fields>
+                    </sc-grid>
+                </template>
+
+            </div>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'es-invest-mgt',
+
+            properties: {
+                /* ── 조회 조건 ── */
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ── 좌측 프로젝트 목록 ── */
+                pjtList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                /* ── 선택된 프로젝트 코드 ── */
+                selectedPjtCd: {
+                    type: String,
+                    value: ''
+                },
+
+                /* ── 활성 탭 ── */
+                activeTab: {
+                    type: String,
+                    value: 'line'
+                },
+
+                /* ── 탭1: 라인투자비 ── */
+                lineInvestList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                lineSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                lineSaveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                lineDeleteParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ── 탭2: 기타투자비 ── */
+                otherInvestList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                otherSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                otherSaveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                otherDeleteParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ── 탭3: 인원계획 ── */
+                manpowerList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                mpSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                mpSaveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ── 공통코드 ── */
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            lineTypeList: [
+                                { label: '신규', data: 'NEW' },
+                                { label: '기존', data: 'EXIST' }
+                            ],
+                            processTypeList: [
+                                { label: '가공',   data: 'MACH' },
+                                { label: '조립',   data: 'ASSY' },
+                                { label: '열처리', data: 'HEAT' },
+                                { label: 'SEAT',   data: 'SEAT' }
+                            ],
+                            investTypeList: [
+                                { label: '건구축물', data: 'BUILDING' },
+                                { label: '연구개발', data: 'RND' },
+                                { label: '토지',     data: 'LAND' },
+                                { label: '기타',     data: 'ETC' }
+                            ],
+                            deprTypeList: [
+                                { label: '내용연수 상각',   data: 'USEFUL_LIFE' },
+                                { label: '지출연도 비용',   data: 'EXPENSE' },
+                                { label: '자산',             data: 'ASSET' }
+                            ],
+                            mpTypeList: [
+                                { label: '생산직접', data: 'DIRECT' },
+                                { label: '생산간접', data: 'INDIRECT' },
+                                { label: '판매관리', data: 'SGA' }
+                            ],
+                            currencyList: [
+                                { label: 'KRW', data: 'KRW' },
+                                { label: 'USD', data: 'USD' },
+                                { label: 'EUR', data: 'EUR' },
+                                { label: 'CNY', data: 'CNY' },
+                                { label: 'JPY', data: 'JPY' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ==============================================================
+               탭 헬퍼
+               ============================================================== */
+
+            _onTabClick: function(e) {
+                var tab = e.currentTarget.getAttribute('data-tab');
+                if (tab) {
+                    this.set('activeTab', tab);
+                    this._loadTabData();
+                }
+            },
+
+            _isTab: function(tabName, activeTab) {
+                return tabName === activeTab;
+            },
+
+            _tabBtnClass: function(tabName, activeTab) {
+                return tabName === activeTab ? 'tab-active' : '';
+            },
+
+            /**
+             * 현재 활성 탭에 따라 데이터 로드
+             */
+            _loadTabData: function() {
+                if (!this.selectedPjtCd) return;
+
+                if (this.activeTab === 'line') {
+                    this.set('lineSearchParam', { ecPjtCd: this.selectedPjtCd });
+                    this.$.findLineInvestAjax.generateRequest();
+                } else if (this.activeTab === 'other') {
+                    this.set('otherSearchParam', { ecPjtCd: this.selectedPjtCd });
+                    this.$.findOtherInvestAjax.generateRequest();
+                } else if (this.activeTab === 'manpower') {
+                    this.set('mpSearchParam', { ecPjtCd: this.selectedPjtCd });
+                    this.$.findManpowerAjax.generateRequest();
+                }
+            },
+
+            /* ==============================================================
+               프로젝트 목록 조회 (좌측 그리드)
+               ============================================================== */
+
+            onFindPjtList: function() {
+                this.$.findPjtListAjax.generateRequest();
+            },
+
+            onFindPjtListResponse: function(e) {
+                this.set('pjtList', e.detail.response);
+            },
+
+            /* ==============================================================
+               프로젝트 선택 -> 우측 탭 데이터 로드
+               ============================================================== */
+
+            onProjectClick: function(e) {
+                var row = e.detail.data;
+                if (!row || !row.pjtCd) return;
+
+                this.set('selectedPjtCd', row.pjtCd);
+                this._readOnly = (row.sts && row.sts !== 'T');
+
+                this._loadTabData();
+            },
+
+            /* ==============================================================
+               탭1: 라인투자비 — 조회/추가/삭제/저장
+               ============================================================== */
+
+            onFindLineInvestResponse: function(e) {
+                this.set('lineInvestList', e.detail.response);
+            },
+
+            onAddLineInvest: function() {
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#lineGrid');
+                if (!grid) return;
+
+                grid.insertRow(0, {
+                    ecPjtCd:      this.selectedPjtCd,
+                    lineInvestSeq: '',
+                    lineType:     '',
+                    lineCd:       '',
+                    lineNm:       '',
+                    processType:  '',
+                    acqAmt:       0,
+                    currency:     'KRW',
+                    deprStartYm:  '',
+                    capa:         0,
+                    availRate:    0,
+                    useRate:      0,
+                    usefulLife:   0
+                });
+            },
+
+            onDeleteLineInvest: function() {
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#lineGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('lineDeleteParam', {
+                        ecPjtCd:    me.selectedPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteLineInvestAjax.generateRequest();
+                });
+            },
+
+            onDeleteLineInvestResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData();
+            },
+
+            onSaveLineInvest: function() {
+                if (!this.selectedPjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
+                    return;
+                }
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#lineGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                // 필수값 검증
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].lineType || !modifiedRows[i].lineNm || !modifiedRows[i].processType) {
+                        UT.alert('MSG_COM_00001');
+                        return;
+                    }
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('lineSaveParam', {
+                        ecPjtCd:  me.selectedPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveLineInvestAjax.generateRequest();
+                });
+            },
+
+            onSaveLineInvestResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData();
+            },
+
+            /* ==============================================================
+               탭2: 기타투자비 — 조회/추가/검색추가/삭제/저장
+               ============================================================== */
+
+            onFindOtherInvestResponse: function(e) {
+                this.set('otherInvestList', e.detail.response);
+            },
+
+            onAddOtherInvest: function() {
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#otherGrid');
+                if (!grid) return;
+
+                grid.insertRow(0, {
+                    ecPjtCd:        this.selectedPjtCd,
+                    otherInvestSeq: '',
+                    investNm:       '',
+                    investType:     '',
+                    currency:       'KRW',
+                    acqAmt:         0,
+                    deprType:       '',
+                    usefulLife:     0,
+                    acqYear:        '',
+                    deprStartYm:    '',
+                    availRate:      0,
+                    useRate:        0
+                });
+            },
+
+            /**
+             * 검색추가: 기존 등록된 기타투자 항목을 검색하여 추가
+             */
+            onSearchAddOtherInvest: function() {
+                if (!this.selectedPjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
+                    return;
+                }
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                // 팝업 검색창 호출 (프로젝트별 기존 투자항목 검색)
+                var me = this;
+                UT.popup({
+                    url:    'es-invest-search-popup',
+                    title:  '기타투자 항목 검색',
+                    width:  800,
+                    height: 500,
+                    param:  { ecPjtCd: me.selectedPjtCd },
+                    callback: function(result) {
+                        if (result && result.length > 0) {
+                            var grid = me.$$('#otherGrid');
+                            if (!grid) return;
+                            for (var i = 0; i < result.length; i++) {
+                                result[i].ecPjtCd = me.selectedPjtCd;
+                                grid.insertRow(0, result[i]);
+                            }
+                        }
+                    }
+                });
+            },
+
+            onDeleteOtherInvest: function() {
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#otherGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('otherDeleteParam', {
+                        ecPjtCd:    me.selectedPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteOtherInvestAjax.generateRequest();
+                });
+            },
+
+            onDeleteOtherInvestResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this._loadTabData();
+            },
+
+            onSaveOtherInvest: function() {
+                if (!this.selectedPjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
+                    return;
+                }
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#otherGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                // 필수값 검증
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].investNm || !modifiedRows[i].investType) {
+                        UT.alert('MSG_COM_00001');
+                        return;
+                    }
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('otherSaveParam', {
+                        ecPjtCd:  me.selectedPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveOtherInvestAjax.generateRequest();
+                });
+            },
+
+            onSaveOtherInvestResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData();
+            },
+
+            /* ==============================================================
+               탭3: 인원계획 — 조회/추가/저장
+               ============================================================== */
+
+            onFindManpowerResponse: function(e) {
+                this.set('manpowerList', e.detail.response);
+            },
+
+            onAddManpower: function() {
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#mpGrid');
+                if (!grid) return;
+
+                grid.insertRow(0, {
+                    ecPjtCd:     this.selectedPjtCd,
+                    mpSeq:       '',
+                    mpType:      '',
+                    mpNm:        '',
+                    processType: '',
+                    currency:    'KRW',
+                    avgWage:     0,
+                    y1Cnt:       0,
+                    y2Cnt:       0,
+                    y3Cnt:       0,
+                    y4Cnt:       0,
+                    y5Cnt:       0,
+                    y6Cnt:       0,
+                    y7Cnt:       0
+                });
+            },
+
+            onSaveManpower: function() {
+                if (!this.selectedPjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
+                    return;
+                }
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#mpGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                // 필수값 검증
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].mpType || !modifiedRows[i].mpNm) {
+                        UT.alert('MSG_COM_00001');
+                        return;
+                    }
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('mpSaveParam', {
+                        ecPjtCd:  me.selectedPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveManpowerAjax.generateRequest();
+                });
+            },
+
+            onSaveManpowerResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData();
+            }
+        });
+    </script>
+</dom-module>

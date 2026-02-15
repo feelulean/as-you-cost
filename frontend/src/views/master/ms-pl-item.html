@@ -1,0 +1,247 @@
+<dom-module id="ms-pl-item">
+    <template>
+        <!-- ============================================================
+             Ajax 선언부 — 손익 항목
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/master/data/findListPlItem.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+        <sc-ajax id="saveListAjax"
+                 url="/bp/master/data/saveListPlItem.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveListResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/master/data/deleteListPlItem.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteListResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역
+             ============================================================ -->
+        <sc-search-container on-search="onFindList">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/>
+                    <col/>
+                    <col style="width:120px"/>
+                    <col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="항목코드"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.itemCd}}"
+                                       on-enter="onFindList"
+                                       placeholder="항목코드">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="항목명"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.itemNm}}"
+                                       on-enter="onFindList"
+                                       placeholder="항목명">
+                        </sc-text-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             트리 그리드 — 손익 항목
+             ============================================================ -->
+        <sc-grid id="gridPanel"
+                 data-provider="{{treeList}}"
+                 editable="true"
+                 is-tree="true"
+                 tree-field="itemNm"
+                 class="flex">
+
+            <sc-toolbar>
+                <sc-button text="조회"       on-click="onFindList"></sc-button>
+                <sc-button text="하위노드추가" on-click="onAddChildNode"></sc-button>
+                <sc-button text="현재노드추가" on-click="onAddSiblingNode"></sc-button>
+                <span class="vt-seperator"></span>
+                <sc-button text="삭제" on-click="onDeleteList"></sc-button>
+                <sc-button text="저장" on-click="onSaveList"></sc-button>
+            </sc-toolbar>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="itemCd"
+                                header-text="항목코드"
+                                width="120"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="itemNm"
+                                header-text="항목명"
+                                width="200"
+                                editable="true">
+                </sc-data-column>
+                <sc-data-column data-field="upItemCd"
+                                header-text="상위코드"
+                                width="120"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="itemType"
+                                header-text="특성"
+                                width="80"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="sortNo"
+                                header-text="정렬"
+                                width="70"
+                                editable="true"
+                                text-align="center"
+                                data-type="number">
+                </sc-data-column>
+                <sc-data-column data-field="modrId"
+                                header-text="변경자"
+                                width="100"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="modDttm"
+                                header-text="변경일자"
+                                width="140"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'ms-pl-item',
+
+            properties: {
+                searchParam:  { type: Object, value: function() { return {}; } },
+                resultList:   { type: Array,  value: function() { return []; } },
+                treeList:     { type: Array,  value: function() { return []; } },
+                saveParam:    { type: Object, value: function() { return {}; } },
+                deleteParam:  { type: Object, value: function() { return {}; } }
+            },
+
+            /* ── 조회 ── */
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            onFindListResponse: function(e) {
+                var flatList = e.detail.response || [];
+                this.set('resultList', flatList);
+                var tree = this._buildTree(flatList);
+                this.set('treeList', tree);
+            },
+
+            /**
+             * 평탄 목록(flat list)을 트리 구조로 변환한다.
+             * upItemCd 가 빈 값이거나 null이면 루트 노드로 간주한다.
+             */
+            _buildTree: function(flatList) {
+                var map = {};
+                var roots = [];
+                var i, item, parent;
+
+                /* 1단계: 맵 생성 */
+                for (i = 0; i < flatList.length; i++) {
+                    item = flatList[i];
+                    item.children = [];
+                    map[item.itemCd] = item;
+                }
+
+                /* 2단계: 부모-자식 관계 구성 */
+                for (i = 0; i < flatList.length; i++) {
+                    item = flatList[i];
+                    if (item.upItemCd && map[item.upItemCd]) {
+                        parent = map[item.upItemCd];
+                        parent.children.push(item);
+                    } else {
+                        roots.push(item);
+                    }
+                }
+
+                return roots;
+            },
+
+            /* ── 하위 노드 추가 ── */
+            onAddChildNode: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                var parentCd = '';
+
+                if (selectedRows && selectedRows.length > 0) {
+                    parentCd = selectedRows[0].itemCd || '';
+                }
+
+                grid.addRow({
+                    itemCd: '', itemNm: '', upItemCd: parentCd,
+                    itemType: 'V', sortNo: 0,
+                    _rowStatus: 'C'
+                });
+            },
+
+            /* ── 현재 노드(동일 레벨) 추가 ── */
+            onAddSiblingNode: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                var upItemCd = '';
+
+                if (selectedRows && selectedRows.length > 0) {
+                    upItemCd = selectedRows[0].upItemCd || '';
+                }
+
+                grid.addRow({
+                    itemCd: '', itemNm: '', upItemCd: upItemCd,
+                    itemType: 'V', sortNo: 0,
+                    _rowStatus: 'C'
+                });
+            },
+
+            /* ── 저장 ── */
+            onSaveList: function() {
+                var grid = this.$.gridPanel;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveParam', { saveList: modifiedRows });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+
+            onSaveListResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindList();
+            },
+
+            /* ── 삭제 ── */
+            onDeleteList: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteParam', { deleteList: selectedRows });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+
+            onDeleteListResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindList();
+            }
+        });
+    </script>
+</dom-module>

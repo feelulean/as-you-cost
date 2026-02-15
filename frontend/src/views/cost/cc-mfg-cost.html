@@ -1,0 +1,776 @@
+<dom-module id="cc-mfg-cost">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+            /* 결과 요약 테이블 */
+            .result-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+                margin-top: 6px;
+            }
+            .result-table th,
+            .result-table td {
+                border: 1px solid #e0e0e0;
+                padding: 5px 8px;
+            }
+            .result-table th {
+                background: #f5f6fa;
+                font-weight: 600;
+                text-align: center;
+            }
+            .result-table td.amt {
+                text-align: right;
+            }
+            .result-table tr.row-total {
+                background: #f0f1f5;
+                font-weight: 600;
+            }
+            /* 상세 탭 콘텐츠 */
+            .detail-tab-content {
+                border: 1px solid #e0e0e0;
+                border-top: none;
+                padding: 8px;
+                min-height: 200px;
+                flex: 1;
+                overflow: auto;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+
+        <!-- 제조경비 데이터 조회 -->
+        <sc-ajax id="findMfgCostAjax"
+                 url="/bp/cost/cc/detail/findListCcMfgCost.do"
+                 body="{{mfgCostSearchParam}}"
+                 on-response="onFindMfgCostResponse">
+        </sc-ajax>
+
+        <!-- 제조경비 계산 요청 -->
+        <sc-ajax id="calculateMfgCostAjax"
+                 url="/bp/cost/cc/detail/calculateCcMfgCost.do"
+                 body="{{calculateParam}}"
+                 on-response="onCalculateMfgCostResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             상단: 입력 파라미터 폼
+             ============================================================ -->
+        <div class="section-title">제조경비 산출 정보 입력</div>
+
+        <sc-toolbar>
+            <sc-button text="계산"      on-click="onCalculate"     auth-code="S"></sc-button>
+            <sc-button text="계산완료"   on-click="onCalcComplete"  auth-code="S"></sc-button>
+        </sc-toolbar>
+
+        <table class="detail-form-table">
+            <colgroup>
+                <col style="width:160px"/><col/>
+                <col style="width:160px"/><col/>
+            </colgroup>
+            <tr>
+                <th><sc-label text="임금인상률(%)"></sc-label></th>
+                <td>
+                    <sc-text-field value="{{mfgCostData.wageIncRate}}" data-type="number"></sc-text-field>
+                </td>
+                <th><sc-label text="물가상승률(%)"></sc-label></th>
+                <td>
+                    <sc-text-field value="{{mfgCostData.inflationRate}}" data-type="number"></sc-text-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="생산직접경비비율(%)"></sc-label></th>
+                <td>
+                    <sc-text-field value="{{mfgCostData.prodDirectRate}}" data-type="number"></sc-text-field>
+                </td>
+                <th><sc-label text="인건비성경비비율(%)"></sc-label></th>
+                <td>
+                    <sc-text-field value="{{mfgCostData.laborRelatedRate}}" data-type="number"></sc-text-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="기타제조경비비율(%)"></sc-label></th>
+                <td>
+                    <sc-text-field value="{{mfgCostData.etcMfgRate}}" data-type="number"></sc-text-field>
+                </td>
+                <th><sc-label text="금형비단가"></sc-label></th>
+                <td>
+                    <sc-text-field value="{{mfgCostData.moldCostUnit}}" data-type="number"></sc-text-field>
+                </td>
+            </tr>
+            <tr>
+                <th><sc-label text="외주가공비단가/비율"></sc-label></th>
+                <td colspan="3">
+                    <sc-text-field value="{{mfgCostData.outsrcCostUnit}}" data-type="number"></sc-text-field>
+                </td>
+            </tr>
+        </table>
+
+        <!-- ============================================================
+             하단: 결과 영역 (12개 탭)
+             ============================================================ -->
+        <div style="flex:1; overflow:auto; margin-top:10px; display:flex; flex-direction:column;">
+
+            <!-- 결과 요약 테이블 -->
+            <div class="section-title">제조경비 계산 결과</div>
+            <table class="result-table">
+                <colgroup>
+                    <col style="width:40px"/>
+                    <col style="width:200px"/>
+                    <col/>
+                    <col style="width:160px"/>
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>원가항목</th>
+                        <th>단위당 금액(KRW)</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:center">1</td>
+                        <td>직접노무비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.directLaborCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">2</td>
+                        <td>간접노무비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.indirectLaborCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">3</td>
+                        <td>생산직접경비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.prodDirectCost)}}</td>
+                        <td>직접노무비 x {{mfgCostData.prodDirectRate}}%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">4</td>
+                        <td>인건비성경비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.laborRelatedCost)}}</td>
+                        <td>노무비 x {{mfgCostData.laborRelatedRate}}%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">5</td>
+                        <td>기타제조경비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.etcMfgCost)}}</td>
+                        <td>노무비 x {{mfgCostData.etcMfgRate}}%</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">6</td>
+                        <td>감가상각비(건구축물)</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.deprBldgCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">7</td>
+                        <td>감가상각비(생산라인)</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.deprLineCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">8</td>
+                        <td>감가상각비(기타)</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.deprEtcCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">9</td>
+                        <td>외주가공비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.outsrcCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">10</td>
+                        <td>금형비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.moldCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">11</td>
+                        <td>연구개발비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.rndCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center">12</td>
+                        <td>기타경비</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.etcCost)}}</td>
+                        <td></td>
+                    </tr>
+                    <tr class="row-total">
+                        <td style="text-align:center"></td>
+                        <td>합계</td>
+                        <td class="amt">{{_formatAmt(mfgCostResult.totalMfgCost)}}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 세부 원가 상세 탭 -->
+            <div class="section-title" style="margin-top:12px;">세부 원가 상세</div>
+            <div class="tab-bar">
+                <button class$="tab-btn {{_detailTabClass('directLabor')}}"
+                        on-click="_onDetailTab" data-dtab="directLabor">직접노무비</button>
+                <button class$="tab-btn {{_detailTabClass('indirectLabor')}}"
+                        on-click="_onDetailTab" data-dtab="indirectLabor">간접노무비</button>
+                <button class$="tab-btn {{_detailTabClass('prodDirect')}}"
+                        on-click="_onDetailTab" data-dtab="prodDirect">생산직접경비</button>
+                <button class$="tab-btn {{_detailTabClass('laborRelated')}}"
+                        on-click="_onDetailTab" data-dtab="laborRelated">인건비성경비</button>
+                <button class$="tab-btn {{_detailTabClass('etcMfg')}}"
+                        on-click="_onDetailTab" data-dtab="etcMfg">기타제조경비</button>
+                <button class$="tab-btn {{_detailTabClass('deprBldg')}}"
+                        on-click="_onDetailTab" data-dtab="deprBldg">감가상각_건구축</button>
+                <button class$="tab-btn {{_detailTabClass('deprLine')}}"
+                        on-click="_onDetailTab" data-dtab="deprLine">감가상각_생산라인</button>
+                <button class$="tab-btn {{_detailTabClass('deprEtc')}}"
+                        on-click="_onDetailTab" data-dtab="deprEtc">감가상각_기타</button>
+                <button class$="tab-btn {{_detailTabClass('outsrc')}}"
+                        on-click="_onDetailTab" data-dtab="outsrc">외주가공비</button>
+                <button class$="tab-btn {{_detailTabClass('mold')}}"
+                        on-click="_onDetailTab" data-dtab="mold">금형비</button>
+                <button class$="tab-btn {{_detailTabClass('rnd')}}"
+                        on-click="_onDetailTab" data-dtab="rnd">연구개발비</button>
+                <button class$="tab-btn {{_detailTabClass('etcExp')}}"
+                        on-click="_onDetailTab" data-dtab="etcExp">기타경비</button>
+            </div>
+
+            <div class="detail-tab-content">
+
+                <!-- 직접노무비 -->
+                <template is="dom-if" if="{{_isDetailTab('directLabor')}}">
+                    <sc-grid id="gridDirectLabor"
+                             data-provider="{{detailDirectLabor}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="lineNm" header-text="라인명" width="140"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="workerCnt" header-text="인원(명)" width="80" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="wagePerPerson" header-text="인당임금(원)" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualCost" header-text="연간노무비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 간접노무비 -->
+                <template is="dom-if" if="{{_isDetailTab('indirectLabor')}}">
+                    <sc-grid id="gridIndirectLabor"
+                             data-provider="{{detailIndirectLabor}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="lineNm" header-text="라인명" width="140"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="workerCnt" header-text="인원(명)" width="80" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="wagePerPerson" header-text="인당임금(원)" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualCost" header-text="연간노무비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 생산직접경비 -->
+                <template is="dom-if" if="{{_isDetailTab('prodDirect')}}">
+                    <sc-grid id="gridProdDirect"
+                             data-provider="{{detailProdDirect}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 인건비성경비 -->
+                <template is="dom-if" if="{{_isDetailTab('laborRelated')}}">
+                    <sc-grid id="gridLaborRelated"
+                             data-provider="{{detailLaborRelated}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 기타제조경비 -->
+                <template is="dom-if" if="{{_isDetailTab('etcMfg')}}">
+                    <sc-grid id="gridEtcMfg"
+                             data-provider="{{detailEtcMfg}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 감가상각비 건구축물 -->
+                <template is="dom-if" if="{{_isDetailTab('deprBldg')}}">
+                    <sc-grid id="gridDeprBldg"
+                             data-provider="{{detailDeprBldg}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="assetNm" header-text="자산명" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="acqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="annualDepr" header-text="연간상각비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 감가상각비 생산라인 -->
+                <template is="dom-if" if="{{_isDetailTab('deprLine')}}">
+                    <sc-grid id="gridDeprLine"
+                             data-provider="{{detailDeprLine}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="assetNm" header-text="설비/라인명" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="acqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="annualDepr" header-text="연간상각비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 감가상각비 기타 -->
+                <template is="dom-if" if="{{_isDetailTab('deprEtc')}}">
+                    <sc-grid id="gridDeprEtc"
+                             data-provider="{{detailDeprEtc}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="assetNm" header-text="자산명" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="acqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="annualDepr" header-text="연간상각비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 외주가공비 -->
+                <template is="dom-if" if="{{_isDetailTab('outsrc')}}">
+                    <sc-grid id="gridOutsrc"
+                             data-provider="{{detailOutsrc}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="processNm" header-text="공정명" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="outsrcVendor" header-text="외주업체" width="120"></sc-data-column>
+                            <sc-data-column data-field="unitPrice" header-text="단가(원)" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 금형비 -->
+                <template is="dom-if" if="{{_isDetailTab('mold')}}">
+                    <sc-grid id="gridMold"
+                             data-provider="{{detailMold}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="moldNm" header-text="금형명" width="160"></sc-data-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
+                            <sc-data-column data-field="moldAcqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="totalProdQty" header-text="총생산수량" width="110" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 연구개발비 -->
+                <template is="dom-if" if="{{_isDetailTab('rnd')}}">
+                    <sc-grid id="gridRnd"
+                             data-provider="{{detailRnd}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="rndItemNm" header-text="R&D 항목" width="180"></sc-data-column>
+                            <sc-data-column data-field="investAmt" header-text="투자금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="allocRate" header-text="배분비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
+                            <sc-data-column data-field="allocAmt" header-text="배분금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+                <!-- 기타경비 -->
+                <template is="dom-if" if="{{_isDetailTab('etcExp')}}">
+                    <sc-grid id="gridEtcExp"
+                             data-provider="{{detailEtcExp}}"
+                             class="flex" use-state="false">
+                        <sc-grid-columns>
+                            <sc-data-column data-field="costItemNm" header-text="경비항목" width="180"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                        </sc-grid-columns>
+                    </sc-grid>
+                </template>
+
+            </div><!-- /detail-tab-content -->
+
+        </div><!-- /flex overflow -->
+    </template>
+
+    <script>
+        Polymer({
+            is: 'cc-mfg-cost',
+
+            properties: {
+                /* ─── URL 파라미터 ─── */
+                ccPjtCd: { type: String, value: '' },
+                ccRev:   { type: String, value: '' },
+
+                /* ─── 제조경비 산출 입력 데이터 ─── */
+                mfgCostData: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            ccPjtCd:          '',
+                            ccRev:            '',
+                            wageIncRate:      0,
+                            inflationRate:    0,
+                            prodDirectRate:   0,
+                            laborRelatedRate: 0,
+                            etcMfgRate:       0,
+                            moldCostUnit:     0,
+                            outsrcCostUnit:   0
+                        };
+                    }
+                },
+
+                /* ─── 제조경비 계산 결과 (요약) ─── */
+                mfgCostResult: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            directLaborCost:   0,
+                            indirectLaborCost: 0,
+                            prodDirectCost:    0,
+                            laborRelatedCost:  0,
+                            etcMfgCost:        0,
+                            deprBldgCost:      0,
+                            deprLineCost:      0,
+                            deprEtcCost:       0,
+                            outsrcCost:        0,
+                            moldCost:          0,
+                            rndCost:           0,
+                            etcCost:           0,
+                            totalMfgCost:      0
+                        };
+                    }
+                },
+
+                /* ─── 활성 상세 탭 ─── */
+                activeDetailTab: { type: String, value: 'directLabor' },
+
+                /* ─── 상세 탭별 그리드 데이터 ─── */
+                detailDirectLabor:   { type: Array, value: function() { return []; } },
+                detailIndirectLabor: { type: Array, value: function() { return []; } },
+                detailProdDirect:    { type: Array, value: function() { return []; } },
+                detailLaborRelated:  { type: Array, value: function() { return []; } },
+                detailEtcMfg:        { type: Array, value: function() { return []; } },
+                detailDeprBldg:      { type: Array, value: function() { return []; } },
+                detailDeprLine:      { type: Array, value: function() { return []; } },
+                detailDeprEtc:       { type: Array, value: function() { return []; } },
+                detailOutsrc:        { type: Array, value: function() { return []; } },
+                detailMold:          { type: Array, value: function() { return []; } },
+                detailRnd:           { type: Array, value: function() { return []; } },
+                detailEtcExp:        { type: Array, value: function() { return []; } },
+
+                /* ─── Ajax 파라미터 ─── */
+                mfgCostSearchParam: { type: Object, value: function() { return {}; } },
+                calculateParam:     { type: Object, value: function() { return {}; } }
+            },
+
+            /* ==============================================================
+               라이프사이클
+               ============================================================== */
+
+            attached: function() {
+                var param = UT.getParameter();
+                if (param) {
+                    this.ccPjtCd = param.ccPjtCd || '';
+                    this.ccRev   = param.ccRev   || '';
+                }
+                if (this.ccPjtCd) {
+                    this.set('mfgCostSearchParam', {
+                        ccPjtCd: this.ccPjtCd,
+                        ccRev:   this.ccRev
+                    });
+                    this.$.findMfgCostAjax.generateRequest();
+                }
+            },
+
+            /* ==============================================================
+               상세 탭 전환
+               ============================================================== */
+
+            _onDetailTab: function(e) {
+                var dtab = e.currentTarget.getAttribute('data-dtab');
+                this.set('activeDetailTab', dtab);
+            },
+
+            _detailTabClass: function(tabName) {
+                return this.activeDetailTab === tabName ? 'active' : '';
+            },
+
+            _isDetailTab: function(tabName) {
+                return this.activeDetailTab === tabName;
+            },
+
+            /* ==============================================================
+               제조경비 데이터 조회 응답
+               ============================================================== */
+
+            onFindMfgCostResponse: function(e) {
+                var data = e.detail.response;
+                if (!data) {
+                    this._initEmptyForm();
+                    return;
+                }
+
+                if (data.inputData) {
+                    this.set('mfgCostData', data.inputData);
+                } else {
+                    this._initEmptyForm();
+                }
+
+                if (data.resultSummary) {
+                    this.set('mfgCostResult', data.resultSummary);
+                }
+
+                this._bindDetailData(data);
+            },
+
+            _initEmptyForm: function() {
+                this.set('mfgCostData', {
+                    ccPjtCd:          this.ccPjtCd,
+                    ccRev:            this.ccRev,
+                    wageIncRate:      0,
+                    inflationRate:    0,
+                    prodDirectRate:   0,
+                    laborRelatedRate: 0,
+                    etcMfgRate:       0,
+                    moldCostUnit:     0,
+                    outsrcCostUnit:   0
+                });
+                this._clearDetailGrids();
+            },
+
+            _clearDetailGrids: function() {
+                this.set('detailDirectLabor',   []);
+                this.set('detailIndirectLabor', []);
+                this.set('detailProdDirect',    []);
+                this.set('detailLaborRelated',  []);
+                this.set('detailEtcMfg',        []);
+                this.set('detailDeprBldg',      []);
+                this.set('detailDeprLine',      []);
+                this.set('detailDeprEtc',       []);
+                this.set('detailOutsrc',        []);
+                this.set('detailMold',          []);
+                this.set('detailRnd',           []);
+                this.set('detailEtcExp',        []);
+            },
+
+            _bindDetailData: function(data) {
+                this.set('detailDirectLabor',   data.detailDirectLabor   || []);
+                this.set('detailIndirectLabor', data.detailIndirectLabor || []);
+                this.set('detailProdDirect',    data.detailProdDirect    || []);
+                this.set('detailLaborRelated',  data.detailLaborRelated  || []);
+                this.set('detailEtcMfg',        data.detailEtcMfg        || []);
+                this.set('detailDeprBldg',      data.detailDeprBldg      || []);
+                this.set('detailDeprLine',      data.detailDeprLine      || []);
+                this.set('detailDeprEtc',       data.detailDeprEtc       || []);
+                this.set('detailOutsrc',        data.detailOutsrc        || []);
+                this.set('detailMold',          data.detailMold          || []);
+                this.set('detailRnd',           data.detailRnd           || []);
+                this.set('detailEtcExp',        data.detailEtcExp        || []);
+            },
+
+            /* ==============================================================
+               제조경비 계산
+               ============================================================== */
+
+            onCalculate: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 정보가 없습니다.');
+                    return;
+                }
+
+                var d = this.mfgCostData;
+                var me = this;
+                UT.confirm('제조경비를 계산하시겠습니까?', function() {
+                    me.set('calculateParam', {
+                        ccPjtCd:          me.ccPjtCd,
+                        ccRev:            me.ccRev,
+                        wageIncRate:      Number(d.wageIncRate)      || 0,
+                        inflationRate:    Number(d.inflationRate)    || 0,
+                        prodDirectRate:   Number(d.prodDirectRate)   || 0,
+                        laborRelatedRate: Number(d.laborRelatedRate) || 0,
+                        etcMfgRate:       Number(d.etcMfgRate)       || 0,
+                        moldCostUnit:     Number(d.moldCostUnit)     || 0,
+                        outsrcCostUnit:   Number(d.outsrcCostUnit)   || 0
+                    });
+                    me.$.calculateMfgCostAjax.generateRequest();
+                });
+            },
+
+            onCalculateMfgCostResponse: function(e) {
+                var data = e.detail.response;
+                if (!data) {
+                    UT.alert('계산 결과를 수신하지 못했습니다.');
+                    return;
+                }
+
+                if (data.resultSummary) {
+                    this.set('mfgCostResult', data.resultSummary);
+                }
+                this._bindDetailData(data);
+
+                UT.alert('제조경비 계산이 완료되었습니다.\n합계: KRW '
+                         + (data.resultSummary ? data.resultSummary.totalMfgCost.toLocaleString() : '0'));
+            },
+
+            /* ==============================================================
+               계산완료 (확정 처리)
+               ============================================================== */
+
+            onCalcComplete: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 정보가 없습니다.');
+                    return;
+                }
+
+                var total = this.mfgCostResult.totalMfgCost || 0;
+                if (total <= 0) {
+                    UT.alert('계산 결과가 없습니다. 먼저 계산을 실행해 주세요.');
+                    return;
+                }
+
+                var me = this;
+                var d  = me.mfgCostData;
+                UT.confirm('제조경비 계산 결과를 확정하시겠습니까?\n(합계: KRW ' + total.toLocaleString() + ')', function() {
+                    me.set('calculateParam', {
+                        ccPjtCd:          me.ccPjtCd,
+                        ccRev:            me.ccRev,
+                        wageIncRate:      Number(d.wageIncRate)      || 0,
+                        inflationRate:    Number(d.inflationRate)    || 0,
+                        prodDirectRate:   Number(d.prodDirectRate)   || 0,
+                        laborRelatedRate: Number(d.laborRelatedRate) || 0,
+                        etcMfgRate:       Number(d.etcMfgRate)       || 0,
+                        moldCostUnit:     Number(d.moldCostUnit)     || 0,
+                        outsrcCostUnit:   Number(d.outsrcCostUnit)   || 0,
+                        completeYn:       'Y'
+                    });
+                    me.$.calculateMfgCostAjax.generateRequest();
+                });
+            },
+
+            /* ==============================================================
+               유틸리티
+               ============================================================== */
+
+            _formatAmt: function(val) {
+                var num = Number(val) || 0;
+                return 'KRW ' + num.toLocaleString();
+            }
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,279 @@
+<dom-module id="tc-achievement-status">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/tc/detail/findListTcAchievementStatus.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             조회 조건 영역
+             ============================================================ -->
+        <sc-search-container on-search="onFindList" auth-code="V">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/>
+                    <col/>
+                    <col style="width:120px"/>
+                    <col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="사업부"></sc-label></th>
+                    <td>
+                        <sc-combobox-field value="{{searchParam.bizUnit}}"
+                                          items="{{codes.bizUnitList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          placeholder="전체">
+                        </sc-combobox-field>
+                    </td>
+                    <th><sc-label text="제품군"></sc-label></th>
+                    <td>
+                        <sc-combobox-field value="{{searchParam.prodGrp}}"
+                                          items="{{codes.prodGrpList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          placeholder="전체">
+                        </sc-combobox-field>
+                    </td>
+                </tr>
+                <tr>
+                    <th><sc-label text="OEM"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.oemNm}}"
+                                       on-enter="onFindList">
+                        </sc-text-field>
+                    </td>
+                    <th><sc-label text="차종"></sc-label></th>
+                    <td>
+                        <sc-text-field value="{{searchParam.carType}}"
+                                       on-enter="onFindList">
+                        </sc-text-field>
+                    </td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- ============================================================
+             데이터 그리드
+             ============================================================ -->
+        <sc-grid id="gridPanel"
+                 data-provider="{{resultList}}"
+                 editable="false"
+                 class="flex">
+
+            <sc-toolbar>
+                <sc-button text="조회" on-click="onFindList" auth-code="V"></sc-button>
+            </sc-toolbar>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="pjtCd"
+                                header-text="프로젝트코드"
+                                width="120"
+                                editable="false"
+                                text-align="center"
+                                on-item-click="onPjtCdClick">
+                </sc-data-column>
+
+                <sc-data-column data-field="pjtNm"
+                                header-text="프로젝트명"
+                                width="200"
+                                editable="false"
+                                text-align="left">
+                </sc-data-column>
+
+                <sc-data-column data-field="bizUnitNm"
+                                header-text="사업부"
+                                width="80"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="prodGrpNm"
+                                header-text="제품군"
+                                width="100"
+                                editable="false"
+                                text-align="center">
+                </sc-data-column>
+
+                <sc-data-column data-field="oemNm"
+                                header-text="OEM"
+                                width="100"
+                                editable="false">
+                </sc-data-column>
+
+                <sc-data-column data-field="carType"
+                                header-text="차종"
+                                width="100"
+                                editable="false">
+                </sc-data-column>
+
+                <sc-group-column header-text="원가 합계">
+                    <sc-data-column data-field="ecTotalCost"
+                                    header-text="견적원가"
+                                    width="120"
+                                    editable="false"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="tgtTotalCost"
+                                    header-text="목표원가"
+                                    width="120"
+                                    editable="false"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="ccTotalCost"
+                                    header-text="현상원가"
+                                    width="120"
+                                    editable="false"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt">
+                    </sc-data-column>
+                </sc-group-column>
+
+                <sc-group-column header-text="절감 현황">
+                    <sc-data-column data-field="saveTgtAmt"
+                                    header-text="절감목표"
+                                    width="120"
+                                    editable="false"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="saveActAmt"
+                                    header-text="절감실적"
+                                    width="120"
+                                    editable="false"
+                                    text-align="right"
+                                    data-type="number"
+                                    format-type="amt">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="achvRate"
+                                    header-text="달성률(%)"
+                                    width="100"
+                                    editable="false"
+                                    text-align="right"
+                                    data-type="number"
+                                    format="#,##0.00">
+                    </sc-data-column>
+
+                    <sc-data-column data-field="achvYn"
+                                    header-text="달성여부"
+                                    width="80"
+                                    editable="false"
+                                    text-align="center">
+                    </sc-data-column>
+                </sc-group-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'tc-achievement-status',
+
+            properties: {
+                /* ─── 조회 조건 ─── */
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── 그리드 데이터 ─── */
+                resultList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+
+                /* ─── 공통코드 ─── */
+                codes: {
+                    type: Object,
+                    value: function() {
+                        return {
+                            bizUnitList: [
+                                { label: 'PT',   data: 'PT' },
+                                { label: 'SEAT', data: 'SEAT' }
+                            ],
+                            prodGrpList: [
+                                { label: 'T/M',  data: 'TM' },
+                                { label: 'AXLE', data: 'AXLE' },
+                                { label: 'SEAT', data: 'SEAT' }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            /* ==============================================================
+               조회
+               ============================================================== */
+
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            onFindListResponse: function(e) {
+                this.set('resultList', e.detail.response || []);
+            },
+
+            /* ==============================================================
+               프로젝트 코드 클릭 -> 목표원가 상세 이동
+               ============================================================== */
+
+            onPjtCdClick: function(e) {
+                var row = e.detail.row;
+                if (!row || !row.pjtCd) return;
+
+                UT.navigateTo('tc-detail', {
+                    tgtPjtCd: row.pjtCd,
+                    pjtNm:    row.pjtNm
+                });
+            }
+        });
+    </script>
+</dom-module>

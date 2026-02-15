@@ -1,0 +1,903 @@
+<dom-module id="tc-calc">
+    <template>
+        <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .tab-bar {
+                display: flex;
+                gap: 2px;
+                border-bottom: 2px solid #6954FE;
+                margin-bottom: 8px;
+            }
+            .tab-btn {
+                padding: 8px 16px;
+                border: none;
+                background: #f0f1f5;
+                cursor: pointer;
+                font-size: 12px;
+                border-radius: 4px 4px 0 0;
+                white-space: nowrap;
+            }
+            .tab-btn:hover {
+                background: #e0e1e8;
+            }
+            .tab-btn.active {
+                background: #6954FE;
+                color: #fff;
+                font-weight: 600;
+            }
+            .detail-form-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .detail-form-table th {
+                background: #f7f8fa;
+                padding: 6px 10px;
+                text-align: right;
+                font-weight: 500;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #e0e0e0;
+                white-space: nowrap;
+            }
+            .detail-form-table td {
+                padding: 4px 8px;
+                border: 1px solid #e0e0e0;
+            }
+            .section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: #333;
+                padding: 8px 0 4px 0;
+                border-bottom: 1px solid #ddd;
+                margin-bottom: 8px;
+            }
+            .pjt-header {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                padding: 8px 12px;
+                background: #f7f8fa;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                font-size: 12px;
+            }
+            .pjt-header .label {
+                font-weight: 600;
+                color: #364FC7;
+            }
+            .pjt-header .value {
+                color: #333;
+            }
+        </style>
+
+        <!-- ============================================================
+             Ajax 선언부
+             ============================================================ -->
+
+        <!-- TAB 1: 견적 불러오기 -->
+        <sc-ajax id="findEcImportAjax"
+                 url="/bp/cost/tc/detail/findListTcEcImport.do"
+                 body="{{searchParam}}"
+                 on-response="onFindEcImportResponse">
+        </sc-ajax>
+
+        <!-- TAB 2: 부문별 목표 Guide 산출 -->
+        <sc-ajax id="findGuideAjax"
+                 url="/bp/cost/tc/detail/findListTcGuide.do"
+                 body="{{searchParam}}"
+                 on-response="onFindGuideResponse">
+        </sc-ajax>
+        <sc-ajax id="calculateGuideAjax"
+                 url="/bp/cost/tc/detail/calculateTcGuide.do"
+                 body="{{searchParam}}"
+                 on-response="onCalculateGuideResponse">
+        </sc-ajax>
+        <sc-ajax id="saveGuideAjax"
+                 url="/bp/cost/tc/detail/saveListTcGuide.do"
+                 body="{{saveGuideParam}}"
+                 on-response="onSaveGuideResponse">
+        </sc-ajax>
+
+        <!-- TAB 3: 목표원가 등록 -->
+        <sc-ajax id="findCostRegAjax"
+                 url="/bp/cost/tc/detail/findListTcCostReg.do"
+                 body="{{costRegSearchParam}}"
+                 on-response="onFindCostRegResponse">
+        </sc-ajax>
+        <sc-ajax id="createCostRegAjax"
+                 url="/bp/cost/tc/detail/createTcCostReg.do"
+                 body="{{searchParam}}"
+                 on-response="onCreateCostRegResponse">
+        </sc-ajax>
+        <sc-ajax id="saveCostRegAjax"
+                 url="/bp/cost/tc/detail/saveListTcCostReg.do"
+                 body="{{saveCostRegParam}}"
+                 on-response="onSaveCostRegResponse">
+        </sc-ajax>
+        <sc-ajax id="confirmCostRegAjax"
+                 url="/bp/cost/tc/detail/confirmTcCostReg.do"
+                 body="{{searchParam}}"
+                 on-response="onConfirmCostRegResponse">
+        </sc-ajax>
+
+        <!-- TAB 4: 목표달성 계획 -->
+        <sc-ajax id="findAchvPlanAjax"
+                 url="/bp/cost/tc/detail/findListTcAchvPlan.do"
+                 body="{{searchParam}}"
+                 on-response="onFindAchvPlanResponse">
+        </sc-ajax>
+        <sc-ajax id="createAchvPlanAjax"
+                 url="/bp/cost/tc/detail/createTcAchvPlan.do"
+                 body="{{searchParam}}"
+                 on-response="onCreateAchvPlanResponse">
+        </sc-ajax>
+        <sc-ajax id="saveAchvPlanAjax"
+                 url="/bp/cost/tc/detail/saveListTcAchvPlan.do"
+                 body="{{saveAchvPlanParam}}"
+                 on-response="onSaveAchvPlanResponse">
+        </sc-ajax>
+        <sc-ajax id="confirmAchvPlanAjax"
+                 url="/bp/cost/tc/detail/confirmTcAchvPlan.do"
+                 body="{{searchParam}}"
+                 on-response="onConfirmAchvPlanResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             프로젝트 헤더 정보
+             ============================================================ -->
+        <div class="pjt-header">
+            <span class="label">목표원가그룹코드:</span>
+            <span class="value">{{tgtPjtCd}}</span>
+            <span class="label">프로젝트명:</span>
+            <span class="value">{{pjtNm}}</span>
+        </div>
+
+        <!-- ============================================================
+             탭 버튼 바
+             ============================================================ -->
+        <div class="tab-bar">
+            <button class$="tab-btn {{_activeTab(activeTab,'ecImport')}}"
+                    on-click="_setTab" data-tab="ecImport">견적 불러오기</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'guide')}}"
+                    on-click="_setTab" data-tab="guide">부문별 목표 Guide 산출</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'costReg')}}"
+                    on-click="_setTab" data-tab="costReg">목표원가 등록</button>
+            <button class$="tab-btn {{_activeTab(activeTab,'achvPlan')}}"
+                    on-click="_setTab" data-tab="achvPlan">목표달성 계획</button>
+        </div>
+
+        <!-- ============================================================
+             탭 콘텐츠 영역
+             ============================================================ -->
+        <div style="flex:1; overflow:auto;">
+
+            <!-- ======================================================
+                 TAB 1: 견적 불러오기 (Read-only)
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'ecImport')}}">
+                <sc-grid id="ecImportGrid"
+                         data-provider="{{ecImportList}}"
+                         editable="false"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindEcImport" auth-code="V"></sc-button>
+                        <span class="vt-seperator"></span>
+                        <sc-button id="btnToggleEcAmt"
+                                   text="단위당금액 보기"
+                                   on-click="onToggleEcAmountType"
+                                   auth-code="V">
+                        </sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="costItemNm"
+                                        header-text="원가항목"
+                                        width="180"
+                                        text-align="left"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="deptNm"
+                                        header-text="부문"
+                                        width="120"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="costAmt"
+                                        header-text="금액"
+                                        width="150"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 2: 부문별 목표 Guide 산출
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'guide')}}">
+                <sc-grid id="guideGrid"
+                         data-provider="{{guideList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindGuide" auth-code="V"></sc-button>
+                        <sc-button text="산출" on-click="onCalculateGuide" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveGuide" auth-code="S"></sc-button>
+                        <span class="vt-seperator"></span>
+                        <sc-button id="btnToggleGuideAmt"
+                                   text="단위당금액 보기"
+                                   on-click="onToggleGuideAmountType"
+                                   auth-code="V">
+                        </sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="costItemNm"
+                                        header-text="원가항목"
+                                        width="160"
+                                        text-align="left"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="deptNm"
+                                        header-text="부문"
+                                        width="120"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="ecCostAmt"
+                                        header-text="견적원가"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="guideAmt"
+                                        header-text="배부Guide"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="cftTgtAmt"
+                                        header-text="CFT목표"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="saveRate"
+                                        header-text="절감률(%)"
+                                        width="90"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,##0.00"
+                                        editable="false">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="guideSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 3: 목표원가 등록
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'costReg')}}">
+                <sc-grid id="costRegGrid"
+                         data-provider="{{costRegList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindCostReg" auth-code="V"></sc-button>
+                        <sc-button text="생성" on-click="onCreateCostReg" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveCostReg" auth-code="S"></sc-button>
+                        <sc-button text="확정" on-click="onConfirmCostReg" auth-code="S"></sc-button>
+                        <span class="vt-seperator"></span>
+                        <sc-button id="btnToggleCostRegAmt"
+                                   text="합계 보기"
+                                   on-click="onToggleCostRegMode"
+                                   auth-code="V">
+                        </sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="costItemNm"
+                                        header-text="원가항목"
+                                        width="160"
+                                        text-align="left"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="deptNm"
+                                        header-text="부문"
+                                        width="120"
+                                        text-align="center"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="ecCostAmt"
+                                        header-text="견적원가"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="guideAmt"
+                                        header-text="배부Guide"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="finalTgtAmt"
+                                        header-text="최종목표"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="diffAmt"
+                                        header-text="차이"
+                                        width="110"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="adjustReason"
+                                        header-text="조정사유"
+                                        width="200"
+                                        editable="true">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="saveTgtAmt"
+                                        header-text="절감목표"
+                                        width="120"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="costRegSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+            <!-- ======================================================
+                 TAB 4: 목표달성 계획
+                 ====================================================== -->
+            <template is="dom-if" if="{{_isTab(activeTab,'achvPlan')}}">
+                <sc-grid id="achvPlanGrid"
+                         data-provider="{{achvPlanList}}"
+                         editable="true"
+                         class="flex">
+
+                    <sc-toolbar>
+                        <sc-button text="조회" on-click="onFindAchvPlan" auth-code="V"></sc-button>
+                        <sc-button text="생성" on-click="onCreateAchvPlan" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveAchvPlan" auth-code="S"></sc-button>
+                        <sc-button text="확정" on-click="onConfirmAchvPlan" auth-code="S"></sc-button>
+                        <span class="vt-seperator"></span>
+                        <sc-button text="절감계획" on-click="onOpenReductionPlan" auth-code="V"></sc-button>
+                    </sc-toolbar>
+
+                    <sc-grid-columns>
+                        <sc-data-column data-field="costItemNm"
+                                        header-text="원가항목"
+                                        width="160"
+                                        text-align="left"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="ecCostAmt"
+                                        header-text="견적원가"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="tgtCostAmt"
+                                        header-text="목표원가"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="saveTgtAmt"
+                                        header-text="절감목표"
+                                        width="120"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="false">
+                        </sc-data-column>
+
+                        <sc-data-column data-field="savePlanAmt"
+                                        header-text="절감계획금액"
+                                        width="130"
+                                        text-align="right"
+                                        data-type="number"
+                                        format-type="amt"
+                                        editable="true">
+                        </sc-data-column>
+                    </sc-grid-columns>
+
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="tgtPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="achvPlanSeq"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
+            </template>
+
+        </div><!-- /탭 콘텐츠 영역 -->
+    </template>
+
+    <script>
+        Polymer({
+            is: 'tc-calc',
+
+            properties: {
+                /* ─── URL 파라미터 ─── */
+                tgtPjtCd: {
+                    type: String,
+                    value: ''
+                },
+                pjtNm: {
+                    type: String,
+                    value: ''
+                },
+
+                /* ─── 활성 탭 ─── */
+                activeTab: {
+                    type: String,
+                    value: 'ecImport'
+                },
+
+                /* ─── 조회 파라미터 ─── */
+                searchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+
+                /* ─── TAB 1: 견적 불러오기 ─── */
+                ecImportList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                ecAmountMode: {
+                    type: String,
+                    value: 'total'
+                },
+
+                /* ─── TAB 2: 부문별 목표 Guide 산출 ─── */
+                guideList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveGuideParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                guideAmountMode: {
+                    type: String,
+                    value: 'total'
+                },
+
+                /* ─── TAB 3: 목표원가 등록 ─── */
+                costRegList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                costRegSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                saveCostRegParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                costRegMode: {
+                    type: String,
+                    value: 'yr1'
+                },
+
+                /* ─── TAB 4: 목표달성 계획 ─── */
+                achvPlanList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                saveAchvPlanParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                }
+            },
+
+            /* ==============================================================
+               라이프사이클
+               ============================================================== */
+
+            attached: function() {
+                var params = new URLSearchParams(window.location.search);
+                var pjtCd = params.get('tgtPjtCd') || '';
+                var pjtNm = params.get('pjtNm') || '';
+
+                this.set('tgtPjtCd', pjtCd);
+                this.set('pjtNm', pjtNm);
+                this.set('searchParam', { tgtPjtCd: pjtCd });
+                this.set('costRegSearchParam', { tgtPjtCd: pjtCd, viewMode: 'yr1' });
+
+                if (pjtCd) {
+                    this._loadTabData(this.activeTab);
+                }
+            },
+
+            /* ==============================================================
+               탭 제어 헬퍼
+               ============================================================== */
+
+            _activeTab: function(activeTab, tabName) {
+                return activeTab === tabName ? 'active' : '';
+            },
+
+            _isTab: function(activeTab, tabName) {
+                return activeTab === tabName;
+            },
+
+            _setTab: function(e) {
+                var tabName = e.currentTarget.getAttribute('data-tab');
+                this.set('activeTab', tabName);
+                this._loadTabData(tabName);
+            },
+
+            _loadTabData: function(tabName) {
+                if (!this.tgtPjtCd) return;
+
+                switch (tabName) {
+                    case 'ecImport':
+                        this.$.findEcImportAjax.generateRequest();
+                        break;
+                    case 'guide':
+                        this.$.findGuideAjax.generateRequest();
+                        break;
+                    case 'costReg':
+                        this.$.findCostRegAjax.generateRequest();
+                        break;
+                    case 'achvPlan':
+                        this.$.findAchvPlanAjax.generateRequest();
+                        break;
+                }
+            },
+
+            /* ==============================================================
+               TAB 1: 견적 불러오기 (Read-only)
+               ============================================================== */
+
+            onFindEcImport: function() {
+                this.$.findEcImportAjax.generateRequest();
+            },
+
+            onFindEcImportResponse: function(e) {
+                var list = e.detail.response || [];
+                this._applyEcAmountMode(list);
+                this.set('ecImportList', list);
+            },
+
+            onToggleEcAmountType: function() {
+                if (this.ecAmountMode === 'total') {
+                    this.set('ecAmountMode', 'unit');
+                    var btn = this.$['btnToggleEcAmt'] || this.$$('#btnToggleEcAmt');
+                    if (btn) btn.text = '총금액 보기';
+                } else {
+                    this.set('ecAmountMode', 'total');
+                    var btn2 = this.$['btnToggleEcAmt'] || this.$$('#btnToggleEcAmt');
+                    if (btn2) btn2.text = '단위당금액 보기';
+                }
+
+                var list = this.ecImportList;
+                if (list && list.length > 0) {
+                    this._applyEcAmountMode(list);
+                    this.set('ecImportList', []);
+                    this.set('ecImportList', list);
+                }
+            },
+
+            _applyEcAmountMode: function(list) {
+                var isUnit = (this.ecAmountMode === 'unit');
+                var src = isUnit ? 'costUnitAmt' : 'costTotAmt';
+                for (var i = 0; i < list.length; i++) {
+                    list[i].costAmt = list[i][src] || 0;
+                }
+            },
+
+            /* ==============================================================
+               TAB 2: 부문별 목표 Guide 산출
+               ============================================================== */
+
+            onFindGuide: function() {
+                this.$.findGuideAjax.generateRequest();
+            },
+
+            onFindGuideResponse: function(e) {
+                var list = e.detail.response || [];
+                this._applyGuideAmountMode(list);
+                this.set('guideList', list);
+            },
+
+            onCalculateGuide: function() {
+                if (!this.tgtPjtCd) {
+                    UT.alert('프로젝트 코드가 없습니다.');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('견적원가를 기준으로 부문별 목표 Guide를 산출하시겠습니까?', function() {
+                    me.$.calculateGuideAjax.generateRequest();
+                });
+            },
+
+            onCalculateGuideResponse: function(e) {
+                var list = e.detail.response || [];
+                this._applyGuideAmountMode(list);
+                this.set('guideList', list);
+                UT.alert('부문별 목표 Guide가 산출되었습니다.');
+            },
+
+            onSaveGuide: function() {
+                var grid = this.$['guideGrid'] || this.$$('#guideGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveGuideParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveGuideAjax.generateRequest();
+                });
+            },
+
+            onSaveGuideResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('guide');
+            },
+
+            onToggleGuideAmountType: function() {
+                if (this.guideAmountMode === 'total') {
+                    this.set('guideAmountMode', 'unit');
+                    var btn = this.$['btnToggleGuideAmt'] || this.$$('#btnToggleGuideAmt');
+                    if (btn) btn.text = '총금액 보기';
+                } else {
+                    this.set('guideAmountMode', 'total');
+                    var btn2 = this.$['btnToggleGuideAmt'] || this.$$('#btnToggleGuideAmt');
+                    if (btn2) btn2.text = '단위당금액 보기';
+                }
+
+                var list = this.guideList;
+                if (list && list.length > 0) {
+                    this._applyGuideAmountMode(list);
+                    this.set('guideList', []);
+                    this.set('guideList', list);
+                }
+            },
+
+            _applyGuideAmountMode: function(list) {
+                var isUnit = (this.guideAmountMode === 'unit');
+                var ecSrc    = isUnit ? 'ecCostUnitAmt'   : 'ecCostTotAmt';
+                var guideSrc = isUnit ? 'guideUnitAmt'    : 'guideTotAmt';
+                var cftSrc   = isUnit ? 'cftTgtUnitAmt'   : 'cftTgtTotAmt';
+
+                for (var i = 0; i < list.length; i++) {
+                    list[i].ecCostAmt = list[i][ecSrc]    || 0;
+                    list[i].guideAmt  = list[i][guideSrc] || 0;
+                    list[i].cftTgtAmt = list[i][cftSrc]   || 0;
+                }
+            },
+
+            /* ==============================================================
+               TAB 3: 목표원가 등록
+               ============================================================== */
+
+            onFindCostReg: function() {
+                this.$.findCostRegAjax.generateRequest();
+            },
+
+            onFindCostRegResponse: function(e) {
+                this.set('costRegList', e.detail.response || []);
+            },
+
+            onCreateCostReg: function() {
+                var me = this;
+                UT.confirm('목표 Guide 기준으로 목표원가 등록 데이터를 생성하시겠습니까?', function() {
+                    me.$.createCostRegAjax.generateRequest();
+                });
+            },
+
+            onCreateCostRegResponse: function(e) {
+                UT.alert('목표원가 등록 데이터가 생성되었습니다.');
+                this._loadTabData('costReg');
+            },
+
+            onSaveCostReg: function() {
+                var grid = this.$['costRegGrid'] || this.$$('#costRegGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveCostRegParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveCostRegAjax.generateRequest();
+                });
+            },
+
+            onSaveCostRegResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('costReg');
+            },
+
+            onConfirmCostReg: function() {
+                var me = this;
+                UT.confirm('목표원가를 확정하시겠습니까?\n확정 후에는 수정이 불가합니다.', function() {
+                    me.$.confirmCostRegAjax.generateRequest();
+                });
+            },
+
+            onConfirmCostRegResponse: function() {
+                UT.alert('목표원가가 확정되었습니다.');
+                this._loadTabData('costReg');
+            },
+
+            onToggleCostRegMode: function() {
+                if (this.costRegMode === 'yr1') {
+                    this.set('costRegMode', 'sum');
+                    this.set('costRegSearchParam', { tgtPjtCd: this.tgtPjtCd, viewMode: 'sum' });
+                    var btn = this.$['btnToggleCostRegAmt'] || this.$$('#btnToggleCostRegAmt');
+                    if (btn) btn.text = '1차년도 보기';
+                } else {
+                    this.set('costRegMode', 'yr1');
+                    this.set('costRegSearchParam', { tgtPjtCd: this.tgtPjtCd, viewMode: 'yr1' });
+                    var btn2 = this.$['btnToggleCostRegAmt'] || this.$$('#btnToggleCostRegAmt');
+                    if (btn2) btn2.text = '합계 보기';
+                }
+                this.$.findCostRegAjax.generateRequest();
+            },
+
+            /* ==============================================================
+               TAB 4: 목표달성 계획
+               ============================================================== */
+
+            onFindAchvPlan: function() {
+                this.$.findAchvPlanAjax.generateRequest();
+            },
+
+            onFindAchvPlanResponse: function(e) {
+                this.set('achvPlanList', e.detail.response || []);
+            },
+
+            onCreateAchvPlan: function() {
+                var me = this;
+                UT.confirm('목표원가 기준으로 달성 계획 데이터를 생성하시겠습니까?', function() {
+                    me.$.createAchvPlanAjax.generateRequest();
+                });
+            },
+
+            onCreateAchvPlanResponse: function() {
+                UT.alert('목표달성 계획 데이터가 생성되었습니다.');
+                this._loadTabData('achvPlan');
+            },
+
+            onSaveAchvPlan: function() {
+                var grid = this.$['achvPlanGrid'] || this.$$('#achvPlanGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveAchvPlanParam', {
+                        tgtPjtCd: me.tgtPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveAchvPlanAjax.generateRequest();
+                });
+            },
+
+            onSaveAchvPlanResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this._loadTabData('achvPlan');
+            },
+
+            onConfirmAchvPlan: function() {
+                var me = this;
+                UT.confirm('목표달성 계획을 확정하시겠습니까?\n확정 후에는 수정이 불가합니다.', function() {
+                    me.$.confirmAchvPlanAjax.generateRequest();
+                });
+            },
+
+            onConfirmAchvPlanResponse: function() {
+                UT.alert('목표달성 계획이 확정되었습니다.');
+                this._loadTabData('achvPlan');
+            },
+
+            onOpenReductionPlan: function() {
+                var grid = this.$['achvPlanGrid'] || this.$$('#achvPlanGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('절감계획을 확인할 원가항목을 선택해 주세요.');
+                    return;
+                }
+
+                var row = selectedRows[0];
+                UT.popup({
+                    url: 'tc-reduction-plan-popup',
+                    param: {
+                        tgtPjtCd:   this.tgtPjtCd,
+                        costItemCd: row.costItemCd,
+                        costItemNm: row.costItemNm
+                    },
+                    close: function(result) {
+                        // 팝업 닫힘 후 필요 시 새로고침
+                    }
+                });
+            }
+        });
+    </script>
+</dom-module>

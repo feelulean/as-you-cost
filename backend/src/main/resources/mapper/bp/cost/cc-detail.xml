@@ -1,0 +1,1692 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="smartcost.app.bp.cost.ccdetail.CcDetailRepository">
+
+    <!-- ═══════════════════════════════════════════
+         1. 현상원가 상세 (PCM_CUR_DETAIL)
+         PK: TEN_ID, CC_PJT_CD, CC_REV
+         ═══════════════════════════════════════════ -->
+    <select id="findCcDetail" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               REV_NM       AS "revNm",
+               FACTORY_DIV  AS "factoryDiv",
+               FACTORY_CD   AS "factoryCd",
+               FACTORY_NM   AS "factoryNm",
+               CORP_DIV     AS "corpDiv",
+               CORP_CD      AS "corpCd",
+               CORP_NM      AS "corpNm",
+               ATTACH_FILE  AS "attachFile",
+               COMPOSE_YN   AS "composeYn",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_DETAIL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </select>
+
+    <select id="findListCcDetail" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               REV_NM       AS "revNm",
+               FACTORY_DIV  AS "factoryDiv",
+               FACTORY_CD   AS "factoryCd",
+               FACTORY_NM   AS "factoryNm",
+               CORP_DIV     AS "corpDiv",
+               CORP_CD      AS "corpCd",
+               CORP_NM      AS "corpNm",
+               ATTACH_FILE  AS "attachFile",
+               COMPOSE_YN   AS "composeYn",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_DETAIL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY CC_REV DESC
+    </select>
+
+    <select id="countCcDetail" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_DETAIL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </select>
+
+    <insert id="insertCcDetail" parameterType="map">
+        INSERT INTO PCM_CUR_DETAIL (
+            TEN_ID, CC_PJT_CD, CC_REV, REV_NM,
+            FACTORY_DIV, FACTORY_CD, FACTORY_NM,
+            CORP_DIV, CORP_CD, CORP_NM,
+            ATTACH_FILE, COMPOSE_YN, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.revNm},
+            #{p.factoryDiv}, #{p.factoryCd}, #{p.factoryNm},
+            #{p.corpDiv}, #{p.corpCd}, #{p.corpNm},
+            #{p.attachFile}, #{p.composeYn}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateCcDetail" parameterType="map">
+        UPDATE PCM_CUR_DETAIL
+           SET REV_NM      = #{p.revNm},
+               FACTORY_DIV = #{p.factoryDiv},
+               FACTORY_CD  = #{p.factoryCd},
+               FACTORY_NM  = #{p.factoryNm},
+               CORP_DIV    = #{p.corpDiv},
+               CORP_CD     = #{p.corpCd},
+               CORP_NM     = #{p.corpNm},
+               ATTACH_FILE = #{p.attachFile},
+               COMPOSE_YN  = #{p.composeYn},
+               RMK         = #{p.rmk},
+               STS         = #{p.sts},
+               MODR_ID     = #{g.username},
+               MOD_DTTM    = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </update>
+
+    <delete id="deleteCcDetail" parameterType="map">
+        DELETE FROM PCM_CUR_DETAIL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         2. 원가코드/판가 (PCM_CUR_COST_CODE)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, COST_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListCostCode" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD      AS "ccPjtCd",
+               CC_REV         AS "ccRev",
+               COST_SEQ       AS "costSeq",
+               COST_CD        AS "costCd",
+               CALC_TARGET    AS "calcTarget",
+               PROD_DESC      AS "prodDesc",
+               CURRENCY       AS "currency",
+               EST_SELL_PRICE AS "estSellPrice",
+               SOP_YM         AS "sopYm",
+               EOP_YM         AS "eopYm",
+               RMK            AS "rmk",
+               STS            AS "sts"
+          FROM PCM_CUR_COST_CODE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY COST_SEQ
+    </select>
+
+    <select id="countCostCode" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_COST_CODE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_SEQ  = #{p.costSeq}
+    </select>
+
+    <insert id="insertCostCode" parameterType="map">
+        INSERT INTO PCM_CUR_COST_CODE (
+            TEN_ID, CC_PJT_CD, CC_REV, COST_SEQ, COST_CD,
+            CALC_TARGET, PROD_DESC, CURRENCY, EST_SELL_PRICE,
+            SOP_YM, EOP_YM, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costSeq}, #{p.costCd},
+            #{p.calcTarget}, #{p.prodDesc}, #{p.currency}, #{p.estSellPrice},
+            #{p.sopYm}, #{p.eopYm}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateCostCode" parameterType="map">
+        UPDATE PCM_CUR_COST_CODE
+           SET COST_CD        = #{p.costCd},
+               CALC_TARGET    = #{p.calcTarget},
+               PROD_DESC      = #{p.prodDesc},
+               CURRENCY       = #{p.currency},
+               EST_SELL_PRICE = #{p.estSellPrice},
+               SOP_YM         = #{p.sopYm},
+               EOP_YM         = #{p.eopYm},
+               RMK            = #{p.rmk},
+               STS            = #{p.sts},
+               MODR_ID        = #{g.username},
+               MOD_DTTM       = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_SEQ  = #{p.costSeq}
+    </update>
+
+    <delete id="deleteCostCode" parameterType="map">
+        DELETE FROM PCM_CUR_COST_CODE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_SEQ  = #{p.costSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         3. 수량/할인율 (PCM_CUR_QTY_DISC)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, QTY_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListQtyDisc" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD AS "ccPjtCd",
+               CC_REV    AS "ccRev",
+               QTY_SEQ   AS "qtySeq",
+               COST_CD   AS "costCd",
+               YEAR_VAL  AS "yearVal",
+               SELL_QTY  AS "sellQty",
+               DISC_RATE AS "discRate",
+               RMK       AS "rmk",
+               STS       AS "sts"
+          FROM PCM_CUR_QTY_DISC
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY QTY_SEQ
+    </select>
+
+    <select id="countQtyDisc" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_QTY_DISC
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND QTY_SEQ   = #{p.qtySeq}
+    </select>
+
+    <insert id="insertQtyDisc" parameterType="map">
+        INSERT INTO PCM_CUR_QTY_DISC (
+            TEN_ID, CC_PJT_CD, CC_REV, QTY_SEQ, COST_CD,
+            YEAR_VAL, SELL_QTY, DISC_RATE, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.qtySeq}, #{p.costCd},
+            #{p.yearVal}, #{p.sellQty}, #{p.discRate}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateQtyDisc" parameterType="map">
+        UPDATE PCM_CUR_QTY_DISC
+           SET COST_CD   = #{p.costCd},
+               YEAR_VAL  = #{p.yearVal},
+               SELL_QTY  = #{p.sellQty},
+               DISC_RATE = #{p.discRate},
+               RMK       = #{p.rmk},
+               STS       = #{p.sts},
+               MODR_ID   = #{g.username},
+               MOD_DTTM  = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND QTY_SEQ   = #{p.qtySeq}
+    </update>
+
+    <delete id="deleteQtyDisc" parameterType="map">
+        DELETE FROM PCM_CUR_QTY_DISC
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND QTY_SEQ   = #{p.qtySeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         4. 담당자 (PCM_CUR_MANAGER)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, MGR_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListManager" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD AS "ccPjtCd",
+               CC_REV    AS "ccRev",
+               MGR_SEQ   AS "mgrSeq",
+               DEPT_DIV  AS "deptDiv",
+               MGR_ID    AS "mgrId",
+               MGR_NM    AS "mgrNm",
+               ROLE_CD   AS "roleCd",
+               EMAIL     AS "email",
+               RMK       AS "rmk",
+               STS       AS "sts"
+          FROM PCM_CUR_MANAGER
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY MGR_SEQ
+    </select>
+
+    <select id="countManager" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_MANAGER
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND MGR_SEQ   = #{p.mgrSeq}
+    </select>
+
+    <insert id="insertManager" parameterType="map">
+        INSERT INTO PCM_CUR_MANAGER (
+            TEN_ID, CC_PJT_CD, CC_REV, MGR_SEQ,
+            DEPT_DIV, MGR_ID, MGR_NM, ROLE_CD, EMAIL, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.mgrSeq},
+            #{p.deptDiv}, #{p.mgrId}, #{p.mgrNm}, #{p.roleCd}, #{p.email}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateManager" parameterType="map">
+        UPDATE PCM_CUR_MANAGER
+           SET DEPT_DIV = #{p.deptDiv},
+               MGR_ID   = #{p.mgrId},
+               MGR_NM   = #{p.mgrNm},
+               ROLE_CD  = #{p.roleCd},
+               EMAIL    = #{p.email},
+               RMK      = #{p.rmk},
+               STS      = #{p.sts},
+               MODR_ID  = #{g.username},
+               MOD_DTTM = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND MGR_SEQ   = #{p.mgrSeq}
+    </update>
+
+    <delete id="deleteManager" parameterType="map">
+        DELETE FROM PCM_CUR_MANAGER
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND MGR_SEQ   = #{p.mgrSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         5. 일정 (PCM_CUR_SCHEDULE)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, SCHED_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListSchedule" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD  AS "ccPjtCd",
+               CC_REV     AS "ccRev",
+               SCHED_SEQ  AS "schedSeq",
+               TASK_NM    AS "taskNm",
+               STD_PERIOD AS "stdPeriod",
+               START_DT   AS "startDt",
+               END_DT     AS "endDt",
+               ACT_END_DT AS "actEndDt",
+               PROC_STS   AS "procSts",
+               DELAY_DAYS AS "delayDays",
+               SORT_ORDER AS "sortOrder",
+               RMK        AS "rmk",
+               STS        AS "sts"
+          FROM PCM_CUR_SCHEDULE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY SCHED_SEQ
+    </select>
+
+    <select id="countSchedule" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_SCHEDULE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND SCHED_SEQ = #{p.schedSeq}
+    </select>
+
+    <insert id="insertSchedule" parameterType="map">
+        INSERT INTO PCM_CUR_SCHEDULE (
+            TEN_ID, CC_PJT_CD, CC_REV, SCHED_SEQ, TASK_NM,
+            STD_PERIOD, START_DT, END_DT, ACT_END_DT,
+            PROC_STS, DELAY_DAYS, SORT_ORDER, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.schedSeq}, #{p.taskNm},
+            #{p.stdPeriod}, #{p.startDt}, #{p.endDt}, #{p.actEndDt},
+            #{p.procSts}, #{p.delayDays}, #{p.sortOrder}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateSchedule" parameterType="map">
+        UPDATE PCM_CUR_SCHEDULE
+           SET TASK_NM    = #{p.taskNm},
+               STD_PERIOD = #{p.stdPeriod},
+               START_DT   = #{p.startDt},
+               END_DT     = #{p.endDt},
+               ACT_END_DT = #{p.actEndDt},
+               PROC_STS   = #{p.procSts},
+               DELAY_DAYS = #{p.delayDays},
+               SORT_ORDER = #{p.sortOrder},
+               RMK        = #{p.rmk},
+               STS        = #{p.sts},
+               MODR_ID    = #{g.username},
+               MOD_DTTM   = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND SCHED_SEQ = #{p.schedSeq}
+    </update>
+
+    <delete id="deleteSchedule" parameterType="map">
+        DELETE FROM PCM_CUR_SCHEDULE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND SCHED_SEQ = #{p.schedSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         6. BOM (PCM_CUR_BOM)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, COST_CD, BOM_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListBom" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               COST_CD      AS "costCd",
+               BOM_SEQ      AS "bomSeq",
+               PART_NO      AS "partNo",
+               PART_NM      AS "partNm",
+               PART_DIV     AS "partDiv",
+               QTY          AS "qty",
+               RECV_UNIT_YN AS "recvUnitYn",
+               PARENT_SEQ   AS "parentSeq",
+               BOM_LEVEL    AS "bomLevel",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_BOM
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.costCd != null and p.costCd != ''">
+           AND COST_CD = #{p.costCd}
+        </if>
+         ORDER BY BOM_LEVEL, BOM_SEQ
+    </select>
+
+    <select id="countBom" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_BOM
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND BOM_SEQ   = #{p.bomSeq}
+    </select>
+
+    <insert id="insertBom" parameterType="map">
+        INSERT INTO PCM_CUR_BOM (
+            TEN_ID, CC_PJT_CD, CC_REV, COST_CD, BOM_SEQ,
+            PART_NO, PART_NM, PART_DIV, QTY, RECV_UNIT_YN,
+            PARENT_SEQ, BOM_LEVEL, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.bomSeq},
+            #{p.partNo}, #{p.partNm}, #{p.partDiv}, #{p.qty}, #{p.recvUnitYn},
+            #{p.parentSeq}, #{p.bomLevel}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateBom" parameterType="map">
+        UPDATE PCM_CUR_BOM
+           SET PART_NO      = #{p.partNo},
+               PART_NM      = #{p.partNm},
+               PART_DIV     = #{p.partDiv},
+               QTY          = #{p.qty},
+               RECV_UNIT_YN = #{p.recvUnitYn},
+               PARENT_SEQ   = #{p.parentSeq},
+               BOM_LEVEL    = #{p.bomLevel},
+               RMK          = #{p.rmk},
+               STS          = #{p.sts},
+               MODR_ID      = #{g.username},
+               MOD_DTTM     = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND BOM_SEQ   = #{p.bomSeq}
+    </update>
+
+    <delete id="deleteBom" parameterType="map">
+        DELETE FROM PCM_CUR_BOM
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND BOM_SEQ   = #{p.bomSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         7. BOM 맵핑 (PCM_CUR_BOM_MAP)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, COST_CD, MAP_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListBomMap" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               COST_CD      AS "costCd",
+               MAP_SEQ      AS "mapSeq",
+               CUR_BOM_SEQ  AS "curBomSeq",
+               PREV_BOM_SEQ AS "prevBomSeq",
+               PREV_COST_CD AS "prevCostCd",
+               PREV_REV     AS "prevRev",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_BOM_MAP
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.costCd != null and p.costCd != ''">
+           AND COST_CD = #{p.costCd}
+        </if>
+         ORDER BY COST_CD, MAP_SEQ
+    </select>
+
+    <select id="countBomMap" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_BOM_MAP
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND MAP_SEQ   = #{p.mapSeq}
+    </select>
+
+    <insert id="insertBomMap" parameterType="map">
+        INSERT INTO PCM_CUR_BOM_MAP (
+            TEN_ID, CC_PJT_CD, CC_REV, COST_CD, MAP_SEQ,
+            CUR_BOM_SEQ, PREV_BOM_SEQ, PREV_COST_CD, PREV_REV,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.mapSeq},
+            #{p.curBomSeq}, #{p.prevBomSeq}, #{p.prevCostCd}, #{p.prevRev},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateBomMap" parameterType="map">
+        UPDATE PCM_CUR_BOM_MAP
+           SET CUR_BOM_SEQ  = #{p.curBomSeq},
+               PREV_BOM_SEQ = #{p.prevBomSeq},
+               PREV_COST_CD = #{p.prevCostCd},
+               PREV_REV     = #{p.prevRev},
+               RMK          = #{p.rmk},
+               STS          = #{p.sts},
+               MODR_ID      = #{g.username},
+               MOD_DTTM     = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND MAP_SEQ   = #{p.mapSeq}
+    </update>
+
+    <delete id="deleteBomMap" parameterType="map">
+        DELETE FROM PCM_CUR_BOM_MAP
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND MAP_SEQ   = #{p.mapSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         8. 부품단가 (PCM_CUR_PART_PRICE)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, COST_CD, PRICE_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListPartPrice" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD        AS "ccPjtCd",
+               CC_REV           AS "ccRev",
+               COST_CD          AS "costCd",
+               PRICE_SEQ        AS "priceSeq",
+               PART_NO          AS "partNo",
+               PART_NM          AS "partNm",
+               PART_DIV         AS "partDiv",
+               PIMS_CURRENCY    AS "pimsCurrency",
+               PIMS_PRICE       AS "pimsPrice",
+               DESIGN_CURRENCY  AS "designCurrency",
+               DESIGN_PRICE     AS "designPrice",
+               PURCHASE_CURRENCY AS "purchaseCurrency",
+               PURCHASE_PRICE   AS "purchasePrice",
+               CONFIRM_CURRENCY AS "confirmCurrency",
+               CONFIRM_PRICE    AS "confirmPrice",
+               LOSS_RATE        AS "lossRate",
+               RMK              AS "rmk",
+               STS              AS "sts"
+          FROM PCM_CUR_PART_PRICE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.costCd != null and p.costCd != ''">
+           AND COST_CD = #{p.costCd}
+        </if>
+         ORDER BY COST_CD, PRICE_SEQ
+    </select>
+
+    <select id="countPartPrice" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_PART_PRICE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND PRICE_SEQ = #{p.priceSeq}
+    </select>
+
+    <insert id="insertPartPrice" parameterType="map">
+        INSERT INTO PCM_CUR_PART_PRICE (
+            TEN_ID, CC_PJT_CD, CC_REV, COST_CD, PRICE_SEQ,
+            PART_NO, PART_NM, PART_DIV,
+            PIMS_CURRENCY, PIMS_PRICE,
+            DESIGN_CURRENCY, DESIGN_PRICE,
+            PURCHASE_CURRENCY, PURCHASE_PRICE,
+            CONFIRM_CURRENCY, CONFIRM_PRICE,
+            LOSS_RATE, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.priceSeq},
+            #{p.partNo}, #{p.partNm}, #{p.partDiv},
+            #{p.pimsCurrency}, #{p.pimsPrice},
+            #{p.designCurrency}, #{p.designPrice},
+            #{p.purchaseCurrency}, #{p.purchasePrice},
+            #{p.confirmCurrency}, #{p.confirmPrice},
+            #{p.lossRate}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updatePartPrice" parameterType="map">
+        UPDATE PCM_CUR_PART_PRICE
+           SET PART_NO           = #{p.partNo},
+               PART_NM           = #{p.partNm},
+               PART_DIV          = #{p.partDiv},
+               PIMS_CURRENCY     = #{p.pimsCurrency},
+               PIMS_PRICE        = #{p.pimsPrice},
+               DESIGN_CURRENCY   = #{p.designCurrency},
+               DESIGN_PRICE      = #{p.designPrice},
+               PURCHASE_CURRENCY = #{p.purchaseCurrency},
+               PURCHASE_PRICE    = #{p.purchasePrice},
+               CONFIRM_CURRENCY  = #{p.confirmCurrency},
+               CONFIRM_PRICE     = #{p.confirmPrice},
+               LOSS_RATE         = #{p.lossRate},
+               RMK               = #{p.rmk},
+               STS               = #{p.sts},
+               MODR_ID           = #{g.username},
+               MOD_DTTM          = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND PRICE_SEQ = #{p.priceSeq}
+    </update>
+
+    <delete id="deletePartPrice" parameterType="map">
+        DELETE FROM PCM_CUR_PART_PRICE
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+           AND PRICE_SEQ = #{p.priceSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         9. 라인투자비 (PCM_CUR_LINE_INVEST)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, LINE_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListLineInvest" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD     AS "ccPjtCd",
+               CC_REV        AS "ccRev",
+               LINE_SEQ      AS "lineSeq",
+               LINE_DIV      AS "lineDiv",
+               LINE_CD       AS "lineCd",
+               LINE_NM       AS "lineNm",
+               INVEST_NM     AS "investNm",
+               PROCESS_CD    AS "processCd",
+               ACQ_AMT       AS "acqAmt",
+               ACQ_CURRENCY  AS "acqCurrency",
+               DEPR_START_YM AS "deprStartYm",
+               CAPA_EA       AS "capaEa",
+               AVAIL_RATE    AS "availRate",
+               USE_RATE      AS "useRate",
+               BASE_YEAR     AS "baseYear",
+               RMK           AS "rmk",
+               STS           AS "sts"
+          FROM PCM_CUR_LINE_INVEST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY LINE_SEQ
+    </select>
+
+    <select id="countLineInvest" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_LINE_INVEST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+    </select>
+
+    <insert id="insertLineInvest" parameterType="map">
+        INSERT INTO PCM_CUR_LINE_INVEST (
+            TEN_ID, CC_PJT_CD, CC_REV, LINE_SEQ,
+            LINE_DIV, LINE_CD, LINE_NM, INVEST_NM, PROCESS_CD,
+            ACQ_AMT, ACQ_CURRENCY, DEPR_START_YM,
+            CAPA_EA, AVAIL_RATE, USE_RATE, BASE_YEAR,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.lineSeq},
+            #{p.lineDiv}, #{p.lineCd}, #{p.lineNm}, #{p.investNm}, #{p.processCd},
+            #{p.acqAmt}, #{p.acqCurrency}, #{p.deprStartYm},
+            #{p.capaEa}, #{p.availRate}, #{p.useRate}, #{p.baseYear},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateLineInvest" parameterType="map">
+        UPDATE PCM_CUR_LINE_INVEST
+           SET LINE_DIV      = #{p.lineDiv},
+               LINE_CD       = #{p.lineCd},
+               LINE_NM       = #{p.lineNm},
+               INVEST_NM     = #{p.investNm},
+               PROCESS_CD    = #{p.processCd},
+               ACQ_AMT       = #{p.acqAmt},
+               ACQ_CURRENCY  = #{p.acqCurrency},
+               DEPR_START_YM = #{p.deprStartYm},
+               CAPA_EA       = #{p.capaEa},
+               AVAIL_RATE    = #{p.availRate},
+               USE_RATE      = #{p.useRate},
+               BASE_YEAR     = #{p.baseYear},
+               RMK           = #{p.rmk},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+    </update>
+
+    <delete id="deleteLineInvest" parameterType="map">
+        DELETE FROM PCM_CUR_LINE_INVEST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         10. 라인투자비 상세 (PCM_CUR_LINE_INVEST_DTL)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, LINE_SEQ, DTL_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListLineInvestDtl" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD     AS "ccPjtCd",
+               CC_REV        AS "ccRev",
+               LINE_SEQ      AS "lineSeq",
+               DTL_SEQ       AS "dtlSeq",
+               ITEM_DESC     AS "itemDesc",
+               CURRENCY      AS "currency",
+               AMT           AS "amt",
+               ACQ_YEAR      AS "acqYear",
+               DEPR_START_YM AS "deprStartYm",
+               CAPA_EA       AS "capaEa",
+               USEFUL_LIFE   AS "usefulLife",
+               RMK           AS "rmk",
+               STS           AS "sts"
+          FROM PCM_CUR_LINE_INVEST_DTL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.lineSeq != null and p.lineSeq != ''">
+           AND LINE_SEQ = #{p.lineSeq}
+        </if>
+         ORDER BY LINE_SEQ, DTL_SEQ
+    </select>
+
+    <select id="countLineInvestDtl" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_LINE_INVEST_DTL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND DTL_SEQ   = #{p.dtlSeq}
+    </select>
+
+    <insert id="insertLineInvestDtl" parameterType="map">
+        INSERT INTO PCM_CUR_LINE_INVEST_DTL (
+            TEN_ID, CC_PJT_CD, CC_REV, LINE_SEQ, DTL_SEQ,
+            ITEM_DESC, CURRENCY, AMT, ACQ_YEAR, DEPR_START_YM,
+            CAPA_EA, USEFUL_LIFE, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.lineSeq}, #{p.dtlSeq},
+            #{p.itemDesc}, #{p.currency}, #{p.amt}, #{p.acqYear}, #{p.deprStartYm},
+            #{p.capaEa}, #{p.usefulLife}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateLineInvestDtl" parameterType="map">
+        UPDATE PCM_CUR_LINE_INVEST_DTL
+           SET ITEM_DESC     = #{p.itemDesc},
+               CURRENCY      = #{p.currency},
+               AMT           = #{p.amt},
+               ACQ_YEAR      = #{p.acqYear},
+               DEPR_START_YM = #{p.deprStartYm},
+               CAPA_EA       = #{p.capaEa},
+               USEFUL_LIFE   = #{p.usefulLife},
+               RMK           = #{p.rmk},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND DTL_SEQ   = #{p.dtlSeq}
+    </update>
+
+    <delete id="deleteLineInvestDtl" parameterType="map">
+        DELETE FROM PCM_CUR_LINE_INVEST_DTL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND DTL_SEQ   = #{p.dtlSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         11. 라인CT (PCM_CUR_LINE_CT)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, LINE_SEQ, COST_CD
+         ═══════════════════════════════════════════ -->
+    <select id="findListLineCt" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD AS "ccPjtCd",
+               CC_REV    AS "ccRev",
+               LINE_SEQ  AS "lineSeq",
+               COST_CD   AS "costCd",
+               USE_YN    AS "useYn",
+               EST_CT    AS "estCt",
+               RMK       AS "rmk",
+               STS       AS "sts"
+          FROM PCM_CUR_LINE_CT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.lineSeq != null and p.lineSeq != ''">
+           AND LINE_SEQ = #{p.lineSeq}
+        </if>
+         ORDER BY LINE_SEQ, COST_CD
+    </select>
+
+    <select id="countLineCt" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_LINE_CT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND COST_CD   = #{p.costCd}
+    </select>
+
+    <insert id="insertLineCt" parameterType="map">
+        INSERT INTO PCM_CUR_LINE_CT (
+            TEN_ID, CC_PJT_CD, CC_REV, LINE_SEQ, COST_CD,
+            USE_YN, EST_CT, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.lineSeq}, #{p.costCd},
+            #{p.useYn}, #{p.estCt}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateLineCt" parameterType="map">
+        UPDATE PCM_CUR_LINE_CT
+           SET USE_YN  = #{p.useYn},
+               EST_CT  = #{p.estCt},
+               RMK     = #{p.rmk},
+               STS     = #{p.sts},
+               MODR_ID = #{g.username},
+               MOD_DTTM = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND COST_CD   = #{p.costCd}
+    </update>
+
+    <delete id="deleteLineCt" parameterType="map">
+        DELETE FROM PCM_CUR_LINE_CT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND COST_CD   = #{p.costCd}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         12. 기타투자비 (PCM_CUR_OTHER_INVEST)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, INVEST_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListOtherInvest" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD     AS "ccPjtCd",
+               CC_REV        AS "ccRev",
+               INVEST_SEQ    AS "investSeq",
+               INVEST_NM     AS "investNm",
+               INVEST_DIV    AS "investDiv",
+               CURRENCY      AS "currency",
+               ACQ_AMT       AS "acqAmt",
+               DEPR_DIV      AS "deprDiv",
+               USEFUL_LIFE   AS "usefulLife",
+               ACQ_YEAR      AS "acqYear",
+               DEPR_START_YM AS "deprStartYm",
+               AVAIL_RATE    AS "availRate",
+               USE_RATE      AS "useRate",
+               RMK           AS "rmk",
+               STS           AS "sts"
+          FROM PCM_CUR_OTHER_INVEST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY INVEST_SEQ
+    </select>
+
+    <select id="countOtherInvest" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_OTHER_INVEST
+         WHERE TEN_ID     = #{g.tenant}
+           AND CC_PJT_CD  = #{p.ccPjtCd}
+           AND CC_REV     = CAST(#{p.ccRev} AS INTEGER)
+           AND INVEST_SEQ = #{p.investSeq}
+    </select>
+
+    <insert id="insertOtherInvest" parameterType="map">
+        INSERT INTO PCM_CUR_OTHER_INVEST (
+            TEN_ID, CC_PJT_CD, CC_REV, INVEST_SEQ,
+            INVEST_NM, INVEST_DIV, CURRENCY, ACQ_AMT,
+            DEPR_DIV, USEFUL_LIFE, ACQ_YEAR, DEPR_START_YM,
+            AVAIL_RATE, USE_RATE, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.investSeq},
+            #{p.investNm}, #{p.investDiv}, #{p.currency}, #{p.acqAmt},
+            #{p.deprDiv}, #{p.usefulLife}, #{p.acqYear}, #{p.deprStartYm},
+            #{p.availRate}, #{p.useRate}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateOtherInvest" parameterType="map">
+        UPDATE PCM_CUR_OTHER_INVEST
+           SET INVEST_NM     = #{p.investNm},
+               INVEST_DIV    = #{p.investDiv},
+               CURRENCY      = #{p.currency},
+               ACQ_AMT       = #{p.acqAmt},
+               DEPR_DIV      = #{p.deprDiv},
+               USEFUL_LIFE   = #{p.usefulLife},
+               ACQ_YEAR      = #{p.acqYear},
+               DEPR_START_YM = #{p.deprStartYm},
+               AVAIL_RATE    = #{p.availRate},
+               USE_RATE      = #{p.useRate},
+               RMK           = #{p.rmk},
+               STS           = #{p.sts},
+               MODR_ID       = #{g.username},
+               MOD_DTTM      = #{g.now}
+         WHERE TEN_ID     = #{g.tenant}
+           AND CC_PJT_CD  = #{p.ccPjtCd}
+           AND CC_REV     = CAST(#{p.ccRev} AS INTEGER)
+           AND INVEST_SEQ = #{p.investSeq}
+    </update>
+
+    <delete id="deleteOtherInvest" parameterType="map">
+        DELETE FROM PCM_CUR_OTHER_INVEST
+         WHERE TEN_ID     = #{g.tenant}
+           AND CC_PJT_CD  = #{p.ccPjtCd}
+           AND CC_REV     = CAST(#{p.ccRev} AS INTEGER)
+           AND INVEST_SEQ = #{p.investSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         13. 인원계획 (PCM_CUR_MANPOWER)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, MP_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListManpower" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD  AS "ccPjtCd",
+               CC_REV     AS "ccRev",
+               MP_SEQ     AS "mpSeq",
+               MP_DIV     AS "mpDiv",
+               MP_NM      AS "mpNm",
+               PROCESS_CD AS "processCd",
+               CURRENCY   AS "currency",
+               AVG_SALARY AS "avgSalary",
+               YEAR_VAL   AS "yearVal",
+               HEAD_COUNT AS "headCount",
+               LINE_SEQ   AS "lineSeq",
+               RMK        AS "rmk",
+               STS        AS "sts"
+          FROM PCM_CUR_MANPOWER
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY MP_SEQ
+    </select>
+
+    <select id="countManpower" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_MANPOWER
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND MP_SEQ    = #{p.mpSeq}
+    </select>
+
+    <insert id="insertManpower" parameterType="map">
+        INSERT INTO PCM_CUR_MANPOWER (
+            TEN_ID, CC_PJT_CD, CC_REV, MP_SEQ,
+            MP_DIV, MP_NM, PROCESS_CD, CURRENCY, AVG_SALARY,
+            YEAR_VAL, HEAD_COUNT, LINE_SEQ, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.mpSeq},
+            #{p.mpDiv}, #{p.mpNm}, #{p.processCd}, #{p.currency}, #{p.avgSalary},
+            #{p.yearVal}, #{p.headCount}, #{p.lineSeq}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateManpower" parameterType="map">
+        UPDATE PCM_CUR_MANPOWER
+           SET MP_DIV     = #{p.mpDiv},
+               MP_NM      = #{p.mpNm},
+               PROCESS_CD = #{p.processCd},
+               CURRENCY   = #{p.currency},
+               AVG_SALARY = #{p.avgSalary},
+               YEAR_VAL   = #{p.yearVal},
+               HEAD_COUNT = #{p.headCount},
+               LINE_SEQ   = #{p.lineSeq},
+               RMK        = #{p.rmk},
+               STS        = #{p.sts},
+               MODR_ID    = #{g.username},
+               MOD_DTTM   = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND MP_SEQ    = #{p.mpSeq}
+    </update>
+
+    <delete id="deleteManpower" parameterType="map">
+        DELETE FROM PCM_CUR_MANPOWER
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND MP_SEQ    = #{p.mpSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         14. 제조경비 (PCM_CUR_MFG_COST)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, COST_CD
+         ═══════════════════════════════════════════ -->
+    <select id="findListMfgCost" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD          AS "ccPjtCd",
+               CC_REV             AS "ccRev",
+               COST_CD            AS "costCd",
+               WAGE_INCR_RATE     AS "wageIncrRate",
+               PRICE_INCR_RATE    AS "priceIncrRate",
+               DIRECT_EXP_RATE    AS "directExpRate",
+               LABOR_EXP_RATE     AS "laborExpRate",
+               OTHER_MFG_RATE     AS "otherMfgRate",
+               MOLD_UNIT_COST     AS "moldUnitCost",
+               OUTSRC_UNIT_COST   AS "outsrcUnitCost",
+               OUTSRC_RATE        AS "outsrcRate",
+               CALC_DONE_YN       AS "calcDoneYn",
+               DIRECT_LABOR_AMT   AS "directLaborAmt",
+               INDIRECT_LABOR_AMT AS "indirectLaborAmt",
+               DIRECT_EXP_AMT     AS "directExpAmt",
+               LABOR_EXP_AMT      AS "laborExpAmt",
+               OTHER_MFG_AMT      AS "otherMfgAmt",
+               DEPR_BLDG_AMT      AS "deprBldgAmt",
+               DEPR_LINE_AMT      AS "deprLineAmt",
+               DEPR_OTHER_AMT     AS "deprOtherAmt",
+               OUTSRC_AMT         AS "outsrcAmt",
+               MOLD_AMT           AS "moldAmt",
+               RND_AMT            AS "rndAmt",
+               OTHER_EXP_AMT      AS "otherExpAmt",
+               TOTAL_MFG_AMT      AS "totalMfgAmt",
+               RMK                AS "rmk",
+               STS                AS "sts"
+          FROM PCM_CUR_MFG_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY COST_CD
+    </select>
+
+    <select id="countMfgCost" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_MFG_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+    </select>
+
+    <insert id="insertMfgCost" parameterType="map">
+        INSERT INTO PCM_CUR_MFG_COST (
+            TEN_ID, CC_PJT_CD, CC_REV, COST_CD,
+            WAGE_INCR_RATE, PRICE_INCR_RATE, DIRECT_EXP_RATE,
+            LABOR_EXP_RATE, OTHER_MFG_RATE, MOLD_UNIT_COST,
+            OUTSRC_UNIT_COST, OUTSRC_RATE, CALC_DONE_YN,
+            DIRECT_LABOR_AMT, INDIRECT_LABOR_AMT, DIRECT_EXP_AMT,
+            LABOR_EXP_AMT, OTHER_MFG_AMT, DEPR_BLDG_AMT,
+            DEPR_LINE_AMT, DEPR_OTHER_AMT, OUTSRC_AMT,
+            MOLD_AMT, RND_AMT, OTHER_EXP_AMT, TOTAL_MFG_AMT,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd},
+            #{p.wageIncrRate}, #{p.priceIncrRate}, #{p.directExpRate},
+            #{p.laborExpRate}, #{p.otherMfgRate}, #{p.moldUnitCost},
+            #{p.outsrcUnitCost}, #{p.outsrcRate}, #{p.calcDoneYn},
+            #{p.directLaborAmt}, #{p.indirectLaborAmt}, #{p.directExpAmt},
+            #{p.laborExpAmt}, #{p.otherMfgAmt}, #{p.deprBldgAmt},
+            #{p.deprLineAmt}, #{p.deprOtherAmt}, #{p.outsrcAmt},
+            #{p.moldAmt}, #{p.rndAmt}, #{p.otherExpAmt}, #{p.totalMfgAmt},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateMfgCost" parameterType="map">
+        UPDATE PCM_CUR_MFG_COST
+           SET WAGE_INCR_RATE     = #{p.wageIncrRate},
+               PRICE_INCR_RATE    = #{p.priceIncrRate},
+               DIRECT_EXP_RATE    = #{p.directExpRate},
+               LABOR_EXP_RATE     = #{p.laborExpRate},
+               OTHER_MFG_RATE     = #{p.otherMfgRate},
+               MOLD_UNIT_COST     = #{p.moldUnitCost},
+               OUTSRC_UNIT_COST   = #{p.outsrcUnitCost},
+               OUTSRC_RATE        = #{p.outsrcRate},
+               CALC_DONE_YN       = #{p.calcDoneYn},
+               DIRECT_LABOR_AMT   = #{p.directLaborAmt},
+               INDIRECT_LABOR_AMT = #{p.indirectLaborAmt},
+               DIRECT_EXP_AMT     = #{p.directExpAmt},
+               LABOR_EXP_AMT      = #{p.laborExpAmt},
+               OTHER_MFG_AMT      = #{p.otherMfgAmt},
+               DEPR_BLDG_AMT      = #{p.deprBldgAmt},
+               DEPR_LINE_AMT      = #{p.deprLineAmt},
+               DEPR_OTHER_AMT     = #{p.deprOtherAmt},
+               OUTSRC_AMT         = #{p.outsrcAmt},
+               MOLD_AMT           = #{p.moldAmt},
+               RND_AMT            = #{p.rndAmt},
+               OTHER_EXP_AMT      = #{p.otherExpAmt},
+               TOTAL_MFG_AMT      = #{p.totalMfgAmt},
+               RMK                = #{p.rmk},
+               STS                = #{p.sts},
+               MODR_ID            = #{g.username},
+               MOD_DTTM           = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+    </update>
+
+    <delete id="deleteMfgCost" parameterType="map">
+        DELETE FROM PCM_CUR_MFG_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         15. 판매관리비 (PCM_CUR_SGA_COST)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, COST_CD
+         ═══════════════════════════════════════════ -->
+    <select id="findListSgaCost" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD       AS "ccPjtCd",
+               CC_REV          AS "ccRev",
+               COST_CD         AS "costCd",
+               SALE_LABOR_RATE AS "saleLaborRate",
+               TRANSPORT_RATE  AS "transportRate",
+               EXPORT_RATE     AS "exportRate",
+               QA_RATE         AS "qaRate",
+               AD_RATE         AS "adRate",
+               RESEARCH_RATE   AS "researchRate",
+               ASSET_RATE      AS "assetRate",
+               HR_RATE         AS "hrRate",
+               OTHER_RATE      AS "otherRate",
+               CALC_DONE_YN    AS "calcDoneYn",
+               SALE_LABOR_AMT  AS "saleLaborAmt",
+               TRANSPORT_AMT   AS "transportAmt",
+               EXPORT_AMT      AS "exportAmt",
+               QA_AMT          AS "qaAmt",
+               AD_AMT          AS "adAmt",
+               RESEARCH_AMT    AS "researchAmt",
+               ASSET_AMT       AS "assetAmt",
+               HR_AMT          AS "hrAmt",
+               OTHER_AMT       AS "otherAmt",
+               TOTAL_SGA_AMT   AS "totalSgaAmt",
+               RMK             AS "rmk",
+               STS             AS "sts"
+          FROM PCM_CUR_SGA_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY COST_CD
+    </select>
+
+    <select id="countSgaCost" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_SGA_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+    </select>
+
+    <insert id="insertSgaCost" parameterType="map">
+        INSERT INTO PCM_CUR_SGA_COST (
+            TEN_ID, CC_PJT_CD, CC_REV, COST_CD,
+            SALE_LABOR_RATE, TRANSPORT_RATE, EXPORT_RATE,
+            QA_RATE, AD_RATE, RESEARCH_RATE,
+            ASSET_RATE, HR_RATE, OTHER_RATE, CALC_DONE_YN,
+            SALE_LABOR_AMT, TRANSPORT_AMT, EXPORT_AMT,
+            QA_AMT, AD_AMT, RESEARCH_AMT,
+            ASSET_AMT, HR_AMT, OTHER_AMT, TOTAL_SGA_AMT,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd},
+            #{p.saleLaborRate}, #{p.transportRate}, #{p.exportRate},
+            #{p.qaRate}, #{p.adRate}, #{p.researchRate},
+            #{p.assetRate}, #{p.hrRate}, #{p.otherRate}, #{p.calcDoneYn},
+            #{p.saleLaborAmt}, #{p.transportAmt}, #{p.exportAmt},
+            #{p.qaAmt}, #{p.adAmt}, #{p.researchAmt},
+            #{p.assetAmt}, #{p.hrAmt}, #{p.otherAmt}, #{p.totalSgaAmt},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateSgaCost" parameterType="map">
+        UPDATE PCM_CUR_SGA_COST
+           SET SALE_LABOR_RATE = #{p.saleLaborRate},
+               TRANSPORT_RATE  = #{p.transportRate},
+               EXPORT_RATE     = #{p.exportRate},
+               QA_RATE         = #{p.qaRate},
+               AD_RATE         = #{p.adRate},
+               RESEARCH_RATE   = #{p.researchRate},
+               ASSET_RATE      = #{p.assetRate},
+               HR_RATE         = #{p.hrRate},
+               OTHER_RATE      = #{p.otherRate},
+               CALC_DONE_YN    = #{p.calcDoneYn},
+               SALE_LABOR_AMT  = #{p.saleLaborAmt},
+               TRANSPORT_AMT   = #{p.transportAmt},
+               EXPORT_AMT      = #{p.exportAmt},
+               QA_AMT          = #{p.qaAmt},
+               AD_AMT          = #{p.adAmt},
+               RESEARCH_AMT    = #{p.researchAmt},
+               ASSET_AMT       = #{p.assetAmt},
+               HR_AMT          = #{p.hrAmt},
+               OTHER_AMT       = #{p.otherAmt},
+               TOTAL_SGA_AMT   = #{p.totalSgaAmt},
+               RMK             = #{p.rmk},
+               STS             = #{p.sts},
+               MODR_ID         = #{g.username},
+               MOD_DTTM        = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+    </update>
+
+    <delete id="deleteSgaCost" parameterType="map">
+        DELETE FROM PCM_CUR_SGA_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND COST_CD   = #{p.costCd}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         16. 손익계산서 (PCM_CUR_PL_STMT)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, VIEW_TYPE, VIEW_KEY, PL_SEQ, YEAR_VAL
+         ═══════════════════════════════════════════ -->
+    <select id="findListPlStmt" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               VIEW_TYPE    AS "viewType",
+               VIEW_KEY     AS "viewKey",
+               PL_SEQ       AS "plSeq",
+               COST_ITEM    AS "costItem",
+               YEAR_VAL     AS "yearVal",
+               TOT_AMT      AS "totAmt",
+               UNIT_AMT     AS "unitAmt",
+               RATE_VAL     AS "rateVal",
+               CALC_DONE_YN AS "calcDoneYn",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_PL_STMT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.viewType != null and p.viewType != ''">
+           AND VIEW_TYPE = #{p.viewType}
+        </if>
+        <if test="p.viewKey != null and p.viewKey != ''">
+           AND VIEW_KEY  = #{p.viewKey}
+        </if>
+         ORDER BY VIEW_TYPE, VIEW_KEY, PL_SEQ, YEAR_VAL
+    </select>
+
+    <select id="countPlStmt" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_PL_STMT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND VIEW_TYPE = #{p.viewType}
+           AND VIEW_KEY  = #{p.viewKey}
+           AND PL_SEQ    = #{p.plSeq}
+           AND YEAR_VAL  = #{p.yearVal}
+    </select>
+
+    <insert id="insertPlStmt" parameterType="map">
+        INSERT INTO PCM_CUR_PL_STMT (
+            TEN_ID, CC_PJT_CD, CC_REV, VIEW_TYPE, VIEW_KEY,
+            PL_SEQ, COST_ITEM, YEAR_VAL, TOT_AMT, UNIT_AMT,
+            RATE_VAL, CALC_DONE_YN, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.viewType}, #{p.viewKey},
+            #{p.plSeq}, #{p.costItem}, #{p.yearVal}, #{p.totAmt}, #{p.unitAmt},
+            #{p.rateVal}, #{p.calcDoneYn}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updatePlStmt" parameterType="map">
+        UPDATE PCM_CUR_PL_STMT
+           SET COST_ITEM    = #{p.costItem},
+               TOT_AMT      = #{p.totAmt},
+               UNIT_AMT     = #{p.unitAmt},
+               RATE_VAL     = #{p.rateVal},
+               CALC_DONE_YN = #{p.calcDoneYn},
+               RMK          = #{p.rmk},
+               STS          = #{p.sts},
+               MODR_ID      = #{g.username},
+               MOD_DTTM     = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND VIEW_TYPE = #{p.viewType}
+           AND VIEW_KEY  = #{p.viewKey}
+           AND PL_SEQ    = #{p.plSeq}
+           AND YEAR_VAL  = #{p.yearVal}
+    </update>
+
+    <delete id="deletePlStmt" parameterType="map">
+        DELETE FROM PCM_CUR_PL_STMT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND VIEW_TYPE = #{p.viewType}
+           AND VIEW_KEY  = #{p.viewKey}
+           AND PL_SEQ    = #{p.plSeq}
+           AND YEAR_VAL  = #{p.yearVal}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         17. 차이분석 (PCM_CUR_DIFF_ANALYSIS)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, DIFF_SEQ, DIFF_TYPE
+         ═══════════════════════════════════════════ -->
+    <select id="findListDiffAnalysis" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               DIFF_SEQ     AS "diffSeq",
+               DIFF_TYPE    AS "diffType",
+               COST_ITEM_CD AS "costItemCd",
+               COST_ITEM_NM AS "costItemNm",
+               EC_AMT       AS "ecAmt",
+               CC_AMT       AS "ccAmt",
+               DIFF_AMT     AS "diffAmt",
+               DIFF_RATE    AS "diffRate",
+               CUM_EC_AMT   AS "cumEcAmt",
+               CUM_CC_AMT   AS "cumCcAmt",
+               CUM_DIFF_AMT AS "cumDiffAmt",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_DIFF_ANALYSIS
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY DIFF_SEQ
+    </select>
+
+    <select id="countDiffAnalysis" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_DIFF_ANALYSIS
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND DIFF_SEQ  = #{p.diffSeq}
+           AND DIFF_TYPE = #{p.diffType}
+    </select>
+
+    <insert id="insertDiffAnalysis" parameterType="map">
+        INSERT INTO PCM_CUR_DIFF_ANALYSIS (
+            TEN_ID, CC_PJT_CD, CC_REV, DIFF_SEQ, DIFF_TYPE,
+            COST_ITEM_CD, COST_ITEM_NM, EC_AMT, CC_AMT,
+            DIFF_AMT, DIFF_RATE, CUM_EC_AMT, CUM_CC_AMT,
+            CUM_DIFF_AMT, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.diffSeq}, #{p.diffType},
+            #{p.costItemCd}, #{p.costItemNm}, #{p.ecAmt}, #{p.ccAmt},
+            #{p.diffAmt}, #{p.diffRate}, #{p.cumEcAmt}, #{p.cumCcAmt},
+            #{p.cumDiffAmt}, #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateDiffAnalysis" parameterType="map">
+        UPDATE PCM_CUR_DIFF_ANALYSIS
+           SET COST_ITEM_CD = #{p.costItemCd},
+               COST_ITEM_NM = #{p.costItemNm},
+               EC_AMT       = #{p.ecAmt},
+               CC_AMT       = #{p.ccAmt},
+               DIFF_AMT     = #{p.diffAmt},
+               DIFF_RATE    = #{p.diffRate},
+               CUM_EC_AMT   = #{p.cumEcAmt},
+               CUM_CC_AMT   = #{p.cumCcAmt},
+               CUM_DIFF_AMT = #{p.cumDiffAmt},
+               RMK          = #{p.rmk},
+               STS          = #{p.sts},
+               MODR_ID      = #{g.username},
+               MOD_DTTM     = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND DIFF_SEQ  = #{p.diffSeq}
+           AND DIFF_TYPE = #{p.diffType}
+    </update>
+
+    <delete id="deleteDiffAnalysis" parameterType="map">
+        DELETE FROM PCM_CUR_DIFF_ANALYSIS
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND DIFF_SEQ  = #{p.diffSeq}
+           AND DIFF_TYPE = #{p.diffType}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         18. 달성도 평가 상세 (PCM_CUR_ACHV_EVAL_DTL)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, EVAL_SEQ, EVAL_TYPE
+         ═══════════════════════════════════════════ -->
+    <select id="findListAchvEvalDtl" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               EVAL_SEQ     AS "evalSeq",
+               EVAL_TYPE    AS "evalType",
+               DEPT_NM      AS "deptNm",
+               COST_ITEM_CD AS "costItemCd",
+               COST_ITEM_NM AS "costItemNm",
+               EC_AMT       AS "ecAmt",
+               TGT_AMT      AS "tgtAmt",
+               SAVE_TGT_AMT AS "saveTgtAmt",
+               CUR_AMT      AS "curAmt",
+               SAVE_ACT_AMT AS "saveActAmt",
+               ACHV_RATE    AS "achvRate",
+               ACHV_YN      AS "achvYn",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_ACHV_EVAL_DTL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         ORDER BY EVAL_SEQ
+    </select>
+
+    <select id="countAchvEvalDtl" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_ACHV_EVAL_DTL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND EVAL_SEQ  = #{p.evalSeq}
+           AND EVAL_TYPE = #{p.evalType}
+    </select>
+
+    <insert id="insertAchvEvalDtl" parameterType="map">
+        INSERT INTO PCM_CUR_ACHV_EVAL_DTL (
+            TEN_ID, CC_PJT_CD, CC_REV, EVAL_SEQ, EVAL_TYPE,
+            DEPT_NM, COST_ITEM_CD, COST_ITEM_NM, EC_AMT, TGT_AMT,
+            SAVE_TGT_AMT, CUR_AMT, SAVE_ACT_AMT, ACHV_RATE, ACHV_YN,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.evalSeq}, #{p.evalType},
+            #{p.deptNm}, #{p.costItemCd}, #{p.costItemNm}, #{p.ecAmt}, #{p.tgtAmt},
+            #{p.saveTgtAmt}, #{p.curAmt}, #{p.saveActAmt}, #{p.achvRate}, #{p.achvYn},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateAchvEvalDtl" parameterType="map">
+        UPDATE PCM_CUR_ACHV_EVAL_DTL
+           SET DEPT_NM      = #{p.deptNm},
+               COST_ITEM_CD = #{p.costItemCd},
+               COST_ITEM_NM = #{p.costItemNm},
+               EC_AMT       = #{p.ecAmt},
+               TGT_AMT      = #{p.tgtAmt},
+               SAVE_TGT_AMT = #{p.saveTgtAmt},
+               CUR_AMT      = #{p.curAmt},
+               SAVE_ACT_AMT = #{p.saveActAmt},
+               ACHV_RATE    = #{p.achvRate},
+               ACHV_YN      = #{p.achvYn},
+               RMK          = #{p.rmk},
+               STS          = #{p.sts},
+               MODR_ID      = #{g.username},
+               MOD_DTTM     = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND EVAL_SEQ  = #{p.evalSeq}
+           AND EVAL_TYPE = #{p.evalType}
+    </update>
+
+    <delete id="deleteAchvEvalDtl" parameterType="map">
+        DELETE FROM PCM_CUR_ACHV_EVAL_DTL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+           AND EVAL_SEQ  = #{p.evalSeq}
+           AND EVAL_TYPE = #{p.evalType}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         19. 실적평가 (PCM_CUR_ACT_EVAL)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, TGT_COST_CD, EVAL_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListActEval" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD    AS "ccPjtCd",
+               CC_REV       AS "ccRev",
+               TGT_COST_CD  AS "tgtCostCd",
+               EVAL_SEQ     AS "evalSeq",
+               COST_ITEM_NM AS "costItemNm",
+               EC_AMT       AS "ecAmt",
+               TGT_AMT      AS "tgtAmt",
+               SAVE_TGT_AMT AS "saveTgtAmt",
+               ACT_AMT      AS "actAmt",
+               SAVE_ACT_AMT AS "saveActAmt",
+               ACHV_RATE    AS "achvRate",
+               ACHV_YN      AS "achvYn",
+               RMK          AS "rmk",
+               STS          AS "sts"
+          FROM PCM_CUR_ACT_EVAL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.tgtCostCd != null and p.tgtCostCd != ''">
+           AND TGT_COST_CD = #{p.tgtCostCd}
+        </if>
+         ORDER BY EVAL_SEQ
+    </select>
+
+    <select id="countActEval" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_ACT_EVAL
+         WHERE TEN_ID      = #{g.tenant}
+           AND CC_PJT_CD   = #{p.ccPjtCd}
+           AND CC_REV      = CAST(#{p.ccRev} AS INTEGER)
+           AND TGT_COST_CD = #{p.tgtCostCd}
+           AND EVAL_SEQ    = #{p.evalSeq}
+    </select>
+
+    <insert id="insertActEval" parameterType="map">
+        INSERT INTO PCM_CUR_ACT_EVAL (
+            TEN_ID, CC_PJT_CD, CC_REV, TGT_COST_CD, EVAL_SEQ,
+            COST_ITEM_NM, EC_AMT, TGT_AMT, SAVE_TGT_AMT,
+            ACT_AMT, SAVE_ACT_AMT, ACHV_RATE, ACHV_YN,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.tgtCostCd}, #{p.evalSeq},
+            #{p.costItemNm}, #{p.ecAmt}, #{p.tgtAmt}, #{p.saveTgtAmt},
+            #{p.actAmt}, #{p.saveActAmt}, #{p.achvRate}, #{p.achvYn},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateActEval" parameterType="map">
+        UPDATE PCM_CUR_ACT_EVAL
+           SET COST_ITEM_NM = #{p.costItemNm},
+               EC_AMT       = #{p.ecAmt},
+               TGT_AMT      = #{p.tgtAmt},
+               SAVE_TGT_AMT = #{p.saveTgtAmt},
+               ACT_AMT      = #{p.actAmt},
+               SAVE_ACT_AMT = #{p.saveActAmt},
+               ACHV_RATE    = #{p.achvRate},
+               ACHV_YN      = #{p.achvYn},
+               RMK          = #{p.rmk},
+               STS          = #{p.sts},
+               MODR_ID      = #{g.username},
+               MOD_DTTM     = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND CC_PJT_CD   = #{p.ccPjtCd}
+           AND CC_REV      = CAST(#{p.ccRev} AS INTEGER)
+           AND TGT_COST_CD = #{p.tgtCostCd}
+           AND EVAL_SEQ    = #{p.evalSeq}
+    </update>
+
+    <delete id="deleteActEval" parameterType="map">
+        DELETE FROM PCM_CUR_ACT_EVAL
+         WHERE TEN_ID      = #{g.tenant}
+           AND CC_PJT_CD   = #{p.ccPjtCd}
+           AND CC_REV      = CAST(#{p.ccRev} AS INTEGER)
+           AND TGT_COST_CD = #{p.tgtCostCd}
+           AND EVAL_SEQ    = #{p.evalSeq}
+    </delete>
+
+    <!-- ═══════════════════════════════════════════
+         20. 실적자재비 (PCM_CUR_ACT_MATERIAL)
+         PK: TEN_ID, CC_PJT_CD, CC_REV, TGT_COST_CD, MAT_SEQ
+         ═══════════════════════════════════════════ -->
+    <select id="findListActMaterial" parameterType="map" resultType="map">
+        SELECT CC_PJT_CD       AS "ccPjtCd",
+               CC_REV          AS "ccRev",
+               TGT_COST_CD    AS "tgtCostCd",
+               MAT_SEQ        AS "matSeq",
+               PART_NO        AS "partNo",
+               PART_NM        AS "partNm",
+               PIMS_CURRENCY  AS "pimsCurrency",
+               PIMS_PRICE     AS "pimsPrice",
+               EVAL_CURRENCY  AS "evalCurrency",
+               EVAL_EXCH_RATE AS "evalExchRate",
+               EVAL_PRICE     AS "evalPrice",
+               EST_MAT_COST   AS "estMatCost",
+               RMK            AS "rmk",
+               STS            AS "sts"
+          FROM PCM_CUR_ACT_MATERIAL
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.tgtCostCd != null and p.tgtCostCd != ''">
+           AND TGT_COST_CD = #{p.tgtCostCd}
+        </if>
+         ORDER BY MAT_SEQ
+    </select>
+
+    <select id="countActMaterial" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_CUR_ACT_MATERIAL
+         WHERE TEN_ID      = #{g.tenant}
+           AND CC_PJT_CD   = #{p.ccPjtCd}
+           AND CC_REV      = CAST(#{p.ccRev} AS INTEGER)
+           AND TGT_COST_CD = #{p.tgtCostCd}
+           AND MAT_SEQ     = #{p.matSeq}
+    </select>
+
+    <insert id="insertActMaterial" parameterType="map">
+        INSERT INTO PCM_CUR_ACT_MATERIAL (
+            TEN_ID, CC_PJT_CD, CC_REV, TGT_COST_CD, MAT_SEQ,
+            PART_NO, PART_NM, PIMS_CURRENCY, PIMS_PRICE,
+            EVAL_CURRENCY, EVAL_EXCH_RATE, EVAL_PRICE, EST_MAT_COST,
+            RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.tgtCostCd}, #{p.matSeq},
+            #{p.partNo}, #{p.partNm}, #{p.pimsCurrency}, #{p.pimsPrice},
+            #{p.evalCurrency}, #{p.evalExchRate}, #{p.evalPrice}, #{p.estMatCost},
+            #{p.rmk}, #{p.sts},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateActMaterial" parameterType="map">
+        UPDATE PCM_CUR_ACT_MATERIAL
+           SET PART_NO        = #{p.partNo},
+               PART_NM        = #{p.partNm},
+               PIMS_CURRENCY  = #{p.pimsCurrency},
+               PIMS_PRICE     = #{p.pimsPrice},
+               EVAL_CURRENCY  = #{p.evalCurrency},
+               EVAL_EXCH_RATE = #{p.evalExchRate},
+               EVAL_PRICE     = #{p.evalPrice},
+               EST_MAT_COST   = #{p.estMatCost},
+               RMK            = #{p.rmk},
+               STS            = #{p.sts},
+               MODR_ID        = #{g.username},
+               MOD_DTTM       = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND CC_PJT_CD   = #{p.ccPjtCd}
+           AND CC_REV      = CAST(#{p.ccRev} AS INTEGER)
+           AND TGT_COST_CD = #{p.tgtCostCd}
+           AND MAT_SEQ     = #{p.matSeq}
+    </update>
+
+    <delete id="deleteActMaterial" parameterType="map">
+        DELETE FROM PCM_CUR_ACT_MATERIAL
+         WHERE TEN_ID      = #{g.tenant}
+           AND CC_PJT_CD   = #{p.ccPjtCd}
+           AND CC_REV      = CAST(#{p.ccRev} AS INTEGER)
+           AND TGT_COST_CD = #{p.tgtCostCd}
+           AND MAT_SEQ     = #{p.matSeq}
+    </delete>
+
+</mapper>

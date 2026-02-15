@@ -56,8 +56,9 @@
         return;
       }
 
-      /* HTML 파일 경로 결정 */
-      var htmlPath = '/views/cost/' + viewId + '.html';
+      /* HTML 파일 경로 결정 (ms- 접두사는 master 디렉터리) */
+      var dir = viewId.indexOf('ms-') === 0 ? 'master' : 'cost';
+      var htmlPath = '/views/' + dir + '/' + viewId + '.html';
 
       /* 뷰 HTML을 fetch 로 로드 */
       fetch(htmlPath)

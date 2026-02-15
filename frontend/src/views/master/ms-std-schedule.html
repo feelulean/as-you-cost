@@ -1,0 +1,137 @@
+<dom-module id="ms-std-schedule">
+    <template>
+        <!-- Ajax -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/master/data/findListStdSchedule.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+        <sc-ajax id="saveListAjax"
+                 url="/bp/master/data/saveListStdSchedule.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveListResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/master/data/deleteListStdSchedule.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteListResponse">
+        </sc-ajax>
+
+        <!-- 검색 조건 -->
+        <sc-search-container on-search="onFindList">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/><col/>
+                    <col style="width:120px"/><col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="표준 Task명"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.taskNm}}"></sc-text-field></td>
+                    <th><sc-label text="주관부서"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.deptCd}}"></sc-text-field></td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- 그리드 -->
+        <sc-grid id="gridPanel" data-provider="{{resultList}}" editable="true" class="flex">
+            <sc-toolbar>
+                <sc-button text="조회" on-click="onFindList"></sc-button>
+                <sc-button text="추가" on-click="onAddRow"></sc-button>
+                <span class="vt-seperator"></span>
+                <sc-button text="삭제" on-click="onDeleteList"></sc-button>
+                <sc-button text="저장" on-click="onSaveList"></sc-button>
+            </sc-toolbar>
+            <sc-grid-columns>
+                <sc-data-column data-field="taskNm"
+                                header-text="표준Task명"
+                                width="250"
+                                editable="true">
+                </sc-data-column>
+                <sc-data-column data-field="leadDays"
+                                header-text="소요일"
+                                width="80"
+                                editable="true"
+                                text-align="right"
+                                data-type="number">
+                </sc-data-column>
+                <sc-data-column data-field="deptCd"
+                                header-text="주관부서"
+                                width="120"
+                                editable="true"
+                                text-align="center">
+                </sc-data-column>
+                <sc-data-column data-field="rmk"
+                                header-text="비고"
+                                width="200"
+                                editable="true">
+                </sc-data-column>
+            </sc-grid-columns>
+        </sc-grid>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'ms-std-schedule',
+
+            properties: {
+                searchParam: { type: Object, value: function() { return {}; } },
+                resultList: { type: Array, value: function() { return []; } },
+                saveParam: { type: Object, value: function() { return {}; } },
+                deleteParam: { type: Object, value: function() { return {}; } }
+            },
+
+            onFindList: function() {
+                this.$.findListAjax.generateRequest();
+            },
+
+            onFindListResponse: function(e) {
+                this.set('resultList', e.detail.response);
+            },
+
+            onAddRow: function() {
+                this.$.gridPanel.addRow({
+                    taskNm: '', leadDays: 0, deptCd: '', rmk: '', _rowStatus: 'C'
+                });
+            },
+
+            onSaveList: function() {
+                var grid = this.$.gridPanel;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveParam', { saveList: modifiedRows });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+
+            onSaveListResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.onFindList();
+            },
+
+            onDeleteList: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteParam', { deleteList: selectedRows });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+
+            onDeleteListResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.onFindList();
+            }
+        });
+    </script>
+</dom-module>

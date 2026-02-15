@@ -42,26 +42,29 @@ public class GlobalParamAspect {
     public Object wrapGlobalParam(ProceedingJoinPoint pjp) throws Throwable {
         Object[] args = pjp.getArgs();
 
-        if (args.length > 0 && args[0] instanceof Map) {
-            Map<String, Object> original = (Map<String, Object>) args[0];
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof Map) {
+                Map<String, Object> original = (Map<String, Object>) args[i];
 
-            // 이미 래핑된 경우 (g/p 키 존재) 중복 래핑 방지
-            if (original.containsKey("g") && original.containsKey("p")) {
-                return pjp.proceed(args);
+                // 이미 래핑된 경우 (g/p 키 존재) 중복 래핑 방지
+                if (original.containsKey("g") && original.containsKey("p")) {
+                    break;
+                }
+
+                // 글로벌 컨텍스트 구성
+                Map<String, Object> global = new HashMap<>();
+                global.put("tenant", TENANT);
+                global.put("username", USERNAME);
+                global.put("now", new Timestamp(System.currentTimeMillis()));
+
+                // g/p 구조로 래핑
+                Map<String, Object> wrapped = new HashMap<>();
+                wrapped.put("g", global);
+                wrapped.put("p", original);
+
+                args[i] = wrapped;
+                break; // 첫 번째 Map만 래핑
             }
-
-            // 글로벌 컨텍스트 구성
-            Map<String, Object> global = new HashMap<>();
-            global.put("tenant", TENANT);
-            global.put("username", USERNAME);
-            global.put("now", new Timestamp(System.currentTimeMillis()));
-
-            // g/p 구조로 래핑
-            Map<String, Object> wrapped = new HashMap<>();
-            wrapped.put("g", global);
-            wrapped.put("p", original);
-
-            args[0] = wrapped;
         }
 
         return pjp.proceed(args);
