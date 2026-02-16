@@ -107,7 +107,7 @@
     <select id="findListCostCode" parameterType="map" resultType="map">
         SELECT CC_PJT_CD      AS "ccPjtCd",
                CC_REV         AS "ccRev",
-               COST_SEQ       AS "costSeq",
+               COST_SEQ       AS "costCodeSeq",
                COST_CD        AS "costCd",
                CALC_TARGET    AS "calcTarget",
                PROD_DESC      AS "prodDesc",
@@ -130,7 +130,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND COST_SEQ  = #{p.costSeq}
+           AND COST_SEQ  = #{p.costCodeSeq}
     </select>
 
     <insert id="insertCostCode" parameterType="map">
@@ -140,7 +140,7 @@
             SOP_YM, EOP_YM, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costSeq}, #{p.costCd},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCodeSeq}, #{p.costCd},
             #{p.calcTarget}, #{p.prodDesc}, #{p.currency}, #{p.estSellPrice},
             #{p.sopYm}, #{p.eopYm}, #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
@@ -163,7 +163,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND COST_SEQ  = #{p.costSeq}
+           AND COST_SEQ  = #{p.costCodeSeq}
     </update>
 
     <delete id="deleteCostCode" parameterType="map">
@@ -171,7 +171,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND COST_SEQ  = #{p.costSeq}
+           AND COST_SEQ  = #{p.costCodeSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -181,7 +181,7 @@
     <select id="findListQtyDisc" parameterType="map" resultType="map">
         SELECT CC_PJT_CD AS "ccPjtCd",
                CC_REV    AS "ccRev",
-               QTY_SEQ   AS "qtySeq",
+               QTY_SEQ   AS "qtyDiscSeq",
                COST_CD   AS "costCd",
                YEAR_VAL  AS "yearVal",
                SELL_QTY  AS "sellQty",
@@ -201,7 +201,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND QTY_SEQ   = #{p.qtySeq}
+           AND QTY_SEQ   = #{p.qtyDiscSeq}
     </select>
 
     <insert id="insertQtyDisc" parameterType="map">
@@ -210,7 +210,7 @@
             YEAR_VAL, SELL_QTY, DISC_RATE, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.qtySeq}, #{p.costCd},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.qtyDiscSeq}, #{p.costCd},
             #{p.yearVal}, #{p.sellQty}, #{p.discRate}, #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -229,7 +229,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND QTY_SEQ   = #{p.qtySeq}
+           AND QTY_SEQ   = #{p.qtyDiscSeq}
     </update>
 
     <delete id="deleteQtyDisc" parameterType="map">
@@ -237,7 +237,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND QTY_SEQ   = #{p.qtySeq}
+           AND QTY_SEQ   = #{p.qtyDiscSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -247,7 +247,7 @@
     <select id="findListManager" parameterType="map" resultType="map">
         SELECT CC_PJT_CD AS "ccPjtCd",
                CC_REV    AS "ccRev",
-               MGR_SEQ   AS "mgrSeq",
+               MGR_SEQ   AS "managerSeq",
                DEPT_DIV  AS "deptDiv",
                MGR_ID    AS "mgrId",
                MGR_NM    AS "mgrNm",
@@ -268,7 +268,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND MGR_SEQ   = #{p.mgrSeq}
+           AND MGR_SEQ   = #{p.managerSeq}
     </select>
 
     <insert id="insertManager" parameterType="map">
@@ -277,7 +277,7 @@
             DEPT_DIV, MGR_ID, MGR_NM, ROLE_CD, EMAIL, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.mgrSeq},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.managerSeq},
             #{p.deptDiv}, #{p.mgrId}, #{p.mgrNm}, #{p.roleCd}, #{p.email}, #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -297,7 +297,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND MGR_SEQ   = #{p.mgrSeq}
+           AND MGR_SEQ   = #{p.managerSeq}
     </update>
 
     <delete id="deleteManager" parameterType="map">
@@ -305,7 +305,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND MGR_SEQ   = #{p.mgrSeq}
+           AND MGR_SEQ   = #{p.managerSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -315,7 +315,7 @@
     <select id="findListSchedule" parameterType="map" resultType="map">
         SELECT CC_PJT_CD  AS "ccPjtCd",
                CC_REV     AS "ccRev",
-               SCHED_SEQ  AS "schedSeq",
+               SCHED_SEQ  AS "scheduleSeq",
                TASK_NM    AS "taskNm",
                STD_PERIOD AS "stdPeriod",
                START_DT   AS "startDt",
@@ -339,7 +339,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND SCHED_SEQ = #{p.schedSeq}
+           AND SCHED_SEQ = #{p.scheduleSeq}
     </select>
 
     <insert id="insertSchedule" parameterType="map">
@@ -349,7 +349,7 @@
             PROC_STS, DELAY_DAYS, SORT_ORDER, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.schedSeq}, #{p.taskNm},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.scheduleSeq}, #{p.taskNm},
             #{p.stdPeriod}, #{p.startDt}, #{p.endDt}, #{p.actEndDt},
             #{p.procSts}, #{p.delayDays}, #{p.sortOrder}, #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
@@ -373,7 +373,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND SCHED_SEQ = #{p.schedSeq}
+           AND SCHED_SEQ = #{p.scheduleSeq}
     </update>
 
     <delete id="deleteSchedule" parameterType="map">
@@ -381,7 +381,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND SCHED_SEQ = #{p.schedSeq}
+           AND SCHED_SEQ = #{p.scheduleSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -473,7 +473,7 @@
         SELECT CC_PJT_CD    AS "ccPjtCd",
                CC_REV       AS "ccRev",
                COST_CD      AS "costCd",
-               MAP_SEQ      AS "mapSeq",
+               MAP_SEQ      AS "bomMapSeq",
                CUR_BOM_SEQ  AS "curBomSeq",
                PREV_BOM_SEQ AS "prevBomSeq",
                PREV_COST_CD AS "prevCostCd",
@@ -497,7 +497,7 @@
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
            AND COST_CD   = #{p.costCd}
-           AND MAP_SEQ   = #{p.mapSeq}
+           AND MAP_SEQ   = #{p.bomMapSeq}
     </select>
 
     <insert id="insertBomMap" parameterType="map">
@@ -507,7 +507,7 @@
             RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.mapSeq},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.bomMapSeq},
             #{p.curBomSeq}, #{p.prevBomSeq}, #{p.prevCostCd}, #{p.prevRev},
             #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
@@ -528,7 +528,7 @@
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
            AND COST_CD   = #{p.costCd}
-           AND MAP_SEQ   = #{p.mapSeq}
+           AND MAP_SEQ   = #{p.bomMapSeq}
     </update>
 
     <delete id="deleteBomMap" parameterType="map">
@@ -537,7 +537,7 @@
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
            AND COST_CD   = #{p.costCd}
-           AND MAP_SEQ   = #{p.mapSeq}
+           AND MAP_SEQ   = #{p.bomMapSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -548,18 +548,18 @@
         SELECT CC_PJT_CD        AS "ccPjtCd",
                CC_REV           AS "ccRev",
                COST_CD          AS "costCd",
-               PRICE_SEQ        AS "priceSeq",
+               PRICE_SEQ        AS "partPriceSeq",
                PART_NO          AS "partNo",
                PART_NM          AS "partNm",
                PART_DIV         AS "partDiv",
                PIMS_CURRENCY    AS "pimsCurrency",
                PIMS_PRICE       AS "pimsPrice",
                DESIGN_CURRENCY  AS "designCurrency",
-               DESIGN_PRICE     AS "designPrice",
+               DESIGN_PRICE     AS "designCostPrice",
                PURCHASE_CURRENCY AS "purchaseCurrency",
-               PURCHASE_PRICE   AS "purchasePrice",
+               PURCHASE_PRICE   AS "purchaseEstPrice",
                CONFIRM_CURRENCY AS "confirmCurrency",
-               CONFIRM_PRICE    AS "confirmPrice",
+               CONFIRM_PRICE    AS "confirmedPrice",
                LOSS_RATE        AS "lossRate",
                RMK              AS "rmk",
                STS              AS "sts"
@@ -580,7 +580,7 @@
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
            AND COST_CD   = #{p.costCd}
-           AND PRICE_SEQ = #{p.priceSeq}
+           AND PRICE_SEQ = #{p.partPriceSeq}
     </select>
 
     <insert id="insertPartPrice" parameterType="map">
@@ -594,12 +594,12 @@
             LOSS_RATE, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.priceSeq},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd}, #{p.partPriceSeq},
             #{p.partNo}, #{p.partNm}, #{p.partDiv},
             #{p.pimsCurrency}, #{p.pimsPrice},
-            #{p.designCurrency}, #{p.designPrice},
-            #{p.purchaseCurrency}, #{p.purchasePrice},
-            #{p.confirmCurrency}, #{p.confirmPrice},
+            #{p.designCurrency}, #{p.designCostPrice},
+            #{p.purchaseCurrency}, #{p.purchaseEstPrice},
+            #{p.confirmCurrency}, #{p.confirmedPrice},
             #{p.lossRate}, #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -613,11 +613,11 @@
                PIMS_CURRENCY     = #{p.pimsCurrency},
                PIMS_PRICE        = #{p.pimsPrice},
                DESIGN_CURRENCY   = #{p.designCurrency},
-               DESIGN_PRICE      = #{p.designPrice},
+               DESIGN_PRICE      = #{p.designCostPrice},
                PURCHASE_CURRENCY = #{p.purchaseCurrency},
-               PURCHASE_PRICE    = #{p.purchasePrice},
+               PURCHASE_PRICE    = #{p.purchaseEstPrice},
                CONFIRM_CURRENCY  = #{p.confirmCurrency},
-               CONFIRM_PRICE     = #{p.confirmPrice},
+               CONFIRM_PRICE     = #{p.confirmedPrice},
                LOSS_RATE         = #{p.lossRate},
                RMK               = #{p.rmk},
                STS               = #{p.sts},
@@ -627,7 +627,7 @@
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
            AND COST_CD   = #{p.costCd}
-           AND PRICE_SEQ = #{p.priceSeq}
+           AND PRICE_SEQ = #{p.partPriceSeq}
     </update>
 
     <delete id="deletePartPrice" parameterType="map">
@@ -636,7 +636,7 @@
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
            AND COST_CD   = #{p.costCd}
-           AND PRICE_SEQ = #{p.priceSeq}
+           AND PRICE_SEQ = #{p.partPriceSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -646,7 +646,7 @@
     <select id="findListLineInvest" parameterType="map" resultType="map">
         SELECT CC_PJT_CD     AS "ccPjtCd",
                CC_REV        AS "ccRev",
-               LINE_SEQ      AS "lineSeq",
+               LINE_SEQ      AS "lineInvestSeq",
                LINE_DIV      AS "lineDiv",
                LINE_CD       AS "lineCd",
                LINE_NM       AS "lineNm",
@@ -674,7 +674,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND LINE_SEQ  = #{p.lineSeq}
+           AND LINE_SEQ  = #{p.lineInvestSeq}
     </select>
 
     <insert id="insertLineInvest" parameterType="map">
@@ -686,7 +686,7 @@
             RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.lineSeq},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.lineInvestSeq},
             #{p.lineDiv}, #{p.lineCd}, #{p.lineNm}, #{p.investNm}, #{p.processCd},
             #{p.acqAmt}, #{p.acqCurrency}, #{p.deprStartYm},
             #{p.capaEa}, #{p.availRate}, #{p.useRate}, #{p.baseYear},
@@ -716,7 +716,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND LINE_SEQ  = #{p.lineSeq}
+           AND LINE_SEQ  = #{p.lineInvestSeq}
     </update>
 
     <delete id="deleteLineInvest" parameterType="map">
@@ -724,7 +724,7 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
-           AND LINE_SEQ  = #{p.lineSeq}
+           AND LINE_SEQ  = #{p.lineInvestSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -884,7 +884,7 @@
     <select id="findListOtherInvest" parameterType="map" resultType="map">
         SELECT CC_PJT_CD     AS "ccPjtCd",
                CC_REV        AS "ccRev",
-               INVEST_SEQ    AS "investSeq",
+               INVEST_SEQ    AS "otherInvestSeq",
                INVEST_NM     AS "investNm",
                INVEST_DIV    AS "investDiv",
                CURRENCY      AS "currency",
@@ -910,7 +910,7 @@
          WHERE TEN_ID     = #{g.tenant}
            AND CC_PJT_CD  = #{p.ccPjtCd}
            AND CC_REV     = CAST(#{p.ccRev} AS INTEGER)
-           AND INVEST_SEQ = #{p.investSeq}
+           AND INVEST_SEQ = #{p.otherInvestSeq}
     </select>
 
     <insert id="insertOtherInvest" parameterType="map">
@@ -921,7 +921,7 @@
             AVAIL_RATE, USE_RATE, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.investSeq},
+            #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.otherInvestSeq},
             #{p.investNm}, #{p.investDiv}, #{p.currency}, #{p.acqAmt},
             #{p.deprDiv}, #{p.usefulLife}, #{p.acqYear}, #{p.deprStartYm},
             #{p.availRate}, #{p.useRate}, #{p.rmk}, #{p.sts},
@@ -948,7 +948,7 @@
          WHERE TEN_ID     = #{g.tenant}
            AND CC_PJT_CD  = #{p.ccPjtCd}
            AND CC_REV     = CAST(#{p.ccRev} AS INTEGER)
-           AND INVEST_SEQ = #{p.investSeq}
+           AND INVEST_SEQ = #{p.otherInvestSeq}
     </update>
 
     <delete id="deleteOtherInvest" parameterType="map">
@@ -956,7 +956,7 @@
          WHERE TEN_ID     = #{g.tenant}
            AND CC_PJT_CD  = #{p.ccPjtCd}
            AND CC_REV     = CAST(#{p.ccRev} AS INTEGER)
-           AND INVEST_SEQ = #{p.investSeq}
+           AND INVEST_SEQ = #{p.otherInvestSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -1043,13 +1043,13 @@
         SELECT CC_PJT_CD          AS "ccPjtCd",
                CC_REV             AS "ccRev",
                COST_CD            AS "costCd",
-               WAGE_INCR_RATE     AS "wageIncrRate",
-               PRICE_INCR_RATE    AS "priceIncrRate",
-               DIRECT_EXP_RATE    AS "directExpRate",
-               LABOR_EXP_RATE     AS "laborExpRate",
-               OTHER_MFG_RATE     AS "otherMfgRate",
-               MOLD_UNIT_COST     AS "moldUnitCost",
-               OUTSRC_UNIT_COST   AS "outsrcUnitCost",
+               WAGE_INCR_RATE     AS "wageIncRate",
+               PRICE_INCR_RATE    AS "inflationRate",
+               DIRECT_EXP_RATE    AS "prodDirectRate",
+               LABOR_EXP_RATE     AS "laborRelatedRate",
+               OTHER_MFG_RATE     AS "etcMfgRate",
+               MOLD_UNIT_COST     AS "moldCostUnit",
+               OUTSRC_UNIT_COST   AS "outsrcCostUnit",
                OUTSRC_RATE        AS "outsrcRate",
                CALC_DONE_YN       AS "calcDoneYn",
                DIRECT_LABOR_AMT   AS "directLaborAmt",
@@ -1097,9 +1097,9 @@
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
             #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd},
-            #{p.wageIncrRate}, #{p.priceIncrRate}, #{p.directExpRate},
-            #{p.laborExpRate}, #{p.otherMfgRate}, #{p.moldUnitCost},
-            #{p.outsrcUnitCost}, #{p.outsrcRate}, #{p.calcDoneYn},
+            #{p.wageIncRate}, #{p.inflationRate}, #{p.prodDirectRate},
+            #{p.laborRelatedRate}, #{p.etcMfgRate}, #{p.moldCostUnit},
+            #{p.outsrcCostUnit}, #{p.outsrcRate}, #{p.calcDoneYn},
             #{p.directLaborAmt}, #{p.indirectLaborAmt}, #{p.directExpAmt},
             #{p.laborExpAmt}, #{p.otherMfgAmt}, #{p.deprBldgAmt},
             #{p.deprLineAmt}, #{p.deprOtherAmt}, #{p.outsrcAmt},
@@ -1111,13 +1111,13 @@
 
     <update id="updateMfgCost" parameterType="map">
         UPDATE PCM_CUR_MFG_COST
-           SET WAGE_INCR_RATE     = #{p.wageIncrRate},
-               PRICE_INCR_RATE    = #{p.priceIncrRate},
-               DIRECT_EXP_RATE    = #{p.directExpRate},
-               LABOR_EXP_RATE     = #{p.laborExpRate},
-               OTHER_MFG_RATE     = #{p.otherMfgRate},
-               MOLD_UNIT_COST     = #{p.moldUnitCost},
-               OUTSRC_UNIT_COST   = #{p.outsrcUnitCost},
+           SET WAGE_INCR_RATE     = #{p.wageIncRate},
+               PRICE_INCR_RATE    = #{p.inflationRate},
+               DIRECT_EXP_RATE    = #{p.prodDirectRate},
+               LABOR_EXP_RATE     = #{p.laborRelatedRate},
+               OTHER_MFG_RATE     = #{p.etcMfgRate},
+               MOLD_UNIT_COST     = #{p.moldCostUnit},
+               OUTSRC_UNIT_COST   = #{p.outsrcCostUnit},
                OUTSRC_RATE        = #{p.outsrcRate},
                CALC_DONE_YN       = #{p.calcDoneYn},
                DIRECT_LABOR_AMT   = #{p.directLaborAmt},
@@ -1159,25 +1159,25 @@
         SELECT CC_PJT_CD       AS "ccPjtCd",
                CC_REV          AS "ccRev",
                COST_CD         AS "costCd",
-               SALE_LABOR_RATE AS "saleLaborRate",
+               SALE_LABOR_RATE AS "salesLaborRate",
                TRANSPORT_RATE  AS "transportRate",
                EXPORT_RATE     AS "exportRate",
-               QA_RATE         AS "qaRate",
-               AD_RATE         AS "adRate",
+               QA_RATE         AS "warrantyRate",
+               AD_RATE         AS "advertisingRate",
                RESEARCH_RATE   AS "researchRate",
-               ASSET_RATE      AS "assetRate",
-               HR_RATE         AS "hrRate",
-               OTHER_RATE      AS "otherRate",
+               ASSET_RATE      AS "assetCostRate",
+               HR_RATE         AS "hrCostRate",
+               OTHER_RATE      AS "etcRate",
                CALC_DONE_YN    AS "calcDoneYn",
-               SALE_LABOR_AMT  AS "saleLaborAmt",
+               SALE_LABOR_AMT  AS "salesLaborAmt",
                TRANSPORT_AMT   AS "transportAmt",
                EXPORT_AMT      AS "exportAmt",
-               QA_AMT          AS "qaAmt",
-               AD_AMT          AS "adAmt",
+               QA_AMT          AS "warrantyAmt",
+               AD_AMT          AS "advertisingAmt",
                RESEARCH_AMT    AS "researchAmt",
-               ASSET_AMT       AS "assetAmt",
-               HR_AMT          AS "hrAmt",
-               OTHER_AMT       AS "otherAmt",
+               ASSET_AMT       AS "assetCostAmt",
+               HR_AMT          AS "hrCostAmt",
+               OTHER_AMT       AS "etcAmt",
                TOTAL_SGA_AMT   AS "totalSgaAmt",
                RMK             AS "rmk",
                STS             AS "sts"
@@ -1210,12 +1210,12 @@
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
             #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.costCd},
-            #{p.saleLaborRate}, #{p.transportRate}, #{p.exportRate},
-            #{p.qaRate}, #{p.adRate}, #{p.researchRate},
-            #{p.assetRate}, #{p.hrRate}, #{p.otherRate}, #{p.calcDoneYn},
-            #{p.saleLaborAmt}, #{p.transportAmt}, #{p.exportAmt},
-            #{p.qaAmt}, #{p.adAmt}, #{p.researchAmt},
-            #{p.assetAmt}, #{p.hrAmt}, #{p.otherAmt}, #{p.totalSgaAmt},
+            #{p.salesLaborRate}, #{p.transportRate}, #{p.exportRate},
+            #{p.warrantyRate}, #{p.advertisingRate}, #{p.researchRate},
+            #{p.assetCostRate}, #{p.hrCostRate}, #{p.etcRate}, #{p.calcDoneYn},
+            #{p.salesLaborAmt}, #{p.transportAmt}, #{p.exportAmt},
+            #{p.warrantyAmt}, #{p.advertisingAmt}, #{p.researchAmt},
+            #{p.assetCostAmt}, #{p.hrCostAmt}, #{p.etcAmt}, #{p.totalSgaAmt},
             #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -1223,25 +1223,25 @@
 
     <update id="updateSgaCost" parameterType="map">
         UPDATE PCM_CUR_SGA_COST
-           SET SALE_LABOR_RATE = #{p.saleLaborRate},
+           SET SALE_LABOR_RATE = #{p.salesLaborRate},
                TRANSPORT_RATE  = #{p.transportRate},
                EXPORT_RATE     = #{p.exportRate},
-               QA_RATE         = #{p.qaRate},
-               AD_RATE         = #{p.adRate},
+               QA_RATE         = #{p.warrantyRate},
+               AD_RATE         = #{p.advertisingRate},
                RESEARCH_RATE   = #{p.researchRate},
-               ASSET_RATE      = #{p.assetRate},
-               HR_RATE         = #{p.hrRate},
-               OTHER_RATE      = #{p.otherRate},
+               ASSET_RATE      = #{p.assetCostRate},
+               HR_RATE         = #{p.hrCostRate},
+               OTHER_RATE      = #{p.etcRate},
                CALC_DONE_YN    = #{p.calcDoneYn},
-               SALE_LABOR_AMT  = #{p.saleLaborAmt},
+               SALE_LABOR_AMT  = #{p.salesLaborAmt},
                TRANSPORT_AMT   = #{p.transportAmt},
                EXPORT_AMT      = #{p.exportAmt},
-               QA_AMT          = #{p.qaAmt},
-               AD_AMT          = #{p.adAmt},
+               QA_AMT          = #{p.warrantyAmt},
+               AD_AMT          = #{p.advertisingAmt},
                RESEARCH_AMT    = #{p.researchAmt},
-               ASSET_AMT       = #{p.assetAmt},
-               HR_AMT          = #{p.hrAmt},
-               OTHER_AMT       = #{p.otherAmt},
+               ASSET_AMT       = #{p.assetCostAmt},
+               HR_AMT          = #{p.hrCostAmt},
+               OTHER_AMT       = #{p.etcAmt},
                TOTAL_SGA_AMT   = #{p.totalSgaAmt},
                RMK             = #{p.rmk},
                STS             = #{p.sts},
@@ -1433,6 +1433,56 @@
            AND DIFF_TYPE = #{p.diffType}
     </delete>
 
+    <!-- 차이분석 전체 삭제 (CC 프로젝트/차수 기준) -->
+    <delete id="deleteAllDiffAnalysis" parameterType="map">
+        DELETE FROM PCM_CUR_DIFF_ANALYSIS
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </delete>
+
+    <!-- EC 손익계산서 합계 (연도별 합산) -->
+    <select id="findEcPlSummary" parameterType="map" resultType="map">
+        SELECT COALESCE(SUM(SALES_AMT), 0)      AS "salesAmt",
+               COALESCE(SUM(MAT_COST), 0)        AS "matCost",
+               COALESCE(SUM(LABOR_COST), 0)      AS "laborCost",
+               COALESCE(SUM(MFG_COST), 0)        AS "mfgCost",
+               COALESCE(SUM(TOTAL_MFG_COST), 0)  AS "totalMfgCost",
+               COALESCE(SUM(GROSS_PROFIT), 0)    AS "grossProfit",
+               COALESCE(SUM(SGA_COST), 0)        AS "sgaCost",
+               COALESCE(SUM(OPER_INCOME), 0)     AS "operIncome"
+          FROM PCM_EC_PL_STMT
+         WHERE TEN_ID    = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
+    </select>
+
+    <!-- TC 원가등록 항목별 합계 -->
+    <select id="findListTcCostSummary" parameterType="map" resultType="map">
+        SELECT COST_ITEM_CD  AS "costItemCd",
+               COST_ITEM_NM  AS "costItemNm",
+               COALESCE(SUM(EC_COST_AMT), 0)    AS "ecCostAmt",
+               COALESCE(SUM(FINAL_TGT_AMT), 0)  AS "finalTgtAmt"
+          FROM PCM_TGT_COST_REG
+         WHERE TEN_ID     = #{g.tenant}
+           AND TGT_PJT_CD = #{p.tgtPjtCd}
+         GROUP BY COST_ITEM_CD, COST_ITEM_NM
+         ORDER BY COST_ITEM_CD
+    </select>
+
+    <!-- CC 손익계산서 합계 (연도별 합산, 항목별) -->
+    <select id="findListCcPlSummary" parameterType="map" resultType="map">
+        SELECT PL_SEQ       AS "plSeq",
+               COST_ITEM    AS "costItem",
+               COALESCE(SUM(TOT_AMT), 0)  AS "totAmt",
+               COALESCE(SUM(UNIT_AMT), 0) AS "unitAmt"
+          FROM PCM_CUR_PL_STMT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+         GROUP BY PL_SEQ, COST_ITEM
+         ORDER BY PL_SEQ
+    </select>
+
     <!-- ═══════════════════════════════════════════
          18. 달성도 평가 상세 (PCM_CUR_ACHV_EVAL_DTL)
          PK: TEN_ID, CC_PJT_CD, CC_REV, EVAL_SEQ, EVAL_TYPE
@@ -1616,10 +1666,10 @@
                PART_NO        AS "partNo",
                PART_NM        AS "partNm",
                PIMS_CURRENCY  AS "pimsCurrency",
-               PIMS_PRICE     AS "pimsPrice",
+               PIMS_PRICE     AS "pimsUnitPrice",
                EVAL_CURRENCY  AS "evalCurrency",
-               EVAL_EXCH_RATE AS "evalExchRate",
-               EVAL_PRICE     AS "evalPrice",
+               EVAL_EXCH_RATE AS "exchRate",
+               EVAL_PRICE     AS "evalUnitPrice",
                EST_MAT_COST   AS "estMatCost",
                RMK            AS "rmk",
                STS            AS "sts"
@@ -1652,8 +1702,8 @@
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
             #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), #{p.tgtCostCd}, #{p.matSeq},
-            #{p.partNo}, #{p.partNm}, #{p.pimsCurrency}, #{p.pimsPrice},
-            #{p.evalCurrency}, #{p.evalExchRate}, #{p.evalPrice}, #{p.estMatCost},
+            #{p.partNo}, #{p.partNm}, #{p.pimsCurrency}, #{p.pimsUnitPrice},
+            #{p.evalCurrency}, #{p.exchRate}, #{p.evalUnitPrice}, #{p.estMatCost},
             #{p.rmk}, #{p.sts},
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -1664,10 +1714,10 @@
            SET PART_NO        = #{p.partNo},
                PART_NM        = #{p.partNm},
                PIMS_CURRENCY  = #{p.pimsCurrency},
-               PIMS_PRICE     = #{p.pimsPrice},
+               PIMS_PRICE     = #{p.pimsUnitPrice},
                EVAL_CURRENCY  = #{p.evalCurrency},
-               EVAL_EXCH_RATE = #{p.evalExchRate},
-               EVAL_PRICE     = #{p.evalPrice},
+               EVAL_EXCH_RATE = #{p.exchRate},
+               EVAL_PRICE     = #{p.evalUnitPrice},
                EST_MAT_COST   = #{p.estMatCost},
                RMK            = #{p.rmk},
                STS            = #{p.sts},

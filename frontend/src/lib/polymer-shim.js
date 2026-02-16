@@ -312,7 +312,8 @@
     /* ── 양방향 바인딩 필드 value ── */
     if (attrName === 'value' && (
         tag === 'sc-text-field' || tag === 'sc-combobox-field' ||
-        tag === 'sc-number-field' || tag === 'sc-datepicker')) {
+        tag === 'sc-number-field' || tag === 'sc-datepicker' ||
+        tag === 'sc-date-field')) {
       el._valuePath = binding.paths[0];
       el._polymerHost = ctx;
       var val = resolveExpression(ctx, binding.paths[0]);
@@ -369,7 +370,11 @@
           var methodName = attr.value;
           if (typeof ctx[methodName] === 'function') {
             (function (mn, en) {
-              el.addEventListener(en, function (e) { ctx[mn](e); });
+              el.addEventListener(en, function (e) {
+                try { ctx[mn](e); } catch (err) {
+                  console.error('[polymer-shim] 이벤트 핸들러 오류:', mn, err);
+                }
+              });
             })(methodName, evtName);
           }
         }
@@ -405,9 +410,10 @@
   function processDomIf(host) {
     var descriptors = [];
 
-    /* 반복 처리 (중첩 dom-if 포함) */
+    /* 반복 처리 (중첩 dom-if 포함, 최대 50회 안전장치) */
     var changed = true;
-    while (changed) {
+    var maxIter = 50;
+    while (changed && maxIter-- > 0) {
       changed = false;
       var templates = host.querySelectorAll('template[is="dom-if"]');
       for (var i = 0; i < templates.length; i++) {
@@ -668,7 +674,11 @@
 
       /* attached() 라이프사이클 */
       if (typeof me.attached === 'function') {
-        setTimeout(function () { me.attached(); }, 0);
+        setTimeout(function () {
+          try { me.attached(); } catch (err) {
+            console.error('[polymer-shim] attached() 오류:', tagName, err);
+          }
+        }, 0);
       }
     };
 

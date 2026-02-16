@@ -51,6 +51,41 @@
     </select>
 
     <!-- ============================================================
+         단건 조회 (프로젝트 코드 + 현상차수)
+         ============================================================ -->
+    <select id="findCurrentCostPjt" parameterType="map" resultType="map">
+        SELECT  A.TEN_ID        AS "tenId"
+              , A.CC_PJT_CD     AS "pjtCd"
+              , A.CC_REV        AS "ccRev"
+              , A.EC_PJT_CD     AS "ecPjtCd"
+              , A.PJT_NM       AS "pjtNm"
+              , A.BIZ_UNIT     AS "bizUnit"
+              , A.CUST_NM      AS "custNm"
+              , A.CAR_TYPE     AS "carType"
+              , A.OEM_NM       AS "oemNm"
+              , A.PROD_GRP     AS "prodGrp"
+              , A.PROG_STS     AS "progSts"
+              , CASE A.PROG_STS
+                    WHEN 'D' THEN 'Draft'
+                    WHEN 'P' THEN '진행중'
+                    WHEN 'A' THEN '확정'
+                    WHEN 'C' THEN '완료'
+                    ELSE ''
+                END            AS "progStsNm"
+              , A.STS          AS "sts"
+              , TO_CHAR(A.REG_DTTM, 'YYYY-MM-DD') AS "regDttm"
+              , A.RMK          AS "rmk"
+          FROM  PCM_CUR_PJT_MSTR A
+         WHERE  A.TEN_ID    = #{g.tenant}
+           AND  A.CC_PJT_CD = #{p.pjtCd}
+        <if test="p.ccRev != null">
+           AND  A.CC_REV    = #{p.ccRev}
+        </if>
+         ORDER BY A.CC_REV DESC
+         LIMIT 1
+    </select>
+
+    <!-- ============================================================
          프로젝트 코드 자동 채번
          형식: CC + 연도(4) + 일련번호(4)  예) CC20260001
          ============================================================ -->

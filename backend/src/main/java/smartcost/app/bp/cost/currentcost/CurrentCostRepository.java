@@ -30,6 +30,13 @@ public class CurrentCostRepository {
     }
 
     /**
+     * 현상원가 프로젝트 단건 조회 (pjtCd + ccRev)
+     */
+    public Map<String, Object> findCurrentCostPjt(Map<String, Object> param) {
+        return sqlSession.selectOne(NAMESPACE + "findCurrentCostPjt", param);
+    }
+
+    /**
      * 현상원가 프로젝트 코드 자동 채번
      * - 형식: CC + 연도(4자리) + 일련번호(4자리) (예: CC20260001)
      */

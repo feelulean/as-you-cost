@@ -35,6 +35,17 @@ public class CurrentCostController {
     }
 
     /**
+     * 현상원가 프로젝트 단건 조회 (상세 화면 헤더용)
+     *
+     * @param param 조회 조건 (pjtCd, ccRev)
+     * @return 프로젝트 정보
+     */
+    @RequestMapping("/findCurrentCostPjt.do")
+    public Map<String, Object> findCurrentCostPjt(@RequestBody Map<String, Object> param) {
+        return currentCostService.findCurrentCostPjt(param);
+    }
+
+    /**
      * 현상원가 프로젝트 저장 (신규 등록 — EC에서 이관)
      *
      * @param param 견적원가 연계 정보 (ecPjtCd, pjtNm, bizUnit 등)

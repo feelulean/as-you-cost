@@ -1,0 +1,58 @@
+<dom-module id="cc-exist-line-detail-popup">
+    <template>
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/cc/detail/findListLineInvestDtl.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <div style="padding:10px; background:#f5f5f5; margin-bottom:10px; border-bottom:1px solid #ddd;">
+            <table>
+                <colgroup><col style="width:120px"/><col/><col style="width:120px"/><col/></colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td><sc-label text="{{ccPjtCd}}"></sc-label></td>
+                    <th><sc-label text="라인코드"></sc-label></th>
+                    <td><sc-label text="{{lineCd}}"></sc-label></td>
+                </tr>
+            </table>
+        </div>
+
+        <sc-grid id="gridPanel" items="{{dtlList}}" style="height:350px">
+            <sc-grid-column header="연차"           field="yearSeq"      width="60px"></sc-grid-column>
+            <sc-grid-column header="감가상각비"     field="deprAmt"      width="130px" type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="누적상각액"     field="cumDeprAmt"   width="130px" type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="장부잔액"       field="bookAmt"      width="130px" type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="가동률(%)"      field="availRate"    width="100px" type="number" format="#,##0.0"></sc-grid-column>
+            <sc-grid-column header="배부율(%)"      field="allocRate"    width="100px" type="number" format="#,##0.0"></sc-grid-column>
+            <sc-grid-column header="배부금액"       field="allocAmt"     width="130px" type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="비고"           field="rmk"          width="150px"></sc-grid-column>
+        </sc-grid>
+
+        <div style="text-align:center; margin-top:10px;">
+            <sc-button text="닫기" on-click="onClose"></sc-button>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'cc-exist-line-detail-popup',
+            properties: {
+                ccPjtCd:     { type: String, value: '' },
+                ccRev:       { type: String, value: '' },
+                lineCd:      { type: String, value: '' },
+                searchParam: { type: Object, value: function() { return {}; } },
+                dtlList:     { type: Array,  value: function() { return []; } }
+            },
+            attached: function() {
+                var p = UT.getParameter();
+                this.ccPjtCd = p.ccPjtCd || '';
+                this.ccRev   = p.ccRev   || '';
+                this.lineCd  = p.lineCd  || '';
+                this.set('searchParam', { ccPjtCd: this.ccPjtCd, ccRev: this.ccRev, lineCd: this.lineCd });
+                this.$.findListAjax.generateRequest();
+            },
+            onFindListResponse: function(e) { this.set('dtlList', e.detail.response || []); },
+            onClose: function() { window.close(); }
+        });
+    </script>
+</dom-module>

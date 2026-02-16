@@ -1,0 +1,63 @@
+<dom-module id="cc-other-invest-search-popup">
+    <template>
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/cc/detail/findListOtherInvest.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <sc-search-container on-search="onSearch" auth-code="V">
+            <table>
+                <colgroup><col style="width:120px"/><col/><col style="width:120px"/><col/></colgroup>
+                <tr>
+                    <th><sc-label text="투자항목명"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.investNm}}" on-enter="onSearch"></sc-text-field></td>
+                    <th><sc-label text="투자구분"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.investDiv}}" on-enter="onSearch"></sc-text-field></td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <sc-grid id="gridPanel" items="{{investList}}" selection-mode="multi" style="height:300px">
+            <sc-grid-column header="투자항목명"   field="investNm"    width="200px"></sc-grid-column>
+            <sc-grid-column header="투자구분"     field="investDiv"   width="100px"></sc-grid-column>
+            <sc-grid-column header="통화"         field="currency"    width="80px"></sc-grid-column>
+            <sc-grid-column header="취득금액"     field="acqAmt"      width="130px" type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="상각구분"     field="deprDiv"     width="100px"></sc-grid-column>
+            <sc-grid-column header="내용연수"     field="usefulLife"  width="80px"></sc-grid-column>
+            <sc-grid-column header="취득연도"     field="acqYear"     width="100px"></sc-grid-column>
+        </sc-grid>
+
+        <div style="text-align:center; margin-top:10px;">
+            <sc-button text="선택" on-click="onSelect"></sc-button>
+            <sc-button text="닫기" on-click="onClose"></sc-button>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'cc-other-invest-search-popup',
+            properties: {
+                searchParam: { type: Object, value: function() { return {}; } },
+                investList:  { type: Array,  value: function() { return []; } }
+            },
+            attached: function() {
+                var p = UT.getParameter();
+                this.set('searchParam', { ccPjtCd: p.ccPjtCd || '', ccRev: p.ccRev || '' });
+                this.$.findListAjax.generateRequest();
+            },
+            onSearch: function() { this.$.findListAjax.generateRequest(); },
+            onFindListResponse: function(e) { this.set('investList', e.detail.response || []); },
+            onSelect: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('투자항목을 선택해 주세요.');
+                    return;
+                }
+                sessionStorage.setItem('__UT_POPUP_RESULT__', JSON.stringify(selectedRows));
+                window.close();
+            },
+            onClose: function() { window.close(); }
+        });
+    </script>
+</dom-module>

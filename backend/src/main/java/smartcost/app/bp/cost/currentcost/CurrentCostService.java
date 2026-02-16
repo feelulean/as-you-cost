@@ -33,6 +33,18 @@ public class CurrentCostService {
     }
 
     /**
+     * 현상원가 프로젝트 단건 조회
+     *
+     * @param param 조회 조건 (pjtCd, ccRev)
+     * @return 프로젝트 정보 (단건)
+     */
+    public Map<String, Object> findCurrentCostPjt(Map<String, Object> param) {
+        Map<String, Object> result = currentCostRepository.findCurrentCostPjt(param);
+        if (result == null) result = new HashMap<>();
+        return result;
+    }
+
+    /**
      * 현상원가 프로젝트 신규 저장
      * - 견적원가(EC) 프로젝트로부터 이관하여 생성한다.
      * - 프로젝트 코드를 자동 채번하고, 초기 현상차수(ccRev)를 1로 설정한다.

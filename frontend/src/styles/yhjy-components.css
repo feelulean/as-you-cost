@@ -931,3 +931,19 @@ sc-panel > div:first-child {
 .u-ellipsis  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .u-hidden    { display: none !important; }
 .flex        { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ── Flex Box Layout Utilities ── */
+.hbox        { display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden; }
+.vbox        { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.flex-1      { flex: 1; min-width: 0; min-height: 0; }
+.flex-2      { flex: 2; min-width: 0; min-height: 0; }
+.flex-3      { flex: 3; min-width: 0; min-height: 0; }
+.flex-4      { flex: 4; min-width: 0; min-height: 0; }
+.flex-5      { flex: 5; min-width: 0; min-height: 0; }
+.flex-6      { flex: 6; min-width: 0; min-height: 0; }
+.flex-7      { flex: 7; min-width: 0; min-height: 0; }
+.hspace-5    { width: 5px;  flex-shrink: 0; }
+.hspace-10   { width: 10px; flex-shrink: 0; }
+.hspace-15   { width: 15px; flex-shrink: 0; }
+.vspace-5    { height: 5px;  flex-shrink: 0; }
+.vspace-10   { height: 10px; flex-shrink: 0; }

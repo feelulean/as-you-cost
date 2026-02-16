@@ -40,6 +40,11 @@ public class DataInitController {
         return executeSqlFile("init/tc-cc-detail-init.sql", "목표원가/현상원가 상세 테이블 초기화 완료 (31 Tables)");
     }
 
+    @RequestMapping("/excel-master-data")
+    public Map<String, Object> initExcelMasterData() {
+        return executeSqlFile("init/excel-master-data.sql", "기준정보 Excel 데이터 Import 완료");
+    }
+
     private Map<String, Object> executeSqlFile(String resourcePath, String successMessage) {
         Map<String, Object> result = new HashMap<>();
 

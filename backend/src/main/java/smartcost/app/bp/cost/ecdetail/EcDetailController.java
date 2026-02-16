@@ -48,7 +48,7 @@ public class EcDetailController {
     }
     @RequestMapping("/saveListQtyDisc.do")
     public Map<String, Object> saveListQtyDisc(@RequestBody Map<String, Object> param) {
-        return ecDetailService.saveList("QtyDisc", param);
+        return ecDetailService.saveQtyDisc(param);
     }
 
     /* ═══ 담당자 ═══ */

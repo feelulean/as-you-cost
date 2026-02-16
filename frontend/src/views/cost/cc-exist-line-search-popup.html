@@ -1,0 +1,63 @@
+<dom-module id="cc-exist-line-search-popup">
+    <template>
+        <sc-ajax id="findListAjax"
+                 url="/bp/master/data/findListProdLine.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <sc-search-container on-search="onSearch" auth-code="V">
+            <table>
+                <colgroup><col style="width:120px"/><col/><col style="width:120px"/><col/></colgroup>
+                <tr>
+                    <th><sc-label text="라인코드"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.lineCd}}" on-enter="onSearch"></sc-text-field></td>
+                    <th><sc-label text="라인명"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.lineNm}}" on-enter="onSearch"></sc-text-field></td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <sc-grid id="gridPanel" items="{{lineList}}" selection-mode="multi" style="height:300px">
+            <sc-grid-column header="라인코드"   field="lineCd"      width="120px"></sc-grid-column>
+            <sc-grid-column header="라인명"     field="lineNm"      width="200px"></sc-grid-column>
+            <sc-grid-column header="공장"       field="plantNm"     width="120px"></sc-grid-column>
+            <sc-grid-column header="라인유형"   field="lineType"    width="100px"></sc-grid-column>
+            <sc-grid-column header="사용여부"   field="useYn"       width="80px"></sc-grid-column>
+        </sc-grid>
+
+        <div style="text-align:center; margin-top:10px;">
+            <sc-button text="선택" on-click="onSelect"></sc-button>
+            <sc-button text="닫기" on-click="onClose"></sc-button>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'cc-exist-line-search-popup',
+            properties: {
+                searchParam: { type: Object, value: function() { return {}; } },
+                lineList:    { type: Array,  value: function() { return []; } }
+            },
+            attached: function() {
+                this.$.findListAjax.generateRequest();
+            },
+            onSearch: function() {
+                this.$.findListAjax.generateRequest();
+            },
+            onFindListResponse: function(e) {
+                this.set('lineList', e.detail.response || []);
+            },
+            onSelect: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('라인을 선택해 주세요.');
+                    return;
+                }
+                sessionStorage.setItem('__UT_POPUP_RESULT__', JSON.stringify(selectedRows));
+                window.close();
+            },
+            onClose: function() { window.close(); }
+        });
+    </script>
+</dom-module>

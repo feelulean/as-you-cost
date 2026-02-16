@@ -1,0 +1,102 @@
+<dom-module id="ep-estimate-cost-search-popup">
+    <template>
+        <!-- Ajax -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/ec/findListEstimateCostPjt.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <!-- Search conditions -->
+        <sc-search-container on-search="onSearch" auth-code="V">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/><col/>
+                    <col style="width:120px"/><col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.pjtCd}}" on-enter="onSearch"></sc-text-field></td>
+                    <th><sc-label text="프로젝트명"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.pjtNm}}" on-enter="onSearch"></sc-text-field></td>
+                </tr>
+                <tr>
+                    <th><sc-label text="사업부"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.bizUnit}}" on-enter="onSearch"></sc-text-field></td>
+                    <th><sc-label text="고객사"></sc-label></th>
+                    <td><sc-text-field value="{{searchParam.custNm}}" on-enter="onSearch"></sc-text-field></td>
+                </tr>
+            </table>
+        </sc-search-container>
+
+        <!-- Grid -->
+        <sc-grid id="gridPanel"
+                 items="{{projectList}}"
+                 on-item-dblclick="onRowDblClick"
+                 style="height:350px">
+            <sc-grid-column header="프로젝트 코드" field="pjtCd"    width="120px"></sc-grid-column>
+            <sc-grid-column header="프로젝트명"    field="pjtNm"    width="200px"></sc-grid-column>
+            <sc-grid-column header="사업부"        field="bizUnit"  width="100px"></sc-grid-column>
+            <sc-grid-column header="고객사"        field="custNm"   width="120px"></sc-grid-column>
+            <sc-grid-column header="차종"          field="carType"  width="100px"></sc-grid-column>
+            <sc-grid-column header="OEM"           field="oemNm"    width="100px"></sc-grid-column>
+            <sc-grid-column header="제품군"        field="prodGrp"  width="100px"></sc-grid-column>
+            <sc-grid-column header="상태"          field="pjtSts"   width="80px"></sc-grid-column>
+        </sc-grid>
+
+        <!-- Buttons -->
+        <div style="text-align:center; margin-top:10px;">
+            <sc-button text="선택" on-click="onSelect"></sc-button>
+            <sc-button text="닫기" on-click="onClose"></sc-button>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'ep-estimate-cost-search-popup',
+            properties: {
+                searchParam:  { type: Object, value: function() { return {}; } },
+                projectList:  { type: Array,  value: function() { return []; } }
+            },
+            attached: function() {
+                var param = UT.getParameter();
+                if (param.pjtCd) this.set('searchParam.pjtCd', param.pjtCd);
+                this.$.findListAjax.generateRequest();
+            },
+            onSearch: function() {
+                this.$.findListAjax.generateRequest();
+            },
+            onFindListResponse: function(e) {
+                this.set('projectList', e.detail.response || []);
+            },
+            onRowDblClick: function(e) {
+                var row = e.detail.row;
+                this._returnResult(row);
+            },
+            onSelect: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('프로젝트를 선택해 주세요.');
+                    return;
+                }
+                this._returnResult(selectedRows[0]);
+            },
+            onClose: function() {
+                window.close();
+            },
+            _returnResult: function(row) {
+                sessionStorage.setItem('__UT_POPUP_RESULT__', JSON.stringify({
+                    ecPjtCd: row.pjtCd,
+                    pjtNm:   row.pjtNm,
+                    bizUnit: row.bizUnit,
+                    custNm:  row.custNm,
+                    carType: row.carType,
+                    oemNm:   row.oemNm,
+                    prodGrp: row.prodGrp
+                }));
+                window.close();
+            }
+        });
+    </script>
+</dom-module>

@@ -1,0 +1,101 @@
+<dom-module id="cc-line-invest-detail-popup">
+    <template>
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/cc/detail/findListLineInvestDtl.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+        <sc-ajax id="saveListAjax"
+                 url="/bp/cost/cc/detail/saveListLineInvestDtl.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/cost/cc/detail/deleteListLineInvestDtl.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteResponse">
+        </sc-ajax>
+
+        <div style="padding:10px; background:#f5f5f5; margin-bottom:10px; border-bottom:1px solid #ddd;">
+            <table>
+                <colgroup><col style="width:120px"/><col/><col style="width:120px"/><col/></colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td><sc-label text="{{ccPjtCd}}"></sc-label></td>
+                    <th><sc-label text="투자 순번"></sc-label></th>
+                    <td><sc-label text="{{lineInvestSeq}}"></sc-label></td>
+                </tr>
+            </table>
+        </div>
+
+        <sc-grid-container buttons='["add","delete","save"]'
+                          on-add="onAdd" on-delete="onDelete" on-save="onSave">
+        </sc-grid-container>
+
+        <sc-grid id="gridPanel" items="{{dtlList}}" editable style="height:320px">
+            <sc-grid-column header="연차"           field="yearSeq"      width="60px"  editable="false"></sc-grid-column>
+            <sc-grid-column header="감가상각비"     field="deprAmt"      width="130px" editable type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="누적상각액"     field="cumDeprAmt"   width="130px" editable type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="장부잔액"       field="bookAmt"      width="130px" editable type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="가동률(%)"      field="availRate"    width="100px" editable type="number" format="#,##0.0"></sc-grid-column>
+            <sc-grid-column header="배부율(%)"      field="allocRate"    width="100px" editable type="number" format="#,##0.0"></sc-grid-column>
+            <sc-grid-column header="배부금액"       field="allocAmt"     width="130px" editable type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="비고"           field="rmk"          width="150px" editable></sc-grid-column>
+        </sc-grid>
+
+        <div style="text-align:center; margin-top:10px;">
+            <sc-button text="닫기" on-click="onClose"></sc-button>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'cc-line-invest-detail-popup',
+            properties: {
+                ccPjtCd:       { type: String, value: '' },
+                ccRev:         { type: String, value: '' },
+                lineInvestSeq: { type: String, value: '' },
+                searchParam:   { type: Object, value: function() { return {}; } },
+                saveParam:     { type: Object, value: function() { return {}; } },
+                deleteParam:   { type: Object, value: function() { return {}; } },
+                dtlList:       { type: Array,  value: function() { return []; } }
+            },
+            attached: function() {
+                var p = UT.getParameter();
+                this.ccPjtCd       = p.ccPjtCd       || '';
+                this.ccRev         = p.ccRev         || '';
+                this.lineInvestSeq = p.lineInvestSeq || '';
+                this.set('searchParam', { ccPjtCd: this.ccPjtCd, ccRev: this.ccRev, lineInvestSeq: this.lineInvestSeq });
+                this.$.findListAjax.generateRequest();
+            },
+            onFindListResponse: function(e) { this.set('dtlList', e.detail.response || []); },
+            onAdd: function() {
+                var grid = this.$.gridPanel;
+                var seq = (this.dtlList ? this.dtlList.length : 0) + 1;
+                grid.insertRow(0, { ccPjtCd: this.ccPjtCd, ccRev: this.ccRev, lineInvestSeq: this.lineInvestSeq, yearSeq: seq, deprAmt: 0, cumDeprAmt: 0, bookAmt: 0, availRate: 0, allocRate: 0, allocAmt: 0, rmk: '' });
+            },
+            onDelete: function() {
+                var grid = this.$.gridPanel;
+                var sel = grid.getSelectedRows();
+                if (!sel || sel.length === 0) { UT.alert('MSG_COM_00007'); return; }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteParam', { ccPjtCd: me.ccPjtCd, ccRev: me.ccRev, lineInvestSeq: me.lineInvestSeq, deleteList: sel });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+            onSave: function() {
+                var grid = this.$.gridPanel;
+                var mod = grid.getModifiedRows();
+                if (!mod || mod.length === 0) { UT.alert('MSG_COM_00006'); return; }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveParam', { ccPjtCd: me.ccPjtCd, ccRev: me.ccRev, lineInvestSeq: me.lineInvestSeq, saveList: mod });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+            onSaveResponse: function() { UT.alert('MSG_COM_00003'); this.$.findListAjax.generateRequest(); },
+            onDeleteResponse: function() { UT.alert('MSG_COM_00005'); this.$.findListAjax.generateRequest(); },
+            onClose: function() { window.close(); }
+        });
+    </script>
+</dom-module>

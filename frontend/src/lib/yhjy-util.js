@@ -76,15 +76,18 @@
   UT.popup = function (opts) {
     var url = opts.url || '';
     var param = opts.param || {};
+    var closeFn = opts.close || opts.callback;
+    var pw = opts.width  || 800;
+    var ph = opts.height || 600;
     sessionStorage.setItem('__UT_PARAM__' + url, JSON.stringify(param));
-    var w = window.open('/viewer.html?view=' + url, '_blank', 'width=800,height=600');
-    if (opts.close) {
+    var w = window.open('/viewer.html?view=' + url, '_blank', 'width=' + pw + ',height=' + ph);
+    if (closeFn) {
       var timer = setInterval(function () {
         if (w.closed) {
           clearInterval(timer);
           var result = sessionStorage.getItem('__UT_POPUP_RESULT__');
           sessionStorage.removeItem('__UT_POPUP_RESULT__');
-          opts.close(result ? JSON.parse(result) : null);
+          closeFn(result ? JSON.parse(result) : null);
         }
       }, 300);
     }

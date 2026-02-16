@@ -129,9 +129,9 @@
     <select id="findListSpec" parameterType="map" resultType="map">
         SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
                A.SPEC_SEQ    AS "specSeq",
-               A.EC_PJT_CD   AS "ecPjtCd",
+               A.EC_PJT_CD   AS "ecCostCd",
                A.TGT_COST_CD AS "tgtCostCd",
-               A.PROD_GRP    AS "prodGrp",
+               A.PROD_GRP    AS "prodGrpNm",
                A.CAR_TYPE    AS "carType",
                A.OEM_NM      AS "oemNm",
                A.SPEC_DESC   AS "specDesc",
@@ -159,8 +159,8 @@
             RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.tgtPjtCd}, #{p.specSeq}, #{p.ecPjtCd}, #{p.tgtCostCd},
-            #{p.prodGrp}, #{p.carType}, #{p.oemNm}, #{p.specDesc}, #{p.selYn},
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.specSeq}, #{p.ecCostCd}, #{p.tgtCostCd},
+            #{p.prodGrpNm}, #{p.carType}, #{p.oemNm}, #{p.specDesc}, #{p.selYn},
             #{p.rmk}, COALESCE(#{p.sts}, 'T'),
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -168,9 +168,9 @@
 
     <update id="updateSpec" parameterType="map">
         UPDATE PCM_TGT_SPEC
-           SET EC_PJT_CD   = #{p.ecPjtCd},
+           SET EC_PJT_CD   = #{p.ecCostCd},
                TGT_COST_CD = #{p.tgtCostCd},
-               PROD_GRP    = #{p.prodGrp},
+               PROD_GRP    = #{p.prodGrpNm},
                CAR_TYPE    = #{p.carType},
                OEM_NM      = #{p.oemNm},
                SPEC_DESC   = #{p.specDesc},
@@ -262,7 +262,7 @@
          ═══════════════════════════════════════════ -->
     <select id="findListQtyDisc" parameterType="map" resultType="map">
         SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
-               A.QTY_SEQ     AS "qtySeq",
+               A.QTY_SEQ     AS "qtyDiscSeq",
                A.SPEC_DESC   AS "specDesc",
                A.TGT_COST_CD AS "tgtCostCd",
                A.YEAR_VAL    AS "yearVal",
@@ -281,7 +281,7 @@
           FROM PCM_TGT_QTY_DISC A
          WHERE A.TEN_ID      = #{g.tenant}
            AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
-           AND A.QTY_SEQ     = #{p.qtySeq}
+           AND A.QTY_SEQ     = #{p.qtyDiscSeq}
     </select>
 
     <insert id="insertQtyDisc" parameterType="map">
@@ -290,7 +290,7 @@
             YEAR_VAL, QTY, DISC_RATE, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.tgtPjtCd}, #{p.qtySeq}, #{p.specDesc}, #{p.tgtCostCd},
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.qtyDiscSeq}, #{p.specDesc}, #{p.tgtCostCd},
             #{p.yearVal}, #{p.qty}, #{p.discRate}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
         )
@@ -309,14 +309,14 @@
                MOD_DTTM    = #{g.now}
          WHERE TEN_ID      = #{g.tenant}
            AND TGT_PJT_CD  = #{p.tgtPjtCd}
-           AND QTY_SEQ     = #{p.qtySeq}
+           AND QTY_SEQ     = #{p.qtyDiscSeq}
     </update>
 
     <delete id="deleteQtyDisc" parameterType="map">
         DELETE FROM PCM_TGT_QTY_DISC
          WHERE TEN_ID      = #{g.tenant}
            AND TGT_PJT_CD  = #{p.tgtPjtCd}
-           AND QTY_SEQ     = #{p.qtySeq}
+           AND QTY_SEQ     = #{p.qtyDiscSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -400,7 +400,7 @@
          ═══════════════════════════════════════════ -->
     <select id="findListSetupSchedule" parameterType="map" resultType="map">
         SELECT A.TGT_PJT_CD  AS "tgtPjtCd",
-               A.SETUP_SEQ   AS "setupSeq",
+               A.SETUP_SEQ   AS "setupSchedSeq",
                A.DEPT_NM     AS "deptNm",
                A.START_DT    AS "startDt",
                A.END_DT      AS "endDt",
@@ -421,7 +421,7 @@
           FROM PCM_TGT_SETUP_SCHEDULE A
          WHERE A.TEN_ID      = #{g.tenant}
            AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
-           AND A.SETUP_SEQ   = #{p.setupSeq}
+           AND A.SETUP_SEQ   = #{p.setupSchedSeq}
     </select>
 
     <insert id="insertSetupSchedule" parameterType="map">
@@ -431,7 +431,7 @@
             DELAY_DAYS, EMAIL_SENT, RMK, STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
         ) VALUES (
-            #{g.tenant}, #{p.tgtPjtCd}, #{p.setupSeq}, #{p.deptNm},
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.setupSchedSeq}, #{p.deptNm},
             #{p.startDt}, #{p.endDt}, #{p.actEndDt}, #{p.procYn},
             #{p.delayDays}, #{p.emailSent}, #{p.rmk}, COALESCE(#{p.sts}, 'T'),
             #{g.username}, #{g.now}, #{g.username}, #{g.now}
@@ -453,14 +453,14 @@
                MOD_DTTM   = #{g.now}
          WHERE TEN_ID      = #{g.tenant}
            AND TGT_PJT_CD  = #{p.tgtPjtCd}
-           AND SETUP_SEQ   = #{p.setupSeq}
+           AND SETUP_SEQ   = #{p.setupSchedSeq}
     </update>
 
     <delete id="deleteSetupSchedule" parameterType="map">
         DELETE FROM PCM_TGT_SETUP_SCHEDULE
          WHERE TEN_ID      = #{g.tenant}
            AND TGT_PJT_CD  = #{p.tgtPjtCd}
-           AND SETUP_SEQ   = #{p.setupSeq}
+           AND SETUP_SEQ   = #{p.setupSchedSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════

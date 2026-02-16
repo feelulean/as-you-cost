@@ -63,7 +63,10 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(bodyData)
     })
-    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
+      return r.json();
+    })
     .then(function (data) {
       console.log('[sc-ajax] 응답:', url, data);
       if (respHandler && host && typeof host[respHandler] === 'function') {
@@ -71,9 +74,9 @@
       }
     })
     .catch(function (err) {
-      console.warn('[sc-ajax] 요청 실패:', url, err);
-      if (respHandler && host && typeof host[respHandler] === 'function') {
-        host[respHandler]({ detail: { response: [] } });
+      console.error('[sc-ajax] 요청 실패:', url, err);
+      if (typeof UT !== 'undefined' && UT.alert) {
+        UT.alert('서버 통신 오류: ' + (err.message || err));
       }
     });
   };
@@ -94,7 +97,8 @@
     this._columns = [];
     this._isTree = this.getAttribute('is-tree') === 'true';
     this._treeField = this.getAttribute('tree-field') || '';
-    this._editable = this.getAttribute('editable') !== 'false';
+    var editAttr = this.getAttribute('editable');
+    this._editable = editAttr !== null && editAttr !== 'false';
     /* 외부 CSS(sc-grid, .sc-grid) 가 적용됨. 최소한의 기본값만 설정 */
 
     var me = this;
@@ -104,17 +108,24 @@
   ScGrid.prototype._parseColumns = function () {
     this._columns = [];
     var cols = this.querySelectorAll(
-      'sc-data-column, sc-combobox-column, sc-checkbox-column, sc-image-column'
+      'sc-data-column, sc-combobox-column, sc-checkbox-column, sc-image-column, sc-grid-column'
     );
     for (var i = 0; i < cols.length; i++) {
       var c = cols[i];
+      var isSimple = c.tagName.toLowerCase() === 'sc-grid-column';
+      var colEditable = this._editable && c.getAttribute('editable') !== 'false';
+      var colLocked   = this._editable && c.getAttribute('editable') === 'false';
+      /* editMode: 'active' = 편집 가능, 'locked' = 회색 읽기전용, 'text' = 텍스트 표시 */
+      var editMode = colEditable ? 'active' : (colLocked ? 'locked' : 'text');
       this._columns.push({
-        field: c.getAttribute('data-field') || '',
-        header: c.getAttribute('header-text') || '',
+        field:  isSimple ? (c.getAttribute('field') || '') : (c.getAttribute('data-field') || ''),
+        header: isSimple ? (c.getAttribute('header') || '') : (c.getAttribute('header-text') || ''),
         width: c.getAttribute('width') || 'auto',
-        align: c.getAttribute('text-align') || 'left',
-        editable: this._editable && c.getAttribute('editable') !== 'false',
-        type: c.getAttribute('data-type') || 'text',
+        align: c.getAttribute('text-align') || c.getAttribute('align') || 'left',
+        editable: colEditable,
+        editMode: editMode,
+        required: c.getAttribute('required') === 'true',
+        type: c.getAttribute('data-type') || c.getAttribute('type') || 'text',
         format: c.getAttribute('format-type') || c.getAttribute('format') || '',
         tag: c.tagName.toLowerCase(),
         onItemClick: c.getAttribute('on-item-click') || ''
@@ -141,7 +152,17 @@
       var th = document.createElement('th');
       th.textContent = this._columns[i].header;
       th.style.textAlign = this._columns[i].align;
-      if (this._columns[i].width !== 'auto') th.style.width = this._columns[i].width + 'px';
+      if (this._columns[i].width !== 'auto') {
+        var w = this._columns[i].width;
+        th.style.width = (String(w).indexOf('px') > -1) ? w : w + 'px';
+      }
+      /* 필수 입력 필드: 붉은색 * 표시 */
+      if (this._columns[i].required && this._columns[i].editMode === 'active') {
+        var star = document.createElement('span');
+        star.textContent = ' *';
+        star.style.cssText = 'color:#DD0000; font-weight:700;';
+        th.appendChild(star);
+      }
       htr.appendChild(th);
     }
     thead.appendChild(htr);
@@ -193,7 +214,19 @@
       if (itemClickHandler) {
         var host = findHost(me);
         if (host && typeof host[itemClickHandler] === 'function') {
-          host[itemClickHandler]({ detail: { row: row, rowIndex: idx } });
+          host[itemClickHandler]({ detail: { data: row, row: row, rowIndex: idx } });
+        }
+      }
+    });
+
+    /* on-item-dblclick 이벤트 지원 (팝업 등에서 사용) */
+    tr.addEventListener('dblclick', function () {
+      me._selectedIdx = idx;
+      var dblHandler = me.getAttribute('on-item-dblclick');
+      if (dblHandler) {
+        var host = findHost(me);
+        if (host && typeof host[dblHandler] === 'function') {
+          host[dblHandler]({ detail: { data: row, row: row, rowIndex: idx } });
         }
       }
     });
@@ -205,12 +238,37 @@
       var val = row[col.field];
       if (val == null) val = '';
 
-      if (col.editable) {
+      var mode = col.editMode || 'text';
+
+      /* ── 컬럼 레벨 on-item-click: editMode 관계없이 항상 링크로 렌더링 ── */
+      if (col.onItemClick && (col.tag === 'sc-image-column' || val)) {
+        (function (colDef, cellVal, rowData, rowIdx) {
+          var link = document.createElement('a');
+          link.href = 'javascript:void(0)';
+          if (colDef.tag === 'sc-image-column') {
+            link.textContent = colDef.header || '조회';
+            link.style.cssText = 'color:#6954FE; cursor:pointer; font-size:11px;';
+          } else {
+            link.textContent = cellVal;
+            link.style.cssText = 'color:#6954FE; text-decoration:none; cursor:pointer; font-weight:500;';
+            link.addEventListener('mouseenter', function () { link.style.textDecoration = 'underline'; });
+            link.addEventListener('mouseleave', function () { link.style.textDecoration = 'none'; });
+          }
+          link.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var host = findHost(me);
+            if (host && typeof host[colDef.onItemClick] === 'function') {
+              host[colDef.onItemClick]({ detail: { data: rowData, row: rowData, rowIndex: rowIdx, dataField: colDef.field } });
+            }
+          });
+          td.appendChild(link);
+        })(col, val, row, idx);
+      } else if (mode === 'active') {
+        /* ── 편집 가능 입력 필드 ── */
         var inp = document.createElement('input');
         inp.type = (col.type === 'number') ? 'number' : 'text';
         inp.value = val;
         inp.style.textAlign = col.align;
-        /* CSS 클래스로 스타일 적용됨: .sc-grid-wrap table tbody td input */
 
         (function (field, rowIdx, input) {
           input.addEventListener('change', function () {
@@ -233,39 +291,23 @@
         })(col.field, idx, inp);
 
         td.appendChild(inp);
+      } else if (mode === 'locked') {
+        /* ── 읽기전용 입력 필드 (회색 배경) ── */
+        var roInp = document.createElement('input');
+        roInp.type = 'text';
+        roInp.value = (col.format === 'amt' || col.format === '#,###') ? formatNumber(val, col.format) : val;
+        roInp.readOnly = true;
+        roInp.style.cssText = 'text-align:' + col.align + '; background:#F0F1F5; color:#8A94A6; cursor:default;';
+        td.appendChild(roInp);
       } else {
+        /* ── 텍스트 표시 (input 없음) ── */
         if (col.format === 'amt' || col.format === '#,###') {
           val = formatNumber(val, col.format);
         }
         if (col.tag === 'sc-checkbox-column') {
           val = (String(val) === 'Y') ? 'Y' : 'N';
         }
-        /* 컬럼 레벨 on-item-click: 코드/일련번호를 클릭 가능한 링크로 렌더링 */
-        if (col.onItemClick && (col.tag === 'sc-image-column' || val)) {
-          (function (colDef, cellVal, rowData, rowIdx) {
-            var link = document.createElement('a');
-            link.href = 'javascript:void(0)';
-            if (colDef.tag === 'sc-image-column') {
-              link.textContent = colDef.header || '조회';
-              link.style.cssText = 'color:#6954FE; cursor:pointer; font-size:11px;';
-            } else {
-              link.textContent = cellVal;
-              link.style.cssText = 'color:#6954FE; text-decoration:none; cursor:pointer; font-weight:500;';
-              link.addEventListener('mouseenter', function () { link.style.textDecoration = 'underline'; });
-              link.addEventListener('mouseleave', function () { link.style.textDecoration = 'none'; });
-            }
-            link.addEventListener('click', function (e) {
-              e.stopPropagation();
-              var host = findHost(me);
-              if (host && typeof host[colDef.onItemClick] === 'function') {
-                host[colDef.onItemClick]({ detail: { row: rowData, rowIndex: rowIdx, dataField: colDef.field } });
-              }
-            });
-            td.appendChild(link);
-          })(col, val, row, idx);
-        } else {
-          td.textContent = val;
-        }
+        td.textContent = val;
       }
       tr.appendChild(td);
     }
@@ -317,12 +359,49 @@
         result.push(this._data[idx]);
       }
     }
-    return result.length > 0 ? result : this._data.slice();
+    return result;
   };
   ScGrid.prototype.getAllRows = function () { return this._data || []; };
   ScGrid.prototype.insertRow = function (idx, row) {
+    if (!row._rowStatus) row._rowStatus = 'C';
     this._data.splice(idx, 0, row);
+    /* insertRow 후 기존 인덱스 보정 */
+    var newSet = {};
+    for (var k in this._modifiedSet) {
+      if (this._modifiedSet.hasOwnProperty(k)) {
+        var oldIdx = parseInt(k, 10);
+        newSet[oldIdx >= idx ? oldIdx + 1 : oldIdx] = true;
+      }
+    }
+    newSet[idx] = true;
+    this._modifiedSet = newSet;
     this._render();
+  };
+  ScGrid.prototype.deleteRow = function (idx) {
+    if (idx >= 0 && idx < this._data.length) {
+      this._data.splice(idx, 1);
+      var newSet = {};
+      for (var k in this._modifiedSet) {
+        if (this._modifiedSet.hasOwnProperty(k)) {
+          var oldIdx = parseInt(k, 10);
+          if (oldIdx < idx) newSet[oldIdx] = true;
+          else if (oldIdx > idx) newSet[oldIdx - 1] = true;
+        }
+      }
+      this._modifiedSet = newSet;
+      this._selectedIdx = -1;
+      this._render();
+    }
+  };
+  ScGrid.prototype.addRow = function (row) {
+    this.insertRow(this._data.length, row);
+  };
+  ScGrid.prototype.removeRows = function (rows) {
+    if (!rows || rows.length === 0) return;
+    for (var i = rows.length - 1; i >= 0; i--) {
+      var idx = this._data.indexOf(rows[i]);
+      if (idx >= 0) this.deleteRow(idx);
+    }
   };
   ScGrid.prototype.setCellData = function (rowIdx, field, val) {
     if (this._data[rowIdx]) {
@@ -671,6 +750,7 @@
     if (inp) inp.value = (v == null ? '' : v);
   };
   define('sc-datepicker', ScDate);
+  define('sc-date-field', ScDate);
 
   /* ================================================================
      마크업 전용 (내부 자식 요소, 렌더링 불필요)
@@ -678,7 +758,8 @@
   var noopTags = [
     'sc-grid-columns', 'sc-data-column', 'sc-combobox-column',
     'sc-checkbox-column', 'sc-image-column', 'sc-group-column',
-    'sc-grid-fields', 'sc-grid-field'
+    'sc-grid-fields', 'sc-grid-field',
+    'sc-grid-column', 'sc-grid-container'
   ];
   noopTags.forEach(function (tag) {
     var C = function () { return Reflect.construct(HTMLElement, [], C); };

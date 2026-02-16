@@ -8,21 +8,21 @@
          견적정보 상세
          ═══════════════════════════════════════════ -->
     <select id="findEcDetail" parameterType="map" resultType="map">
-        SELECT EC_PJT_CD   AS "ecPjtCd",
-               EC_VER      AS "ecVer",
-               RECV_DT     AS "recvDt",
-               SUBMIT_DT   AS "submitDt",
-               PRICE_COMP  AS "priceComp",
-               ORDER_TYPE  AS "orderType",
-               FACTORY_TYPE AS "factoryType",
-               FACTORY_CD  AS "factoryCd",
-               CORP_TYPE   AS "corpType",
-               CORP_CD     AS "corpCd",
-               ORDER_PROB  AS "orderProb",
+        SELECT EC_PJT_CD    AS "ecPjtCd",
+               EC_VER       AS "ecVer",
+               RECV_DT      AS "estmRcvDt",
+               SUBMIT_DT    AS "estmSubmitDt",
+               PRICE_COMP   AS "priceCompetition",
+               ORDER_TYPE   AS "orderType",
+               FACTORY_TYPE AS "factoryDiv",
+               FACTORY_CD   AS "factoryCd",
+               CORP_TYPE    AS "corpDiv",
+               CORP_CD      AS "corpCd",
+               ORDER_PROB   AS "orderPossibility",
                ORDER_REASON AS "orderReason",
-               COMPETITOR  AS "competitor",
-               DEV_POSS    AS "devPoss",
-               RMK         AS "rmk"
+               COMPETITOR   AS "competitor",
+               DEV_POSS     AS "devPossibility",
+               RMK          AS "rmk"
           FROM PCM_EC_DETAIL
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
@@ -38,23 +38,34 @@
     <insert id="insertEcDetail" parameterType="map">
         INSERT INTO PCM_EC_DETAIL (TEN_ID, EC_PJT_CD, EC_VER, RECV_DT, SUBMIT_DT,
             PRICE_COMP, ORDER_TYPE, FACTORY_TYPE, FACTORY_CD, CORP_TYPE, CORP_CD,
-            ORDER_PROB, ORDER_REASON, COMPETITOR, DEV_POSS, RMK,
+            ORDER_PROB, ORDER_REASON, COMPETITOR, DEV_POSS,
+            RMK,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, COALESCE(#{p.ecVer}, 1), #{p.recvDt}, #{p.submitDt},
-            #{p.priceComp}, #{p.orderType}, #{p.factoryType}, #{p.factoryCd}, #{p.corpType}, #{p.corpCd},
-            #{p.orderProb}, #{p.orderReason}, #{p.competitor}, #{p.devPoss}, #{p.rmk},
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, COALESCE(#{p.ecVer}, 1),
+            #{p.estmRcvDt}, #{p.estmSubmitDt},
+            #{p.priceCompetition}, #{p.orderType},
+            #{p.factoryDiv}, #{p.factoryCd}, #{p.corpDiv}, #{p.corpCd},
+            #{p.orderPossibility}, #{p.orderReason}, #{p.competitor}, #{p.devPossibility},
+            #{p.rmk},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateEcDetail" parameterType="map">
         UPDATE PCM_EC_DETAIL
-           SET RECV_DT = #{p.recvDt}, SUBMIT_DT = #{p.submitDt},
-               PRICE_COMP = #{p.priceComp}, ORDER_TYPE = #{p.orderType},
-               FACTORY_TYPE = #{p.factoryType}, FACTORY_CD = #{p.factoryCd},
-               CORP_TYPE = #{p.corpType}, CORP_CD = #{p.corpCd},
-               ORDER_PROB = #{p.orderProb}, ORDER_REASON = #{p.orderReason},
-               COMPETITOR = #{p.competitor}, DEV_POSS = #{p.devPoss},
-               RMK = #{p.rmk}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
+           SET RECV_DT      = COALESCE(#{p.estmRcvDt}, RECV_DT),
+               SUBMIT_DT    = COALESCE(#{p.estmSubmitDt}, SUBMIT_DT),
+               PRICE_COMP   = COALESCE(#{p.priceCompetition}, PRICE_COMP),
+               ORDER_TYPE   = COALESCE(#{p.orderType}, ORDER_TYPE),
+               FACTORY_TYPE = COALESCE(#{p.factoryDiv}, FACTORY_TYPE),
+               FACTORY_CD   = COALESCE(#{p.factoryCd}, FACTORY_CD),
+               CORP_TYPE    = COALESCE(#{p.corpDiv}, CORP_TYPE),
+               CORP_CD      = COALESCE(#{p.corpCd}, CORP_CD),
+               ORDER_PROB   = COALESCE(#{p.orderPossibility}, ORDER_PROB),
+               ORDER_REASON = COALESCE(#{p.orderReason}, ORDER_REASON),
+               COMPETITOR   = COALESCE(#{p.competitor}, COMPETITOR),
+               DEV_POSS     = COALESCE(#{p.devPossibility}, DEV_POSS),
+               RMK          = COALESCE(#{p.rmk}, RMK),
+               MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
     </update>
 
@@ -62,18 +73,18 @@
          원가코드/판가
          ═══════════════════════════════════════════ -->
     <select id="findListCostCode" parameterType="map" resultType="map">
-        SELECT COST_CD      AS "costCd",
+        SELECT SORT_NO      AS "seqNo",
                EC_PJT_CD    AS "ecPjtCd",
+               COST_CD      AS "costCd",
                PROD_GRP     AS "prodGrp",
                COST_GRP     AS "costGrp",
                COST_GRP_DESC AS "costGrpDesc",
-               EST_CURRENCY AS "estCurrency",
-               EST_PRICE    AS "estPrice",
+               EST_CURRENCY AS "estmCurrency",
+               EST_PRICE    AS "estmSellingPrice",
                MKT_CURRENCY AS "mktCurrency",
                MKT_PRICE    AS "mktPrice",
-               SOP_YM       AS "sopYm",
-               EOP_YM       AS "eopYm",
-               SORT_NO      AS "sortNo"
+               SOP_YM       AS "sopDt",
+               EOP_YM       AS "eopDt"
           FROM PCM_EC_COST_CODE
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
@@ -85,33 +96,47 @@
             COST_GRP_DESC, EST_CURRENCY, EST_PRICE, MKT_CURRENCY, MKT_PRICE,
             SOP_YM, EOP_YM, SORT_NO, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd}, #{p.prodGrp}, #{p.costGrp},
-            #{p.costGrpDesc}, #{p.estCurrency}, #{p.estPrice}, #{p.mktCurrency}, #{p.mktPrice},
-            #{p.sopYm}, #{p.eopYm}, #{p.sortNo}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+            #{p.costGrpDesc}, #{p.estmCurrency}, #{p.estmSellingPrice}, #{p.mktCurrency}, #{p.mktPrice},
+            #{p.sopDt}, #{p.eopDt}, #{p.seqNo}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateCostCode" parameterType="map">
         UPDATE PCM_EC_COST_CODE
            SET PROD_GRP = #{p.prodGrp}, COST_GRP = #{p.costGrp},
-               COST_GRP_DESC = #{p.costGrpDesc}, EST_CURRENCY = #{p.estCurrency},
-               EST_PRICE = #{p.estPrice}, MKT_CURRENCY = #{p.mktCurrency},
-               MKT_PRICE = #{p.mktPrice}, SOP_YM = #{p.sopYm}, EOP_YM = #{p.eopYm},
-               SORT_NO = #{p.sortNo}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
+               COST_GRP_DESC = #{p.costGrpDesc}, EST_CURRENCY = #{p.estmCurrency},
+               EST_PRICE = #{p.estmSellingPrice}, MKT_CURRENCY = #{p.mktCurrency},
+               MKT_PRICE = #{p.mktPrice}, SOP_YM = #{p.sopDt}, EOP_YM = #{p.eopDt},
+               SORT_NO = #{p.seqNo}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND COST_CD = #{p.costCd}
     </update>
 
     <!-- ═══════════════════════════════════════════
-         수량/할인율
+         수량/할인율 (피벗 조회: 행→열 변환)
          ═══════════════════════════════════════════ -->
     <select id="findListQtyDisc" parameterType="map" resultType="map">
-        SELECT COST_CD   AS "costCd",
-               YEAR_VAL  AS "yearVal",
-               SALES_QTY AS "salesQty",
-               DISC_RATE AS "discRate"
+        SELECT COST_CD AS "costCd",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 1 THEN SALES_QTY END) AS "yr1Qty",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 2 THEN SALES_QTY END) AS "yr2Qty",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 3 THEN SALES_QTY END) AS "yr3Qty",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 4 THEN SALES_QTY END) AS "yr4Qty",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 5 THEN SALES_QTY END) AS "yr5Qty",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 1 THEN DISC_RATE END) AS "yr1DiscRate",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 2 THEN DISC_RATE END) AS "yr2DiscRate",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 3 THEN DISC_RATE END) AS "yr3DiscRate",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 4 THEN DISC_RATE END) AS "yr4DiscRate",
+               MAX(CASE WHEN CAST(YEAR_VAL AS INTEGER) = 5 THEN DISC_RATE END) AS "yr5DiscRate"
           FROM PCM_EC_QTY_DISC
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
-         ORDER BY COST_CD, YEAR_VAL
+         GROUP BY COST_CD
+         ORDER BY COST_CD
     </select>
+
+    <!-- QtyDisc 저장용: 프로젝트+원가코드 단위 삭제 후 재입력 -->
+    <delete id="deleteQtyDiscByPjt" parameterType="map">
+        DELETE FROM PCM_EC_QTY_DISC
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </delete>
 
     <insert id="insertQtyDisc" parameterType="map">
         INSERT INTO PCM_EC_QTY_DISC (TEN_ID, EC_PJT_CD, COST_CD, YEAR_VAL, SALES_QTY, DISC_RATE,
@@ -132,12 +157,12 @@
          담당자
          ═══════════════════════════════════════════ -->
     <select id="findListManager" parameterType="map" resultType="map">
-        SELECT SEQ_NO    AS "seqNo",
+        SELECT SEQ_NO    AS "managerSeq",
                EC_PJT_CD AS "ecPjtCd",
-               DEPT_TYPE AS "deptType",
+               DEPT_TYPE AS "deptDiv",
                USER_ID   AS "userId",
                USER_NM   AS "userNm",
-               ROLE_TYPE AS "roleType",
+               ROLE_TYPE AS "role",
                EMAIL     AS "email"
           FROM PCM_EC_MANAGER
          WHERE TEN_ID    = #{g.tenant}
@@ -148,34 +173,34 @@
     <insert id="insertManager" parameterType="map">
         INSERT INTO PCM_EC_MANAGER (TEN_ID, EC_PJT_CD, DEPT_TYPE, USER_ID, USER_NM, ROLE_TYPE, EMAIL,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.deptType}, #{p.userId}, #{p.userNm}, #{p.roleType}, #{p.email},
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.deptDiv}, #{p.userId}, #{p.userNm}, #{p.role}, #{p.email},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateManager" parameterType="map">
         UPDATE PCM_EC_MANAGER
-           SET DEPT_TYPE = #{p.deptType}, USER_ID = #{p.userId}, USER_NM = #{p.userNm},
-               ROLE_TYPE = #{p.roleType}, EMAIL = #{p.email},
+           SET DEPT_TYPE = #{p.deptDiv}, USER_ID = #{p.userId}, USER_NM = #{p.userNm},
+               ROLE_TYPE = #{p.role}, EMAIL = #{p.email},
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND SEQ_NO = #{p.seqNo}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND SEQ_NO = #{p.managerSeq}
     </update>
 
     <delete id="deleteManager" parameterType="map">
         DELETE FROM PCM_EC_MANAGER
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND SEQ_NO = #{p.seqNo}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND SEQ_NO = #{p.managerSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
          일정
          ═══════════════════════════════════════════ -->
     <select id="findListSchedule" parameterType="map" resultType="map">
-        SELECT TASK_CD    AS "taskCd",
-               TASK_NM    AS "taskNm",
-               START_DT   AS "startDt",
-               END_DT     AS "endDt",
+        SELECT TASK_CD       AS "taskDiv",
+               TASK_NM       AS "taskNm",
+               SORT_NO       AS "scheduleSeq",
+               START_DT      AS "startDt",
+               END_DT        AS "endDt",
                ACTUAL_END_DT AS "actualEndDt",
-               DELAY_DAYS AS "delayDays",
-               SORT_NO    AS "sortNo"
+               DELAY_DAYS    AS "delayDays"
           FROM PCM_EC_SCHEDULE
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
@@ -185,31 +210,32 @@
     <insert id="insertSchedule" parameterType="map">
         INSERT INTO PCM_EC_SCHEDULE (TEN_ID, EC_PJT_CD, TASK_CD, TASK_NM, START_DT, END_DT,
             ACTUAL_END_DT, DELAY_DAYS, SORT_NO, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.taskCd}, #{p.taskNm}, #{p.startDt}, #{p.endDt},
-            #{p.actualEndDt}, #{p.delayDays}, #{p.sortNo}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.taskDiv}, #{p.taskDiv}, #{p.startDt}, #{p.endDt},
+            #{p.actualEndDt}, #{p.delayDays}, #{p.scheduleSeq},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateSchedule" parameterType="map">
         UPDATE PCM_EC_SCHEDULE
-           SET TASK_NM = #{p.taskNm}, START_DT = #{p.startDt}, END_DT = #{p.endDt},
+           SET TASK_NM = #{p.taskDiv}, START_DT = #{p.startDt}, END_DT = #{p.endDt},
                ACTUAL_END_DT = #{p.actualEndDt}, DELAY_DAYS = #{p.delayDays},
-               SORT_NO = #{p.sortNo}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND TASK_CD = #{p.taskCd}
+               SORT_NO = #{p.scheduleSeq}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND TASK_CD = #{p.taskDiv}
     </update>
 
     <!-- ═══════════════════════════════════════════
          라인투자비
          ═══════════════════════════════════════════ -->
     <select id="findListLineInvest" parameterType="map" resultType="map">
-        SELECT LINE_SEQ   AS "lineSeq",
+        SELECT LINE_SEQ   AS "lineInvestSeq",
                LINE_TYPE  AS "lineType",
                LINE_CD    AS "lineCd",
                LINE_NM    AS "lineNm",
                PROCESS_TYPE AS "processType",
                ACQ_AMT    AS "acqAmt",
-               ACQ_CURRENCY AS "acqCurrency",
+               ACQ_CURRENCY AS "currency",
                DEPR_START_YM AS "deprStartYm",
-               CAPA_QTY   AS "capaQty",
+               CAPA_QTY   AS "capa",
                AVAIL_RATE AS "availRate",
                USE_RATE   AS "useRate",
                USEFUL_LIFE AS "usefulLife",
@@ -227,7 +253,7 @@
             AVAIL_RATE, USE_RATE, USEFUL_LIFE, RMK,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.lineType}, #{p.lineCd}, #{p.lineNm},
-            #{p.processType}, #{p.acqAmt}, #{p.acqCurrency}, #{p.deprStartYm}, #{p.capaQty},
+            #{p.processType}, #{p.acqAmt}, #{p.currency}, #{p.deprStartYm}, #{p.capa},
             #{p.availRate}, #{p.useRate}, #{p.usefulLife}, #{p.rmk},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
@@ -236,23 +262,23 @@
         UPDATE PCM_EC_LINE_INVEST
            SET LINE_TYPE = #{p.lineType}, LINE_CD = #{p.lineCd}, LINE_NM = #{p.lineNm},
                PROCESS_TYPE = #{p.processType}, ACQ_AMT = #{p.acqAmt},
-               ACQ_CURRENCY = #{p.acqCurrency}, DEPR_START_YM = #{p.deprStartYm},
-               CAPA_QTY = #{p.capaQty}, AVAIL_RATE = #{p.availRate},
+               ACQ_CURRENCY = #{p.currency}, DEPR_START_YM = #{p.deprStartYm},
+               CAPA_QTY = #{p.capa}, AVAIL_RATE = #{p.availRate},
                USE_RATE = #{p.useRate}, USEFUL_LIFE = #{p.usefulLife},
                RMK = #{p.rmk}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND LINE_SEQ = #{p.lineSeq}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND LINE_SEQ = #{p.lineInvestSeq}
     </update>
 
     <delete id="deleteLineInvest" parameterType="map">
         DELETE FROM PCM_EC_LINE_INVEST
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND LINE_SEQ = #{p.lineSeq}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND LINE_SEQ = #{p.lineInvestSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
          기타투자비
          ═══════════════════════════════════════════ -->
     <select id="findListOtherInvest" parameterType="map" resultType="map">
-        SELECT INVEST_SEQ AS "investSeq",
+        SELECT INVEST_SEQ AS "otherInvestSeq",
                INVEST_NM  AS "investNm",
                INVEST_TYPE AS "investType",
                CURRENCY   AS "currency",
@@ -288,12 +314,12 @@
                ACQ_YEAR = #{p.acqYear}, DEPR_START_YM = #{p.deprStartYm},
                AVAIL_RATE = #{p.availRate}, USE_RATE = #{p.useRate},
                RMK = #{p.rmk}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND INVEST_SEQ = #{p.investSeq}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND INVEST_SEQ = #{p.otherInvestSeq}
     </update>
 
     <delete id="deleteOtherInvest" parameterType="map">
         DELETE FROM PCM_EC_OTHER_INVEST
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND INVEST_SEQ = #{p.investSeq}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND INVEST_SEQ = #{p.otherInvestSeq}
     </delete>
 
     <!-- ═══════════════════════════════════════════
@@ -305,7 +331,7 @@
                MP_NM      AS "mpNm",
                PROCESS_TYPE AS "processType",
                CURRENCY   AS "currency",
-               AVG_SALARY AS "avgSalary",
+               AVG_SALARY AS "avgWage",
                Y1_CNT AS "y1Cnt", Y2_CNT AS "y2Cnt", Y3_CNT AS "y3Cnt",
                Y4_CNT AS "y4Cnt", Y5_CNT AS "y5Cnt", Y6_CNT AS "y6Cnt", Y7_CNT AS "y7Cnt"
           FROM PCM_EC_MANPOWER
@@ -319,7 +345,7 @@
             CURRENCY, AVG_SALARY, Y1_CNT, Y2_CNT, Y3_CNT, Y4_CNT, Y5_CNT, Y6_CNT, Y7_CNT,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.mpType}, #{p.mpNm}, #{p.processType},
-            #{p.currency}, #{p.avgSalary},
+            #{p.currency}, #{p.avgWage},
             #{p.y1Cnt}, #{p.y2Cnt}, #{p.y3Cnt}, #{p.y4Cnt}, #{p.y5Cnt}, #{p.y6Cnt}, #{p.y7Cnt},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
@@ -327,7 +353,7 @@
     <update id="updateManpower" parameterType="map">
         UPDATE PCM_EC_MANPOWER
            SET MP_TYPE = #{p.mpType}, MP_NM = #{p.mpNm}, PROCESS_TYPE = #{p.processType},
-               CURRENCY = #{p.currency}, AVG_SALARY = #{p.avgSalary},
+               CURRENCY = #{p.currency}, AVG_SALARY = #{p.avgWage},
                Y1_CNT = #{p.y1Cnt}, Y2_CNT = #{p.y2Cnt}, Y3_CNT = #{p.y3Cnt},
                Y4_CNT = #{p.y4Cnt}, Y5_CNT = #{p.y5Cnt}, Y6_CNT = #{p.y6Cnt}, Y7_CNT = #{p.y7Cnt},
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
@@ -340,11 +366,11 @@
     <select id="findListMfgCost" parameterType="map" resultType="map">
         SELECT EC_PJT_CD       AS "ecPjtCd",
                COST_CD         AS "costCd",
-               WAGE_RAISE_RATE AS "wageRaiseRate",
-               PRICE_RAISE_RATE AS "priceRaiseRate",
+               WAGE_RAISE_RATE AS "wageIncRate",
+               PRICE_RAISE_RATE AS "inflationRate",
                PROD_DIRECT_RATE AS "prodDirectRate",
-               LABOR_COST_RATE AS "laborCostRate",
-               OTHER_MFG_RATE  AS "otherMfgRate",
+               LABOR_COST_RATE AS "laborRelatedRate",
+               OTHER_MFG_RATE  AS "etcMfgRate",
                MOLD_COST       AS "moldCost",
                OUTSRC_COST     AS "outsrcCost",
                OUTSRC_RATE     AS "outsrcRate",
@@ -381,8 +407,8 @@
             RND_COST, OTHER_EXP, TOTAL_MFG_COST, CALC_STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd},
-            #{p.wageRaiseRate}, #{p.priceRaiseRate}, #{p.prodDirectRate},
-            #{p.laborCostRate}, #{p.otherMfgRate}, #{p.moldCost}, #{p.outsrcCost}, #{p.outsrcRate},
+            #{p.wageIncRate}, #{p.inflationRate}, #{p.prodDirectRate},
+            #{p.laborRelatedRate}, #{p.etcMfgRate}, #{p.moldCost}, #{p.outsrcCost}, #{p.outsrcRate},
             #{p.directLabor}, #{p.indirectLabor}, #{p.prodDirectExp}, #{p.laborRelatedExp},
             #{p.otherMfgExp}, #{p.deprBuilding}, #{p.deprLine}, #{p.deprOther},
             #{p.rndCost}, #{p.otherExp}, #{p.totalMfgCost}, 'Y',
@@ -391,9 +417,9 @@
 
     <update id="updateMfgCost" parameterType="map">
         UPDATE PCM_EC_MFG_COST
-           SET WAGE_RAISE_RATE = #{p.wageRaiseRate}, PRICE_RAISE_RATE = #{p.priceRaiseRate},
-               PROD_DIRECT_RATE = #{p.prodDirectRate}, LABOR_COST_RATE = #{p.laborCostRate},
-               OTHER_MFG_RATE = #{p.otherMfgRate}, MOLD_COST = #{p.moldCost},
+           SET WAGE_RAISE_RATE = #{p.wageIncRate}, PRICE_RAISE_RATE = #{p.inflationRate},
+               PROD_DIRECT_RATE = #{p.prodDirectRate}, LABOR_COST_RATE = #{p.laborRelatedRate},
+               OTHER_MFG_RATE = #{p.etcMfgRate}, MOLD_COST = #{p.moldCost},
                OUTSRC_COST = #{p.outsrcCost}, OUTSRC_RATE = #{p.outsrcRate},
                DIRECT_LABOR = #{p.directLabor}, INDIRECT_LABOR = #{p.indirectLabor},
                PROD_DIRECT_EXP = #{p.prodDirectExp}, LABOR_RELATED_EXP = #{p.laborRelatedExp},
@@ -417,9 +443,9 @@
                WARRANTY_RATE    AS "warrantyRate",
                ADVERTISING_RATE AS "advertisingRate",
                RESEARCH_RATE    AS "researchRate",
-               ASSET_RATE       AS "assetRate",
-               PERSONNEL_RATE   AS "personnelRate",
-               OTHER_RATE       AS "otherRate",
+               ASSET_RATE       AS "assetCostRate",
+               PERSONNEL_RATE   AS "hrCostRate",
+               OTHER_RATE       AS "etcRate",
                TOTAL_SGA_COST   AS "totalSgaCost",
                CALC_STS         AS "calcSts"
           FROM PCM_EC_SGA_COST
@@ -441,8 +467,8 @@
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd},
             #{p.salesLaborRate}, #{p.transportRate}, #{p.exportRate}, #{p.warrantyRate},
-            #{p.advertisingRate}, #{p.researchRate}, #{p.assetRate}, #{p.personnelRate},
-            #{p.otherRate}, #{p.totalSgaCost}, 'Y',
+            #{p.advertisingRate}, #{p.researchRate}, #{p.assetCostRate}, #{p.hrCostRate},
+            #{p.etcRate}, #{p.totalSgaCost}, 'Y',
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
@@ -451,8 +477,8 @@
            SET SALES_LABOR_RATE = #{p.salesLaborRate}, TRANSPORT_RATE = #{p.transportRate},
                EXPORT_RATE = #{p.exportRate}, WARRANTY_RATE = #{p.warrantyRate},
                ADVERTISING_RATE = #{p.advertisingRate}, RESEARCH_RATE = #{p.researchRate},
-               ASSET_RATE = #{p.assetRate}, PERSONNEL_RATE = #{p.personnelRate},
-               OTHER_RATE = #{p.otherRate}, TOTAL_SGA_COST = #{p.totalSgaCost},
+               ASSET_RATE = #{p.assetCostRate}, PERSONNEL_RATE = #{p.hrCostRate},
+               OTHER_RATE = #{p.etcRate}, TOTAL_SGA_COST = #{p.totalSgaCost},
                CALC_STS = 'Y', MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND COST_CD = #{p.costCd}
     </update>
@@ -518,9 +544,9 @@
          ═══════════════════════════════════════════ -->
     <select id="findListSensitivity" parameterType="map" resultType="map">
         SELECT EC_PJT_CD AS "ecPjtCd",
-               SENS_VER  AS "sensVer",
-               SENS_NM   AS "sensNm",
-               END_YN    AS "endYn",
+               SENS_VER  AS "seqNo",
+               SENS_NM   AS "analysisNm",
+               END_YN    AS "completeYn",
                TO_CHAR(MOD_DTTM, 'YYYY-MM-DD HH24:MI') AS "modDttm"
           FROM PCM_EC_SENSITIVITY
          WHERE TEN_ID    = #{g.tenant}
@@ -531,15 +557,15 @@
     <insert id="insertSensitivity" parameterType="map">
         INSERT INTO PCM_EC_SENSITIVITY (TEN_ID, EC_PJT_CD, SENS_VER, SENS_NM, END_YN,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.sensVer}, #{p.sensNm}, 'N',
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.seqNo}, #{p.analysisNm}, 'N',
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateSensitivity" parameterType="map">
         UPDATE PCM_EC_SENSITIVITY
-           SET SENS_NM = #{p.sensNm}, END_YN = #{p.endYn},
+           SET SENS_NM = #{p.analysisNm}, END_YN = #{p.completeYn},
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
-         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND SENS_VER = #{p.sensVer}
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND SENS_VER = #{p.seqNo}
     </update>
 
     <!-- ═══════════════════════════════════════════
@@ -555,7 +581,7 @@
           FROM PCM_EC_SENSITIVITY_VAR
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
-           AND SENS_VER  = #{p.sensVer}
+           AND SENS_VER  = #{p.seqNo}
          ORDER BY VAR_TYPE
     </select>
 
@@ -563,7 +589,7 @@
         INSERT INTO PCM_EC_SENSITIVITY_VAR (TEN_ID, EC_PJT_CD, SENS_VER, VAR_TYPE,
             VAR_NM, BEFORE_VAL, AFTER_VAL, YEAR_VAL, COST_CD,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.sensVer}, #{p.varType},
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.seqNo}, #{p.varType},
             #{p.varNm}, #{p.beforeVal}, #{p.afterVal}, #{p.yearVal}, #{p.costCd},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
@@ -573,7 +599,7 @@
            SET VAR_NM = #{p.varNm}, BEFORE_VAL = #{p.beforeVal}, AFTER_VAL = #{p.afterVal},
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
-           AND SENS_VER = #{p.sensVer} AND VAR_TYPE = #{p.varType}
+           AND SENS_VER = #{p.seqNo} AND VAR_TYPE = #{p.varType}
     </update>
 
     <!-- ═══════════════════════════════════════════
@@ -618,10 +644,10 @@
         SELECT ANALYSIS_VER  AS "analysisVer",
                ANALYSIS_TYPE AS "analysisType",
                WACC_RATE     AS "waccRate",
-               NPV_VAL       AS "npvVal",
-               IRR_VAL       AS "irrVal",
+               NPV_VAL       AS "npvValue",
+               IRR_VAL       AS "irrValue",
                PAYBACK_PERIOD AS "paybackPeriod",
-               PI_VAL        AS "piVal",
+               PI_VAL        AS "piValue",
                TO_CHAR(MOD_DTTM, 'YYYY-MM-DD HH24:MI') AS "modDttm"
           FROM PCM_EC_NPV
          WHERE TEN_ID    = #{g.tenant}
@@ -639,15 +665,15 @@
             WACC_RATE, NPV_VAL, IRR_VAL, PAYBACK_PERIOD, PI_VAL,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.analysisVer}, #{p.analysisType},
-            #{p.waccRate}, #{p.npvVal}, #{p.irrVal}, #{p.paybackPeriod}, #{p.piVal},
+            #{p.waccRate}, #{p.npvValue}, #{p.irrValue}, #{p.paybackPeriod}, #{p.piValue},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateNpv" parameterType="map">
         UPDATE PCM_EC_NPV
            SET ANALYSIS_TYPE = #{p.analysisType}, WACC_RATE = #{p.waccRate},
-               NPV_VAL = #{p.npvVal}, IRR_VAL = #{p.irrVal},
-               PAYBACK_PERIOD = #{p.paybackPeriod}, PI_VAL = #{p.piVal},
+               NPV_VAL = #{p.npvValue}, IRR_VAL = #{p.irrValue},
+               PAYBACK_PERIOD = #{p.paybackPeriod}, PI_VAL = #{p.piValue},
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND ANALYSIS_VER = #{p.analysisVer}
     </update>

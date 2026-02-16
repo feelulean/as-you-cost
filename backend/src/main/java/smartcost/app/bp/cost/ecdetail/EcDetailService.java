@@ -45,6 +45,43 @@ public class EcDetailService {
         return result;
     }
 
+    /* ═══ 수량/할인율 저장 (열→행 언피벗) ═══ */
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> saveQtyDisc(Map<String, Object> param) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 1) 기존 데이터 전체 삭제
+        ecDetailRepository.delete("QtyDiscByPjt", param);
+
+        // 2) 프론트엔드 행(yr1Qty~yr5Qty, yr1DiscRate~yr5DiscRate) → 개별 row 변환
+        List<Map<String, Object>> saveList = (List<Map<String, Object>>) param.get("saveList");
+        int insertCnt = 0;
+        if (saveList != null) {
+            String ecPjtCd = (String) param.get("ecPjtCd");
+            for (Map<String, Object> row : saveList) {
+                String costCd = (String) row.get("costCd");
+                for (int yr = 1; yr <= 5; yr++) {
+                    Object qty  = row.get("yr" + yr + "Qty");
+                    Object disc = row.get("yr" + yr + "DiscRate");
+                    if (qty == null && disc == null) continue; // 값 없으면 skip
+
+                    Map<String, Object> dbRow = new HashMap<>();
+                    dbRow.put("ecPjtCd", ecPjtCd);
+                    dbRow.put("costCd", costCd);
+                    dbRow.put("yearVal", String.valueOf(yr));
+                    dbRow.put("salesQty", qty);
+                    dbRow.put("discRate", disc);
+                    ecDetailRepository.insert("QtyDisc", dbRow);
+                    insertCnt++;
+                }
+            }
+        }
+        result.put("status", "OK");
+        result.put("count", insertCnt);
+        return result;
+    }
+
     /* ═══ 범용 목록 저장 (Insert/Update by _rowStatus) ═══ */
     @Transactional
     @SuppressWarnings("unchecked")

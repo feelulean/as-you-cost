@@ -1,0 +1,176 @@
+<dom-module id="tc-reduction-plan-popup">
+    <template>
+        <!-- ============================================================
+             Ajax
+             ============================================================ -->
+        <sc-ajax id="findListAjax"
+                 url="/bp/cost/tc/detail/findListAchvPlanDtl.do"
+                 body="{{searchParam}}"
+                 on-response="onFindListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="saveListAjax"
+                 url="/bp/cost/tc/detail/saveListAchvPlanDtl.do"
+                 body="{{saveParam}}"
+                 on-response="onSaveResponse">
+        </sc-ajax>
+
+        <sc-ajax id="deleteListAjax"
+                 url="/bp/cost/tc/detail/deleteListAchvPlanDtl.do"
+                 body="{{deleteParam}}"
+                 on-response="onDeleteResponse">
+        </sc-ajax>
+
+        <!-- ============================================================
+             Header Info
+             ============================================================ -->
+        <div style="padding:10px; background:#f5f5f5; margin-bottom:10px; border-bottom:1px solid #ddd;">
+            <table>
+                <colgroup>
+                    <col style="width:120px"/><col/>
+                    <col style="width:120px"/><col/>
+                </colgroup>
+                <tr>
+                    <th><sc-label text="프로젝트 코드"></sc-label></th>
+                    <td><sc-label text="{{tgtPjtCd}}"></sc-label></td>
+                    <th><sc-label text="원가항목"></sc-label></th>
+                    <td><sc-label text="{{costItemNm}}"></sc-label></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ============================================================
+             Grid - 절감계획 상세
+             ============================================================ -->
+        <sc-grid-container buttons='["add","delete","save"]'
+                          on-add="onAdd"
+                          on-delete="onDelete"
+                          on-save="onSave">
+        </sc-grid-container>
+
+        <sc-grid id="gridPanel"
+                 items="{{planList}}"
+                 editable
+                 style="height:300px">
+            <sc-grid-column header="순번"      field="seqNo"          width="60px"  editable="false"></sc-grid-column>
+            <sc-grid-column header="절감과제"   field="reduceTaskNm"   width="200px" editable></sc-grid-column>
+            <sc-grid-column header="담당부서"   field="deptNm"         width="120px" editable></sc-grid-column>
+            <sc-grid-column header="담당자"     field="managerNm"      width="100px" editable></sc-grid-column>
+            <sc-grid-column header="절감금액"   field="reduceAmt"      width="120px" editable type="number" format="#,##0"></sc-grid-column>
+            <sc-grid-column header="절감율(%)"  field="reduceRate"     width="100px" editable type="number" format="#,##0.00"></sc-grid-column>
+            <sc-grid-column header="시작일"     field="startDt"        width="110px" editable></sc-grid-column>
+            <sc-grid-column header="완료일"     field="endDt"          width="110px" editable></sc-grid-column>
+            <sc-grid-column header="진행상태"   field="progressSts"    width="100px" editable></sc-grid-column>
+            <sc-grid-column header="비고"       field="rmk"            width="150px" editable></sc-grid-column>
+        </sc-grid>
+
+        <!-- Buttons -->
+        <div style="text-align:center; margin-top:10px;">
+            <sc-button text="닫기" on-click="onClose"></sc-button>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'tc-reduction-plan-popup',
+
+            properties: {
+                tgtPjtCd:   { type: String, value: '' },
+                costItemCd: { type: String, value: '' },
+                costItemNm: { type: String, value: '' },
+                recalcYn:   { type: String, value: 'N' },
+                searchParam: { type: Object, value: function() { return {}; } },
+                saveParam:   { type: Object, value: function() { return {}; } },
+                deleteParam: { type: Object, value: function() { return {}; } },
+                planList:    { type: Array,  value: function() { return []; } }
+            },
+
+            attached: function() {
+                var param = UT.getParameter();
+                this.tgtPjtCd   = param.tgtPjtCd   || '';
+                this.costItemCd = param.costItemCd || '';
+                this.costItemNm = param.costItemNm || '';
+                this.recalcYn   = param.recalcYn   || 'N';
+
+                this.set('searchParam', {
+                    tgtPjtCd:   this.tgtPjtCd,
+                    costItemCd: this.costItemCd
+                });
+                this.$.findListAjax.generateRequest();
+            },
+
+            onFindListResponse: function(e) {
+                this.set('planList', e.detail.response || []);
+            },
+
+            onAdd: function() {
+                var grid = this.$.gridPanel;
+                var seqNo = (this.planList ? this.planList.length : 0) + 1;
+                grid.insertRow(0, {
+                    tgtPjtCd:     this.tgtPjtCd,
+                    costItemCd:   this.costItemCd,
+                    seqNo:        seqNo,
+                    reduceTaskNm: '',
+                    deptNm:       '',
+                    managerNm:    '',
+                    reduceAmt:    0,
+                    reduceRate:   0,
+                    startDt:      '',
+                    endDt:        '',
+                    progressSts:  '',
+                    rmk:          ''
+                });
+            },
+
+            onDelete: function() {
+                var grid = this.$.gridPanel;
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('deleteParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        costItemCd: me.costItemCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteListAjax.generateRequest();
+                });
+            },
+
+            onSave: function() {
+                var grid = this.$.gridPanel;
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveParam', {
+                        tgtPjtCd:   me.tgtPjtCd,
+                        costItemCd: me.costItemCd,
+                        saveList:   modifiedRows
+                    });
+                    me.$.saveListAjax.generateRequest();
+                });
+            },
+
+            onSaveResponse: function() {
+                UT.alert('MSG_COM_00003');
+                this.$.findListAjax.generateRequest();
+            },
+
+            onDeleteResponse: function() {
+                UT.alert('MSG_COM_00005');
+                this.$.findListAjax.generateRequest();
+            },
+
+            onClose: function() {
+                window.close();
+            }
+        });
+    </script>
+</dom-module>

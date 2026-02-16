@@ -31,6 +31,26 @@
       display: flex;
       flex-direction: column;
     }
+    #breadcrumb-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 2px 6px;
+      flex-shrink: 0;
+    }
+    #breadcrumb-bar span {
+      font-size: 11px;
+      color: #8A94A6;
+      letter-spacing: -0.2px;
+    }
+    #breadcrumb-bar span.bc-sep {
+      margin: 0 5px;
+      color: #B3B9C6;
+    }
+    #breadcrumb-bar span.bc-current {
+      color: #30374F;
+      font-weight: 600;
+    }
     #component-host {
       flex: 1;
       display: flex;
@@ -41,14 +61,79 @@
 </head>
 <body>
 
+  <div id="breadcrumb-bar"></div>
   <div id="component-host"></div>
 
   <script>
     (function () {
+      /* ── 화면별 Breadcrumb 매핑 ── */
+      var BREADCRUMB = {
+        /* 견적원가 관리 */
+        'es-project-list':              ['견적원가 관리', '프로젝트 관리'],
+        'es-ec-detail':                 ['견적원가 관리', '견적정보 등록'],
+        'es-ec-bom-list':               ['견적원가 관리', '재료비 관리'],
+        'es-invest-mgt':                ['견적원가 관리', '투자비 관리'],
+        'es-mfg-cost-calc':             ['견적원가 관리', '제조경비 계산'],
+        'es-sga-cost-calc':             ['견적원가 관리', '판매관리비 계산'],
+        'es-pl-statement':              ['견적원가 관리', '견적원가 손익계산서'],
+        'es-sensitivity':               ['견적원가 관리', '민감도 분석'],
+        'es-ec-profit-mgt':             ['견적원가 관리', '수익성 Factor/WACC 산출'],
+        'es-npv-analysis':              ['견적원가 관리', '수익성 분석 (NPV)'],
+        /* 목표원가 관리 */
+        'es-target-cost-project-list':  ['목표원가 관리', '목표원가관리 프로젝트'],
+        'es-target-cost-guide-list':    ['목표원가 관리', '부문별 목표 Guide 산출'],
+        'tc-detail':                    ['목표원가 관리', '목표원가 상세'],
+        'tc-calc':                      ['목표원가 관리', '목표원가 산출'],
+        'tc-recalc':                    ['목표원가 관리', '목표원가 재산출'],
+        'tc-achievement-status':        ['목표원가 관리', '목표달성 현황'],
+        /* 현상원가 관리 */
+        'es-current-cost-project-list': ['현상원가 관리', '현상원가 정보 등록'],
+        'cc-info-register':             ['현상원가 관리', '현상원가 상세 등록'],
+        'cc-material-cost':             ['현상원가 관리', '재료비 관리'],
+        'cc-invest-mgt':                ['현상원가 관리', '투자비 관리'],
+        'cc-mfg-cost':                  ['현상원가 관리', '제조경비 계산'],
+        'cc-sga-cost':                  ['현상원가 관리', '판매관리비 계산'],
+        'cc-pl-statement':              ['현상원가 관리', '현상원가 손익계산서'],
+        'cc-diff-analysis':             ['현상원가 관리', '차이분석'],
+        'es-achievement-eval-list':     ['현상원가 관리', '달성도 평가'],
+        'cc-achievement-eval-detail':   ['현상원가 관리', '달성도 평가 상세'],
+        'cc-actual-eval':               ['현상원가 관리', '실적 달성도 평가'],
+        /* 기준정보 관리 */
+        'ms-code-mgt':                  ['기준정보 관리', '기준정보 코드관리'],
+        'ms-corp-tax-wacc':             ['기준정보 관리', '법인세율/CRP/WACC'],
+        'ms-pl-item':                   ['기준정보 관리', '손익 항목 관리'],
+        'ms-exchange-rate':             ['기준정보 관리', '환율 관리'],
+        'ms-raise-rate':                ['기준정보 관리', '인상율 관리'],
+        'ms-biz-perf-rate':             ['기준정보 관리', '사업 실적 비율'],
+        'ms-prod-line':                 ['기준정보 관리', '기존 생산라인 관리'],
+        'ms-std-schedule':              ['기준정보 관리', '표준 일정 관리'],
+        'ms-cost-redu-type':            ['기준정보 관리', '원가 절감 활동 유형'],
+        'ms-erp-acct-map':              ['기준정보 관리', 'ERP 제조원가 계정 매핑'],
+        'ms-redu-tgt-dept':             ['기준정보 관리', '절감대상 원가항목 및 담당부서']
+      };
+
       /* URL 쿼리에서 view 이름 추출 */
       var search = window.location.search || '';
       var match = search.match(/[?&]view=([^&]+)/);
       var viewId = match ? decodeURIComponent(match[1]) : '';
+
+      /* Breadcrumb 렌더링 */
+      var bcBar = document.getElementById('breadcrumb-bar');
+      var crumbs = BREADCRUMB[viewId];
+      if (crumbs && bcBar) {
+        var html = '<span>Home</span>';
+        for (var b = 0; b < crumbs.length; b++) {
+          html += '<span class="bc-sep">></span>';
+          if (b === crumbs.length - 1) {
+            html += '<span class="bc-current">' + crumbs[b] + '</span>';
+          } else {
+            html += '<span>' + crumbs[b] + '</span>';
+          }
+        }
+        bcBar.innerHTML = html;
+      } else if (bcBar) {
+        bcBar.style.display = 'none';
+      }
 
       if (!viewId) {
         document.getElementById('component-host').innerHTML =

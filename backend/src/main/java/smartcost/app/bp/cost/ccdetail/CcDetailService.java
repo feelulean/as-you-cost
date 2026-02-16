@@ -138,21 +138,119 @@ public class CcDetailService {
         return result;
     }
 
-    /* ═══ 차이분석 생성 ═══ */
+    /* ═══ 차이분석 생성 (2-Step Diff: EC↔TC, TC↔CC) ═══ */
     @Transactional
     public Map<String, Object> generateDiffAnalysis(Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
-        // 견적원가 vs 현상원가 차이분석 데이터 생성
-        int cnt = ccDetailRepository.count("DiffAnalysis", param);
-        if (cnt > 0) {
-            ccDetailRepository.update("DiffAnalysis", param);
-        } else {
-            ccDetailRepository.insert("DiffAnalysis", param);
+
+        // 1) 기존 차이분석 전체 삭제
+        ccDetailRepository.delete("AllDiffAnalysis", param);
+
+        // 2) TC 원가등록 합계 조회 (EC금액 + TC목표금액 포함)
+        Map<String, Object> tcParam = new HashMap<>(param);
+        tcParam.put("tgtPjtCd", param.get("tgtPjtCd"));
+        List<Map<String, Object>> tcItems = ccDetailRepository.findList("TcCostSummary", tcParam);
+
+        // 3) CC 손익계산서 합계 조회 (단가 기준)
+        List<Map<String, Object>> ccItems = ccDetailRepository.findList("CcPlSummary", param);
+
+        // CC 항목명 → 단가 lookup (이름 기준)
+        Map<String, Double> ccLookup = new HashMap<>();
+        for (Map<String, Object> cc : ccItems) {
+            ccLookup.put((String) cc.get("costItem"), toD(cc.get("unitAmt")));
         }
+
+        // 코드 → CC 한글 항목명 매핑 (TC 항목명이 영문인 경우 대비)
+        Map<String, String> codeToKr = new HashMap<>();
+        codeToKr.put("MAT", "재료비");
+        codeToKr.put("LABOR", "노무비");
+        codeToKr.put("MFG", "제조경비");
+        codeToKr.put("SGA", "판관비");
+        codeToKr.put("SALES", "매출액");
+        codeToKr.put("OPER", "영업이익");
+
+        int seq = 0;
+        double cumEc = 0, cumCc = 0, cumDiff = 0;
+
+        // ── Step 1: EC vs TC (절감 목표 분석) ──
+        for (Map<String, Object> tc : tcItems) {
+            seq++;
+            double ecAmt  = toD(tc.get("ecCostAmt"));
+            double tcAmt  = toD(tc.get("finalTgtAmt"));
+            double diffAmt = ecAmt - tcAmt;
+            double diffRate = ecAmt != 0 ? round4(diffAmt / ecAmt) : 0;
+
+            cumEc += ecAmt; cumCc += tcAmt; cumDiff += diffAmt;
+
+            Map<String, Object> row = new HashMap<>(param);
+            row.put("diffSeq",    seq);
+            row.put("diffType",   "EC_TC");
+            row.put("costItemCd", tc.get("costItemCd"));
+            row.put("costItemNm", tc.get("costItemNm"));
+            row.put("ecAmt",      round2(ecAmt));
+            row.put("ccAmt",      round2(tcAmt));
+            row.put("diffAmt",    round2(diffAmt));
+            row.put("diffRate",   diffRate);
+            row.put("cumEcAmt",   round2(cumEc));
+            row.put("cumCcAmt",   round2(cumCc));
+            row.put("cumDiffAmt", round2(cumDiff));
+            row.put("rmk", "");
+            row.put("sts", "Y");
+            ccDetailRepository.insert("DiffAnalysis", row);
+        }
+
+        // ── Step 2: TC vs CC (현상 변동 분석) ──
+        seq = 0; cumEc = 0; cumCc = 0; cumDiff = 0;
+
+        for (Map<String, Object> tc : tcItems) {
+            seq++;
+            String costItemCd = (String) tc.get("costItemCd");
+            String costItemNm = (String) tc.get("costItemNm");
+            double tcAmt = toD(tc.get("finalTgtAmt"));
+            // 이름 매칭 → 실패 시 코드→한글 매핑으로 재시도
+            Double ccVal = ccLookup.get(costItemNm);
+            if (ccVal == null && codeToKr.containsKey(costItemCd)) {
+                ccVal = ccLookup.get(codeToKr.get(costItemCd));
+            }
+            double ccAmt = ccVal != null ? ccVal : 0;
+            double diffAmt  = tcAmt - ccAmt;
+            double diffRate = tcAmt != 0 ? round4(diffAmt / tcAmt) : 0;
+
+            cumEc += tcAmt; cumCc += ccAmt; cumDiff += diffAmt;
+
+            Map<String, Object> row = new HashMap<>(param);
+            row.put("diffSeq",    seq);
+            row.put("diffType",   "TC_CC");
+            row.put("costItemCd", tc.get("costItemCd"));
+            row.put("costItemNm", costItemNm);
+            row.put("ecAmt",      round2(tcAmt));
+            row.put("ccAmt",      round2(ccAmt));
+            row.put("diffAmt",    round2(diffAmt));
+            row.put("diffRate",   diffRate);
+            row.put("cumEcAmt",   round2(cumEc));
+            row.put("cumCcAmt",   round2(cumCc));
+            row.put("cumDiffAmt", round2(cumDiff));
+            row.put("rmk", "");
+            row.put("sts", "Y");
+            ccDetailRepository.insert("DiffAnalysis", row);
+        }
+
+        int totalRows = tcItems.size() * 2;
         result.put("status", "OK");
-        result.put("message", "차이분석 생성 완료");
+        result.put("message", "차이분석 생성 완료 (EC↔TC " + tcItems.size() + "건, TC↔CC " + tcItems.size() + "건)");
+        result.put("count", totalRows);
         return result;
     }
+
+    private double toD(Object val) {
+        if (val == null) return 0;
+        if (val instanceof Number) return ((Number) val).doubleValue();
+        try { return Double.parseDouble(val.toString()); } catch (Exception e) { return 0; }
+    }
+
+    private double round2(double v) { return Math.round(v * 100.0) / 100.0; }
+
+    private double round4(double v) { return Math.round(v * 10000.0) / 10000.0; }
 
     /* ═══ 달성도 평가 상세 생성 ═══ */
     @Transactional

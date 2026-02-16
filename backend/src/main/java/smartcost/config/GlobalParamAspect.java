@@ -57,6 +57,9 @@ public class GlobalParamAspect {
                 global.put("username", USERNAME);
                 global.put("now", new Timestamp(System.currentTimeMillis()));
 
+                // 빈 문자열 → null 변환 (PostgreSQL DATE/NUMERIC 타입 오류 방지)
+                sanitizeEmptyStrings(original);
+
                 // g/p 구조로 래핑
                 Map<String, Object> wrapped = new HashMap<>();
                 wrapped.put("g", global);
@@ -68,5 +71,20 @@ public class GlobalParamAspect {
         }
 
         return pjp.proceed(args);
+    }
+
+    /**
+     * 빈 문자열("")을 null 로 변환한다.
+     * PostgreSQL에서 빈 문자열이 DATE, NUMERIC 등 비문자열 컬럼에
+     * 바인딩될 때 발생하는 타입 변환 오류를 방지한다.
+     */
+    @SuppressWarnings("unchecked")
+    private void sanitizeEmptyStrings(Map<String, Object> map) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Object val = entry.getValue();
+            if (val instanceof String && ((String) val).isEmpty()) {
+                entry.setValue(null);
+            }
+        }
     }
 }
