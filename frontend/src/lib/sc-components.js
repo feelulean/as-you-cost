@@ -398,6 +398,10 @@
     this._data = data || [];
     this._modifiedSet = {};
     this._selectedIdx = -1;
+    /* 컬럼이 아직 파싱되지 않았으면 먼저 파싱 (dom-if에서 늦게 stamp된 경우) */
+    if (!this._columns || this._columns.length === 0) {
+      this._parseColumns();
+    }
     this._render();
   };
 

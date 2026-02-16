@@ -125,49 +125,49 @@
 
         <!-- 목표원가코드 목록 조회 -->
         <sc-ajax id="findTgtCostCodeListAjax"
-                 url="/bp/cost/cc/detail/findListCcTgtCostCode.do"
+                 url="/bp/cost/cc/detail/findListTgtCostCode.do"
                  body="{{tgtCodeSearchParam}}"
                  on-response="onFindTgtCostCodeListResponse">
         </sc-ajax>
 
         <!-- 품번코드 목록 조회 -->
         <sc-ajax id="findPartListAjax"
-                 url="/bp/cost/cc/detail/findListCcActPart.do"
+                 url="/bp/cost/cc/detail/findListActPart.do"
                  body="{{partSearchParam}}"
                  on-response="onFindPartListResponse">
         </sc-ajax>
 
         <!-- 품번코드 저장 -->
         <sc-ajax id="savePartListAjax"
-                 url="/bp/cost/cc/detail/saveListCcActPart.do"
+                 url="/bp/cost/cc/detail/saveListActPart.do"
                  body="{{savePartParam}}"
                  on-response="onSavePartListResponse">
         </sc-ajax>
 
         <!-- 실적 재료비 추정 조회 -->
         <sc-ajax id="findActMaterialAjax"
-                 url="/bp/cost/cc/detail/findListCcActMaterial.do"
+                 url="/bp/cost/cc/detail/findListActMaterial.do"
                  body="{{matSearchParam}}"
                  on-response="onFindActMaterialResponse">
         </sc-ajax>
 
         <!-- 실적 재료비 추정 계산 -->
         <sc-ajax id="calcActMaterialAjax"
-                 url="/bp/cost/cc/detail/calculateCcActMaterial.do"
+                 url="/bp/cost/cc/detail/calculateActMaterial.do"
                  body="{{calcMatParam}}"
                  on-response="onCalcActMaterialResponse">
         </sc-ajax>
 
         <!-- 실적 재료비 추정 저장 -->
         <sc-ajax id="saveActMaterialAjax"
-                 url="/bp/cost/cc/detail/saveListCcActMaterial.do"
+                 url="/bp/cost/cc/detail/saveListActMaterial.do"
                  body="{{saveMatParam}}"
                  on-response="onSaveActMaterialResponse">
         </sc-ajax>
 
         <!-- 실적 달성도 평가 조회 -->
         <sc-ajax id="findActEvalAjax"
-                 url="/bp/cost/cc/detail/findListCcActEval.do"
+                 url="/bp/cost/cc/detail/findListActEval.do"
                  body="{{evalSearchParam}}"
                  on-response="onFindActEvalResponse">
         </sc-ajax>

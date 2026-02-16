@@ -91,28 +91,28 @@
 
         <!-- 단계별 차이분석 조회 -->
         <sc-ajax id="findStepDiffAjax"
-                 url="/bp/cost/cc/detail/findListCcStepDiff.do"
+                 url="/bp/cost/cc/detail/findListDiffAnalysis.do"
                  body="{{stepSearchParam}}"
                  on-response="onFindStepDiffResponse">
         </sc-ajax>
 
         <!-- 단계별 차이분석 생성 -->
         <sc-ajax id="createStepDiffAjax"
-                 url="/bp/cost/cc/detail/createCcStepDiff.do"
+                 url="/bp/cost/cc/detail/generateDiffAnalysis.do"
                  body="{{createParam}}"
                  on-response="onCreateStepDiffResponse">
         </sc-ajax>
 
         <!-- 단계별 차이분석 저장 -->
         <sc-ajax id="saveStepDiffAjax"
-                 url="/bp/cost/cc/detail/saveListCcStepDiff.do"
+                 url="/bp/cost/cc/detail/saveListDiffAnalysis.do"
                  body="{{saveParam}}"
                  on-response="onSaveStepDiffResponse">
         </sc-ajax>
 
         <!-- 누적 차이분석 조회 -->
         <sc-ajax id="findCumDiffAjax"
-                 url="/bp/cost/cc/detail/findListCcCumDiff.do"
+                 url="/bp/cost/cc/detail/findListCumDiff.do"
                  body="{{cumSearchParam}}"
                  on-response="onFindCumDiffResponse">
         </sc-ajax>

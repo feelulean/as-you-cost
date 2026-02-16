@@ -235,4 +235,64 @@ public class TcDetailController {
     public Map<String, Object> generateTcAchvStatus(@RequestBody Map<String, Object> param) {
         return tcDetailService.generateTcAchvStatus(param);
     }
+
+    /* ═══ 견적 불러오기 (tc-calc: EC→TC 임포트) ═══ */
+    @RequestMapping("/findListEcImport.do")
+    @ResponseBody
+    public List<Map<String, Object>> findListEcImport(@RequestBody Map<String, Object> param) {
+        return tcDetailService.findList("CostReg", param);
+    }
+
+    /* ═══ 부문별 목표 Guide 산출 ═══ */
+    @RequestMapping("/findListGuide.do")
+    @ResponseBody
+    public List<Map<String, Object>> findListGuide(@RequestBody Map<String, Object> param) {
+        return tcDetailService.findList("CostReg", param);
+    }
+    @RequestMapping("/calculateGuide.do")
+    @ResponseBody
+    public Map<String, Object> calculateGuide(@RequestBody Map<String, Object> param) {
+        return java.util.Collections.singletonMap("status", "OK");
+    }
+    @RequestMapping("/saveListGuide.do")
+    @ResponseBody
+    public Map<String, Object> saveListGuide(@RequestBody Map<String, Object> param) {
+        return tcDetailService.saveList("CostReg", param);
+    }
+
+    /* ═══ 현상원가 불러오기 (tc-recalc: CC→TC 임포트) ═══ */
+    @RequestMapping("/findListCcImport.do")
+    @ResponseBody
+    public List<Map<String, Object>> findListCcImport(@RequestBody Map<String, Object> param) {
+        return tcDetailService.findList("Recalc", param);
+    }
+
+    /* ═══ 재산출 Guide ═══ */
+    @RequestMapping("/findListRecalcGuide.do")
+    @ResponseBody
+    public List<Map<String, Object>> findListRecalcGuide(@RequestBody Map<String, Object> param) {
+        return tcDetailService.findList("Recalc", param);
+    }
+    @RequestMapping("/calculateRecalcGuide.do")
+    @ResponseBody
+    public Map<String, Object> calculateRecalcGuide(@RequestBody Map<String, Object> param) {
+        return java.util.Collections.singletonMap("status", "OK");
+    }
+    @RequestMapping("/saveListRecalcGuide.do")
+    @ResponseBody
+    public Map<String, Object> saveListRecalcGuide(@RequestBody Map<String, Object> param) {
+        return tcDetailService.saveList("Recalc", param);
+    }
+
+    /* ═══ 재산출 달성계획 ═══ */
+    @RequestMapping("/findListRecalcAchvPlan.do")
+    @ResponseBody
+    public List<Map<String, Object>> findListRecalcAchvPlan(@RequestBody Map<String, Object> param) {
+        return tcDetailService.findList("AchvPlan", param);
+    }
+    @RequestMapping("/saveListRecalcAchvPlan.do")
+    @ResponseBody
+    public Map<String, Object> saveListRecalcAchvPlan(@RequestBody Map<String, Object> param) {
+        return tcDetailService.saveList("AchvPlan", param);
+    }
 }

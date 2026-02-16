@@ -96,14 +96,14 @@
 
         <!-- 제조경비 데이터 조회 -->
         <sc-ajax id="findMfgCostAjax"
-                 url="/bp/cost/cc/detail/findListCcMfgCost.do"
+                 url="/bp/cost/cc/detail/findListMfgCost.do"
                  body="{{mfgCostSearchParam}}"
                  on-response="onFindMfgCostResponse">
         </sc-ajax>
 
         <!-- 제조경비 계산 요청 -->
         <sc-ajax id="calculateMfgCostAjax"
-                 url="/bp/cost/cc/detail/calculateCcMfgCost.do"
+                 url="/bp/cost/cc/detail/calculateMfgCost.do"
                  body="{{calculateParam}}"
                  on-response="onCalculateMfgCostResponse">
         </sc-ajax>

@@ -77,91 +77,91 @@
 
         <!-- 상세정보 협의체구성완료 -->
         <sc-ajax id="completeDetailAjax"
-                 url="/bp/cost/cc/detail/completeCcDetail.do"
+                 url="/bp/cost/cc/detail/completeDetail.do"
                  body="{{completeDetailParam}}"
                  on-response="onCompleteDetailResponse">
         </sc-ajax>
 
         <!-- 원가코드/판가 조회 -->
         <sc-ajax id="findCostCodeAjax"
-                 url="/bp/cost/cc/detail/findListCcCostCode.do"
+                 url="/bp/cost/cc/detail/findListCostCode.do"
                  body="{{detailSearchParam}}"
                  on-response="onFindCostCodeResponse">
         </sc-ajax>
 
         <!-- 원가코드/판가 저장 -->
         <sc-ajax id="saveCostCodeAjax"
-                 url="/bp/cost/cc/detail/saveListCcCostCode.do"
+                 url="/bp/cost/cc/detail/saveListCostCode.do"
                  body="{{saveCostCodeParam}}"
                  on-response="onSaveCostCodeResponse">
         </sc-ajax>
 
         <!-- 원가코드/판가 삭제 -->
         <sc-ajax id="deleteCostCodeAjax"
-                 url="/bp/cost/cc/detail/deleteListCcCostCode.do"
+                 url="/bp/cost/cc/detail/deleteListCostCode.do"
                  body="{{deleteCostCodeParam}}"
                  on-response="onDeleteCostCodeResponse">
         </sc-ajax>
 
         <!-- 수량/할인율 조회 -->
         <sc-ajax id="findQtyDiscAjax"
-                 url="/bp/cost/cc/detail/findListCcQtyDiscount.do"
+                 url="/bp/cost/cc/detail/findListQtyDisc.do"
                  body="{{detailSearchParam}}"
                  on-response="onFindQtyDiscResponse">
         </sc-ajax>
 
         <!-- 수량/할인율 저장 -->
         <sc-ajax id="saveQtyDiscAjax"
-                 url="/bp/cost/cc/detail/saveListCcQtyDiscount.do"
+                 url="/bp/cost/cc/detail/saveListQtyDisc.do"
                  body="{{saveQtyDiscParam}}"
                  on-response="onSaveQtyDiscResponse">
         </sc-ajax>
 
         <!-- 수량/할인율 삭제 -->
         <sc-ajax id="deleteQtyDiscAjax"
-                 url="/bp/cost/cc/detail/deleteListCcQtyDiscount.do"
+                 url="/bp/cost/cc/detail/deleteListQtyDisc.do"
                  body="{{deleteQtyDiscParam}}"
                  on-response="onDeleteQtyDiscResponse">
         </sc-ajax>
 
         <!-- 담당자 조회 -->
         <sc-ajax id="findManagerAjax"
-                 url="/bp/cost/cc/detail/findListCcManager.do"
+                 url="/bp/cost/cc/detail/findListManager.do"
                  body="{{detailSearchParam}}"
                  on-response="onFindManagerResponse">
         </sc-ajax>
 
         <!-- 담당자 저장 -->
         <sc-ajax id="saveManagerAjax"
-                 url="/bp/cost/cc/detail/saveListCcManager.do"
+                 url="/bp/cost/cc/detail/saveListManager.do"
                  body="{{saveManagerParam}}"
                  on-response="onSaveManagerResponse">
         </sc-ajax>
 
         <!-- 담당자 삭제 -->
         <sc-ajax id="deleteManagerAjax"
-                 url="/bp/cost/cc/detail/deleteListCcManager.do"
+                 url="/bp/cost/cc/detail/deleteListManager.do"
                  body="{{deleteManagerParam}}"
                  on-response="onDeleteManagerResponse">
         </sc-ajax>
 
         <!-- 일정 조회 -->
         <sc-ajax id="findScheduleAjax"
-                 url="/bp/cost/cc/detail/findListCcSchedule.do"
+                 url="/bp/cost/cc/detail/findListSchedule.do"
                  body="{{detailSearchParam}}"
                  on-response="onFindScheduleResponse">
         </sc-ajax>
 
         <!-- 일정 저장 -->
         <sc-ajax id="saveScheduleAjax"
-                 url="/bp/cost/cc/detail/saveListCcSchedule.do"
+                 url="/bp/cost/cc/detail/saveListSchedule.do"
                  body="{{saveScheduleParam}}"
                  on-response="onSaveScheduleResponse">
         </sc-ajax>
 
         <!-- 일정 삭제 -->
         <sc-ajax id="deleteScheduleAjax"
-                 url="/bp/cost/cc/detail/deleteListCcSchedule.do"
+                 url="/bp/cost/cc/detail/deleteListSchedule.do"
                  body="{{deleteScheduleParam}}"
                  on-response="onDeleteScheduleResponse">
         </sc-ajax>

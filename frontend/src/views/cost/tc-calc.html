@@ -81,41 +81,41 @@
 
         <!-- TAB 1: 견적 불러오기 -->
         <sc-ajax id="findEcImportAjax"
-                 url="/bp/cost/tc/detail/findListTcEcImport.do"
+                 url="/bp/cost/tc/detail/findListEcImport.do"
                  body="{{searchParam}}"
                  on-response="onFindEcImportResponse">
         </sc-ajax>
 
         <!-- TAB 2: 부문별 목표 Guide 산출 -->
         <sc-ajax id="findGuideAjax"
-                 url="/bp/cost/tc/detail/findListTcGuide.do"
+                 url="/bp/cost/tc/detail/findListGuide.do"
                  body="{{searchParam}}"
                  on-response="onFindGuideResponse">
         </sc-ajax>
         <sc-ajax id="calculateGuideAjax"
-                 url="/bp/cost/tc/detail/calculateTcGuide.do"
+                 url="/bp/cost/tc/detail/calculateGuide.do"
                  body="{{searchParam}}"
                  on-response="onCalculateGuideResponse">
         </sc-ajax>
         <sc-ajax id="saveGuideAjax"
-                 url="/bp/cost/tc/detail/saveListTcGuide.do"
+                 url="/bp/cost/tc/detail/saveListGuide.do"
                  body="{{saveGuideParam}}"
                  on-response="onSaveGuideResponse">
         </sc-ajax>
 
         <!-- TAB 3: 목표원가 등록 -->
         <sc-ajax id="findCostRegAjax"
-                 url="/bp/cost/tc/detail/findListTcCostReg.do"
+                 url="/bp/cost/tc/detail/findListCostReg.do"
                  body="{{costRegSearchParam}}"
                  on-response="onFindCostRegResponse">
         </sc-ajax>
         <sc-ajax id="createCostRegAjax"
-                 url="/bp/cost/tc/detail/createTcCostReg.do"
+                 url="/bp/cost/tc/detail/generateTcCostReg.do"
                  body="{{searchParam}}"
                  on-response="onCreateCostRegResponse">
         </sc-ajax>
         <sc-ajax id="saveCostRegAjax"
-                 url="/bp/cost/tc/detail/saveListTcCostReg.do"
+                 url="/bp/cost/tc/detail/saveListCostReg.do"
                  body="{{saveCostRegParam}}"
                  on-response="onSaveCostRegResponse">
         </sc-ajax>
@@ -127,17 +127,17 @@
 
         <!-- TAB 4: 목표달성 계획 -->
         <sc-ajax id="findAchvPlanAjax"
-                 url="/bp/cost/tc/detail/findListTcAchvPlan.do"
+                 url="/bp/cost/tc/detail/findListAchvPlan.do"
                  body="{{searchParam}}"
                  on-response="onFindAchvPlanResponse">
         </sc-ajax>
         <sc-ajax id="createAchvPlanAjax"
-                 url="/bp/cost/tc/detail/createTcAchvPlan.do"
+                 url="/bp/cost/tc/detail/generateTcAchvPlan.do"
                  body="{{searchParam}}"
                  on-response="onCreateAchvPlanResponse">
         </sc-ajax>
         <sc-ajax id="saveAchvPlanAjax"
-                 url="/bp/cost/tc/detail/saveListTcAchvPlan.do"
+                 url="/bp/cost/tc/detail/saveListAchvPlan.do"
                  body="{{saveAchvPlanParam}}"
                  on-response="onSaveAchvPlanResponse">
         </sc-ajax>

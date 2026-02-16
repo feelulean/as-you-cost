@@ -100,25 +100,25 @@
         </sc-ajax>
 
         <sc-ajax id="findPlStmtAjax"
-                 url="/bp/cost/cc/detail/findListCcPlStmt.do"
+                 url="/bp/cost/cc/detail/findListPlStmt.do"
                  body="{{plSearchParam}}"
                  on-response="onFindPlStmtResponse">
         </sc-ajax>
 
         <sc-ajax id="calculatePlStmtAjax"
-                 url="/bp/cost/cc/detail/calculateCcPlStmt.do"
+                 url="/bp/cost/cc/detail/calculatePlStmt.do"
                  body="{{calcParam}}"
                  on-response="onCalculatePlStmtResponse">
         </sc-ajax>
 
         <sc-ajax id="findCostGrpListAjax"
-                 url="/bp/cost/cc/detail/findListCcCostGrp.do"
+                 url="/bp/cost/cc/detail/findListCostGrp.do"
                  body="{{grpSearchParam}}"
                  on-response="onFindCostGrpListResponse">
         </sc-ajax>
 
         <sc-ajax id="findCostCodeListAjax"
-                 url="/bp/cost/cc/detail/findListCcCostCode.do"
+                 url="/bp/cost/cc/detail/findListCostCode.do"
                  body="{{codeSearchParam}}"
                  on-response="onFindCostCodeListResponse">
         </sc-ajax>

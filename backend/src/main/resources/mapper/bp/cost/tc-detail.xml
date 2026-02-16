@@ -30,6 +30,35 @@
            AND A.TGT_PJT_CD  = #{p.tgtPjtCd}
     </select>
 
+    <insert id="insertTcDetail" parameterType="map">
+        INSERT INTO PCM_TGT_PJT_MSTR (
+            TEN_ID, TGT_PJT_CD, PJT_NM, BIZ_UNIT, CUST_NM,
+            CAR_TYPE, OEM_NM, PROD_GRP, EC_PJT_CD, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.tgtPjtCd}, #{p.pjtNm}, #{p.bizUnit}, #{p.custNm},
+            #{p.carType}, #{p.oemNm}, #{p.prodGrp}, #{p.ecPjtCd}, #{p.rmk}, COALESCE(#{p.sts}, 'A'),
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateTcDetail" parameterType="map">
+        UPDATE PCM_TGT_PJT_MSTR
+           SET PJT_NM    = #{p.pjtNm},
+               BIZ_UNIT  = #{p.bizUnit},
+               CUST_NM   = #{p.custNm},
+               CAR_TYPE  = #{p.carType},
+               OEM_NM    = #{p.oemNm},
+               PROD_GRP  = #{p.prodGrp},
+               EC_PJT_CD = #{p.ecPjtCd},
+               RMK       = #{p.rmk},
+               STS       = #{p.sts},
+               MODR_ID   = #{g.username},
+               MOD_DTTM  = #{g.now}
+         WHERE TEN_ID      = #{g.tenant}
+           AND TGT_PJT_CD  = #{p.tgtPjtCd}
+    </update>
+
     <!-- ═══════════════════════════════════════════
          담당자 (PCM_TGT_MANAGER)
          ═══════════════════════════════════════════ -->

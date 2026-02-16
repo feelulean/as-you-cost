@@ -92,42 +92,42 @@
 
         <!-- 부문별 달성도 조회 -->
         <sc-ajax id="findDeptAchvAjax"
-                 url="/bp/cost/cc/detail/findListCcDeptAchv.do"
+                 url="/bp/cost/cc/detail/findListAchvEvalDtl.do"
                  body="{{deptSearchParam}}"
                  on-response="onFindDeptAchvResponse">
         </sc-ajax>
 
         <!-- 부문별 달성도 생성 -->
         <sc-ajax id="createDeptAchvAjax"
-                 url="/bp/cost/cc/detail/createCcDeptAchv.do"
+                 url="/bp/cost/cc/detail/generateAchvEvalDtl.do"
                  body="{{createDeptParam}}"
                  on-response="onCreateDeptAchvResponse">
         </sc-ajax>
 
         <!-- 부문별 달성도 저장 -->
         <sc-ajax id="saveDeptAchvAjax"
-                 url="/bp/cost/cc/detail/saveListCcDeptAchv.do"
+                 url="/bp/cost/cc/detail/saveListAchvEvalDtl.do"
                  body="{{saveDeptParam}}"
                  on-response="onSaveDeptAchvResponse">
         </sc-ajax>
 
         <!-- 부문 및 원가항목별 달성도 조회 -->
         <sc-ajax id="findItemAchvAjax"
-                 url="/bp/cost/cc/detail/findListCcItemAchv.do"
+                 url="/bp/cost/cc/detail/findListItemAchv.do"
                  body="{{itemSearchParam}}"
                  on-response="onFindItemAchvResponse">
         </sc-ajax>
 
         <!-- 부문 및 원가항목별 달성도 생성 -->
         <sc-ajax id="createItemAchvAjax"
-                 url="/bp/cost/cc/detail/createCcItemAchv.do"
+                 url="/bp/cost/cc/detail/createItemAchv.do"
                  body="{{createItemParam}}"
                  on-response="onCreateItemAchvResponse">
         </sc-ajax>
 
         <!-- 부문 및 원가항목별 달성도 저장 -->
         <sc-ajax id="saveItemAchvAjax"
-                 url="/bp/cost/cc/detail/saveListCcItemAchv.do"
+                 url="/bp/cost/cc/detail/saveListItemAchv.do"
                  body="{{saveItemParam}}"
                  on-response="onSaveItemAchvResponse">
         </sc-ajax>

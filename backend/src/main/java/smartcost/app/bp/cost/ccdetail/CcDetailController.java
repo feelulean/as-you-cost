@@ -302,4 +302,62 @@ public class CcDetailController {
     public Map<String, Object> calculateActMaterial(@RequestBody Map<String, Object> param) {
         return ccDetailService.calculateActMaterial(param);
     }
+
+    /* ═══ 협의체구성 완료 (상세정보 상태변경) ═══ */
+    @RequestMapping("/completeDetail.do")
+    public Map<String, Object> completeDetail(@RequestBody Map<String, Object> param) {
+        return ccDetailService.saveCcDetail(param);
+    }
+
+    /* ═══ BOM 맵핑 - 대상/이전 조회 ═══ */
+    @RequestMapping("/findListBomMapTarget.do")
+    public List<Map<String, Object>> findListBomMapTarget(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("BomMap", param);
+    }
+    @RequestMapping("/findListBomMapPrev.do")
+    public List<Map<String, Object>> findListBomMapPrev(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("BomMap", param);
+    }
+
+    /* ═══ 누적 차이분석 ═══ */
+    @RequestMapping("/findListCumDiff.do")
+    public List<Map<String, Object>> findListCumDiff(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("DiffAnalysis", param);
+    }
+
+    /* ═══ 달성도 평가 - 항목별 ═══ */
+    @RequestMapping("/findListItemAchv.do")
+    public List<Map<String, Object>> findListItemAchv(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("AchvEvalDtl", param);
+    }
+    @RequestMapping("/createItemAchv.do")
+    public Map<String, Object> createItemAchv(@RequestBody Map<String, Object> param) {
+        return ccDetailService.generateAchvEvalDtl(param);
+    }
+    @RequestMapping("/saveListItemAchv.do")
+    public Map<String, Object> saveListItemAchv(@RequestBody Map<String, Object> param) {
+        return ccDetailService.saveList("AchvEvalDtl", param);
+    }
+
+    /* ═══ 목표원가코드 목록 (실적평가용) ═══ */
+    @RequestMapping("/findListTgtCostCode.do")
+    public List<Map<String, Object>> findListTgtCostCode(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("CostCode", param);
+    }
+
+    /* ═══ 실적 부품 목록 ═══ */
+    @RequestMapping("/findListActPart.do")
+    public List<Map<String, Object>> findListActPart(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("PartPrice", param);
+    }
+    @RequestMapping("/saveListActPart.do")
+    public Map<String, Object> saveListActPart(@RequestBody Map<String, Object> param) {
+        return ccDetailService.saveList("PartPrice", param);
+    }
+
+    /* ═══ 원가그룹 목록 (손익계산서용) ═══ */
+    @RequestMapping("/findListCostGrp.do")
+    public List<Map<String, Object>> findListCostGrp(@RequestBody Map<String, Object> param) {
+        return ccDetailService.findList("CostCode", param);
+    }
 }

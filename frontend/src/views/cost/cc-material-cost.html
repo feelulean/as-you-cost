@@ -95,63 +95,63 @@
 
         <!-- 원가코드 목록 조회 -->
         <sc-ajax id="findCostCodeListAjax"
-                 url="/bp/cost/cc/detail/findListCcCostCode.do"
+                 url="/bp/cost/cc/detail/findListCostCode.do"
                  body="{{searchParam}}"
                  on-response="onFindCostCodeListResponse">
         </sc-ajax>
 
         <!-- BOM 등록 조회 -->
         <sc-ajax id="findBomAjax"
-                 url="/bp/cost/cc/detail/findListCcBom.do"
+                 url="/bp/cost/cc/detail/findListBom.do"
                  body="{{bomSearchParam}}"
                  on-response="onFindBomResponse">
         </sc-ajax>
 
         <!-- BOM 등록 저장 -->
         <sc-ajax id="saveBomAjax"
-                 url="/bp/cost/cc/detail/saveListCcBom.do"
+                 url="/bp/cost/cc/detail/saveListBom.do"
                  body="{{bomSaveParam}}"
                  on-response="onSaveBomResponse">
         </sc-ajax>
 
         <!-- BOM 등록 삭제 -->
         <sc-ajax id="deleteBomAjax"
-                 url="/bp/cost/cc/detail/deleteListCcBom.do"
+                 url="/bp/cost/cc/detail/deleteListBom.do"
                  body="{{bomDeleteParam}}"
                  on-response="onDeleteBomResponse">
         </sc-ajax>
 
         <!-- BOM 맵핑 - 대상BOM 조회 -->
         <sc-ajax id="findBomMapTargetAjax"
-                 url="/bp/cost/cc/detail/findListCcBomMapTarget.do"
+                 url="/bp/cost/cc/detail/findListBomMapTarget.do"
                  body="{{bomMapSearchParam}}"
                  on-response="onFindBomMapTargetResponse">
         </sc-ajax>
 
         <!-- BOM 맵핑 - 이전BOM 조회 -->
         <sc-ajax id="findBomMapPrevAjax"
-                 url="/bp/cost/cc/detail/findListCcBomMapPrev.do"
+                 url="/bp/cost/cc/detail/findListBomMapPrev.do"
                  body="{{bomMapSearchParam}}"
                  on-response="onFindBomMapPrevResponse">
         </sc-ajax>
 
         <!-- BOM 맵핑 저장 -->
         <sc-ajax id="saveBomMapAjax"
-                 url="/bp/cost/cc/detail/saveListCcBomMap.do"
+                 url="/bp/cost/cc/detail/saveListBomMap.do"
                  body="{{bomMapSaveParam}}"
                  on-response="onSaveBomMapResponse">
         </sc-ajax>
 
         <!-- 부품단가 등록 조회 -->
         <sc-ajax id="findPartPriceAjax"
-                 url="/bp/cost/cc/detail/findListCcPartPrice.do"
+                 url="/bp/cost/cc/detail/findListPartPrice.do"
                  body="{{partPriceSearchParam}}"
                  on-response="onFindPartPriceResponse">
         </sc-ajax>
 
         <!-- 부품단가 등록 저장 -->
         <sc-ajax id="savePartPriceAjax"
-                 url="/bp/cost/cc/detail/saveListCcPartPrice.do"
+                 url="/bp/cost/cc/detail/saveListPartPrice.do"
                  body="{{partPriceSaveParam}}"
                  on-response="onSavePartPriceResponse">
         </sc-ajax>

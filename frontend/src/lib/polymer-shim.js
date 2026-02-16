@@ -1,13 +1,13 @@
 /**
- * YHJY As-You-Cost — Polymer 1.x Shim (v2 – 바인딩 메타데이터 기반)
+ * YHJY As-You-Cost — Polymer 1.x Shim (v3 – dom-if / computed expression 지원)
  *
  * ── 핵심 설계 ──
- * 1. {{path}} 를 텍스트로 치환하지 않고, 바인딩 디스크립터를 저장한다.
- * 2. this.set(path, value) 시 해당 path 에 연결된 모든 디스크립터를 순회하며
- *    엘리먼트 타입별 세터를 호출한다 (sc-grid → setDataProvider 등).
- * 3. sc-* 커스텀 엘리먼트는 자체적으로 이벤트를 처리하므로,
- *    polymer-shim 은 네이티브 HTML 요소만 이벤트 바인딩한다.
- * 4. Polymer 호스트 인스턴스는 _isPolymerHost = true 로 표시한다.
+ * 1. {{path}} / [[path]] 바인딩 디스크립터를 수집·적용한다.
+ * 2. 함수 호출 표현식 지원: {{_isTab(activeTab,'manager')}} 등
+ * 3. <template is="dom-if"> 조건부 렌더링 지원 (stamp-all, show/hide)
+ * 4. class$ → class 등 Polymer attribute$ 바인딩 매핑
+ * 5. sc-* 커스텀 엘리먼트는 자체 이벤트 처리, 네이티브만 shim 이벤트 바인딩.
+ * 6. this.$, this.$$, this.set() 지원.
  */
 (function (global) {
   'use strict';
@@ -28,7 +28,7 @@
   }
 
   /* ──────────────────────────────────────────────
-     2. 경로 유틸
+     2. 경로 유틸 + 표현식 해석기
      ────────────────────────────────────────────── */
   function getByPath(obj, path) {
     if (!path) return undefined;
@@ -51,19 +51,119 @@
     cur[parts[parts.length - 1]] = value;
   }
 
+  /**
+   * 함수 호출 인자 문자열을 분할한다 (문자열 리터럴 내 콤마 안전).
+   * "_isTab(activeTab,'manager')" → ["activeTab", "'manager'"]
+   */
+  function splitArgs(argStr) {
+    var args = [];
+    var depth = 0;
+    var inStr = false;
+    var strCh = '';
+    var cur = '';
+    for (var i = 0; i < argStr.length; i++) {
+      var ch = argStr[i];
+      if (inStr) {
+        cur += ch;
+        if (ch === strCh) inStr = false;
+      } else if (ch === "'" || ch === '"') {
+        inStr = true;
+        strCh = ch;
+        cur += ch;
+      } else if (ch === '(') {
+        depth++;
+        cur += ch;
+      } else if (ch === ')') {
+        depth--;
+        cur += ch;
+      } else if (ch === ',' && depth === 0) {
+        args.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    if (cur.trim()) args.push(cur.trim());
+    return args;
+  }
+
+  /**
+   * 표현식을 해석하여 값을 반환한다.
+   * - 단순 경로: "searchParam.bizUnit" → getByPath
+   * - 함수 호출: "_isTab(activeTab,'manager')" → ctx._isTab(...)
+   * - 부정: "!someVal" → !resolveExpression(...)
+   */
+  function resolveExpression(ctx, expr) {
+    expr = expr.trim();
+    /* 부정 연산자 */
+    if (expr.charAt(0) === '!') {
+      return !resolveExpression(ctx, expr.substring(1));
+    }
+    /* 함수 호출: funcName(args...) */
+    var funcMatch = expr.match(/^(\w+)\((.+)\)$/);
+    if (funcMatch) {
+      var funcName = funcMatch[1];
+      var func = ctx[funcName];
+      if (typeof func === 'function') {
+        var rawArgs = splitArgs(funcMatch[2]);
+        var resolvedArgs = [];
+        for (var i = 0; i < rawArgs.length; i++) {
+          var a = rawArgs[i].trim();
+          if ((a.charAt(0) === "'" && a.charAt(a.length - 1) === "'") ||
+              (a.charAt(0) === '"' && a.charAt(a.length - 1) === '"')) {
+            resolvedArgs.push(a.substring(1, a.length - 1));
+          } else {
+            resolvedArgs.push(getByPath(ctx, a));
+          }
+        }
+        return func.apply(ctx, resolvedArgs);
+      }
+    }
+    /* 단순 함수 호출 (인자 없음): funcName() */
+    var noArgMatch = expr.match(/^(\w+)\(\)$/);
+    if (noArgMatch && typeof ctx[noArgMatch[1]] === 'function') {
+      return ctx[noArgMatch[1]].call(ctx);
+    }
+    /* 단순 경로 */
+    return getByPath(ctx, expr);
+  }
+
+  /**
+   * 표현식에서 참조하는 프로퍼티 경로들을 추출한다 (의존성 추적용).
+   */
+  function extractDeps(expr) {
+    expr = expr.trim();
+    if (expr.charAt(0) === '!') expr = expr.substring(1).trim();
+    var funcMatch = expr.match(/^(\w+)\((.+)\)$/);
+    if (funcMatch) {
+      var rawArgs = splitArgs(funcMatch[2]);
+      var deps = [];
+      for (var i = 0; i < rawArgs.length; i++) {
+        var a = rawArgs[i].trim();
+        /* 문자열 리터럴은 의존성 아님 */
+        if ((a.charAt(0) === "'" || a.charAt(0) === '"')) continue;
+        deps.push(a);
+      }
+      return deps;
+    }
+    /* 단순 경로 */
+    if (expr && !expr.match(/^(\w+)\(\)$/)) {
+      return [expr];
+    }
+    return [];
+  }
+
   /* ──────────────────────────────────────────────
      3. 바인딩 메타데이터 수집
      ────────────────────────────────────────────── */
-  var BIND_RE = /\{\{([^}]+)\}\}/g;
+  /* {{expr}} 또는 [[expr]] — test() 전에 lastIndex 리셋 필수 */
+  var BIND_RE = /\{\{([^}]+)\}\}|\[\[([^\]]+)\]\]/g;
 
-  /**
-   * root 내부의 모든 {{path}} 를 스캔하여 디스크립터 배열을 반환한다.
-   * 각 디스크립터: { type:'attr'|'text', element, attrName?, path, template }
-   * - template: 원본 문자열 (예: "{{searchParam}}" 또는 "prefix-{{val}}-suffix")
-   * - path: 첫 번째 바인딩 경로 (단일 바인딩 최적화)
-   *
-   * ★ 원본 attribute/textContent 를 훼손하지 않고 메타데이터만 추출한다.
-   */
+  function testBind(str) {
+    BIND_RE.lastIndex = 0;
+    return BIND_RE.test(str);
+  }
+
   function collectBindings(root) {
     var bindings = [];
 
@@ -71,24 +171,31 @@
     var all = root.querySelectorAll('*');
     for (var i = 0; i < all.length; i++) {
       var el = all[i];
+      /* dom-if 래퍼 내부의 숨겨진 콘텐츠도 포함 */
       var attrs = el.attributes;
       for (var j = 0; j < attrs.length; j++) {
         var attr = attrs[j];
-        if (BIND_RE.test(attr.value)) {
+        if (testBind(attr.value)) {
           var template = attr.value;
-          /* 모든 경로 추출 */
           var paths = [];
-          template.replace(BIND_RE, function (_, expr) {
-            paths.push(expr.trim());
+          BIND_RE.lastIndex = 0;
+          template.replace(BIND_RE, function (_, g1, g2) {
+            var expr = (g1 || g2).trim();
+            paths.push(expr);
+            /* 의존 경로도 추가 (함수 호출의 인자 경로) */
+            var deps = extractDeps(expr);
+            for (var d = 0; d < deps.length; d++) {
+              if (paths.indexOf(deps[d]) < 0) paths.push(deps[d]);
+            }
           });
           bindings.push({
             type: 'attr',
             element: el,
-            attrName: attr.name,
+            attrName: attr.name.replace(/\$$/, ''),  /* class$ → class */
+            rawAttrName: attr.name,
             template: template,
             paths: paths
           });
-          /* 원본 속성값을 _bindTemplates 에 저장하고 빈 문자열로 초기화 */
           attr.value = '';
         }
       }
@@ -98,11 +205,17 @@
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
     var node;
     while ((node = walker.nextNode())) {
-      if (BIND_RE.test(node.textContent)) {
+      if (testBind(node.textContent)) {
         var tpl = node.textContent;
         var tpaths = [];
-        tpl.replace(BIND_RE, function (_, expr) {
-          tpaths.push(expr.trim());
+        BIND_RE.lastIndex = 0;
+        tpl.replace(BIND_RE, function (_, g1, g2) {
+          var expr = (g1 || g2).trim();
+          tpaths.push(expr);
+          var deps = extractDeps(expr);
+          for (var d = 0; d < deps.length; d++) {
+            if (tpaths.indexOf(deps[d]) < 0) tpaths.push(deps[d]);
+          }
         });
         bindings.push({
           type: 'text',
@@ -120,16 +233,10 @@
   /* ──────────────────────────────────────────────
      4. 바인딩 적용 (디스크립터 기반)
      ────────────────────────────────────────────── */
-
-  /**
-   * 특정 path 에 영향받는 바인딩만 갱신한다.
-   * path 가 null 이면 전체 바인딩을 갱신한다.
-   */
   function applyBindings(bindings, ctx, changedPath) {
     for (var i = 0; i < bindings.length; i++) {
       var b = bindings[i];
 
-      /* changedPath 가 지정되면 관련 바인딩만 갱신 */
       if (changedPath) {
         var related = false;
         for (var p = 0; p < b.paths.length; p++) {
@@ -141,8 +248,10 @@
         if (!related) continue;
       }
 
-      var resolved = b.template.replace(BIND_RE, function (_, expr) {
-        var v = getByPath(ctx, expr.trim());
+      BIND_RE.lastIndex = 0;
+      var resolved = b.template.replace(BIND_RE, function (_, g1, g2) {
+        var expr = (g1 || g2).trim();
+        var v = resolveExpression(ctx, expr);
         return v == null ? '' : v;
       });
 
@@ -154,70 +263,73 @@
     }
   }
 
-  /**
-   * path 관련성 판단:
-   * changedPath='searchParam' 이면 'searchParam', 'searchParam.bizUnit' 등 모두 관련
-   * changedPath='searchParam.bizUnit' 이면 'searchParam.bizUnit', 'searchParam' 관련
-   */
   function isPathRelated(bindPath, changedPath) {
     return bindPath === changedPath ||
            bindPath.indexOf(changedPath + '.') === 0 ||
            changedPath.indexOf(bindPath + '.') === 0;
   }
 
-  /**
-   * 속성 바인딩을 적용한다.
-   * sc-grid[data-provider], sc-ajax[body] 등 특수 속성은 별도 처리.
-   */
   function applyAttrBinding(binding, resolvedValue, ctx) {
     var el = binding.element;
-    var attrName = binding.attrName;
+    var attrName = binding.attrName;    /* class$ → class 이미 매핑됨 */
     var tag = el.tagName.toLowerCase();
 
-    /* ── sc-grid data-provider: 배열을 setDataProvider()로 전달 ── */
+    /* ── sc-grid data-provider ── */
     if (tag === 'sc-grid' && attrName === 'data-provider') {
       var path = binding.paths[0];
-      var data = getByPath(ctx, path);
+      var data = resolveExpression(ctx, path);
       if (Array.isArray(data) && typeof el.setDataProvider === 'function') {
         el.setDataProvider(data);
       }
       return;
     }
 
-    /* ── sc-ajax body: 경로만 저장 (generateRequest 시 resolve) ── */
+    /* ── sc-ajax body ── */
     if (tag === 'sc-ajax' && attrName === 'body') {
       el._bodyPath = binding.paths[0];
       el._polymerHost = ctx;
       return;
     }
 
-    /* ── sc-combobox-field items: 배열을 setItems()로 전달 ── */
+    /* ── sc-combobox-field items ── */
     if (tag === 'sc-combobox-field' && attrName === 'items') {
       var itemPath = binding.paths[0];
-      var items = getByPath(ctx, itemPath);
+      var items = resolveExpression(ctx, itemPath);
       if (Array.isArray(items) && typeof el.setItems === 'function') {
         el.setItems(items);
       }
       return;
     }
 
-    /* ── sc-text-field, sc-combobox-field, sc-number-field value: 양방향 바인딩 ── */
+    /* ── sc-combobox-column items ── */
+    if (tag === 'sc-combobox-column' && attrName === 'items') {
+      /* 컬럼 정의 요소의 items 경로를 저장 → sc-grid 렌더링 시 참조 */
+      el._itemsPath = binding.paths[0];
+      el._polymerHost = ctx;
+      return;
+    }
+
+    /* ── 양방향 바인딩 필드 value ── */
     if (attrName === 'value' && (
         tag === 'sc-text-field' || tag === 'sc-combobox-field' ||
         tag === 'sc-number-field' || tag === 'sc-datepicker')) {
       el._valuePath = binding.paths[0];
       el._polymerHost = ctx;
-      var val = getByPath(ctx, binding.paths[0]);
+      var val = resolveExpression(ctx, binding.paths[0]);
       if (typeof el.setValue === 'function') {
         el.setValue(val == null ? '' : val);
       }
       return;
     }
 
-    /* ── 일반 속성: 문자열로 설정 ── */
+    /* ── 일반 속성 ── */
     el.setAttribute(attrName, resolvedValue);
     if (attrName === 'value' && 'value' in el) {
       el.value = resolvedValue;
+    }
+    /* class 속성 특수 처리 (class$ 바인딩 시) */
+    if (attrName === 'class' && binding.rawAttrName === 'class$') {
+      el.className = resolvedValue;
     }
   }
 
@@ -244,7 +356,6 @@
       var el = all[i];
       if (el._polyBound) continue;
 
-      /* sc-* 엘리먼트는 자체 이벤트 처리 → 스킵 */
       if (isScElement(el)) {
         el._polyBound = true;
         continue;
@@ -280,7 +391,183 @@
   }
 
   /* ──────────────────────────────────────────────
-     7. Polymer() — 메인 등록 함수
+     7. dom-if 처리 — stamp-all + show/hide
+     ────────────────────────────────────────────── */
+
+  /**
+   * 호스트 내의 모든 <template is="dom-if"> 를 찾아
+   * 콘텐츠를 wrapper <div> 에 stamp 하고,
+   * 조건(if 속성)에 따라 show/hide 한다.
+   *
+   * @returns {Array} dom-if 디스크립터 배열
+   *   [{ wrapper: HTMLElement, condExpr: string, deps: string[] }]
+   */
+  function processDomIf(host) {
+    var descriptors = [];
+
+    /* 반복 처리 (중첩 dom-if 포함) */
+    var changed = true;
+    while (changed) {
+      changed = false;
+      var templates = host.querySelectorAll('template[is="dom-if"]');
+      for (var i = 0; i < templates.length; i++) {
+        var tpl = templates[i];
+        var ifAttr = tpl.getAttribute('if') || '';
+
+        /* {{expr}} 또는 [[expr]] 에서 표현식 추출 */
+        var condExpr = '';
+        BIND_RE.lastIndex = 0;
+        var m = BIND_RE.exec(ifAttr);
+        if (m) {
+          condExpr = (m[1] || m[2]).trim();
+        }
+
+        /* wrapper div 생성 */
+        var wrapper = document.createElement('div');
+        wrapper.className = '_dom-if-wrapper';
+        wrapper.style.display = 'none';  /* 초기에는 숨김 */
+
+        /* template content 를 wrapper 로 이동 */
+        var content = document.importNode(tpl.content, true);
+        wrapper.appendChild(content);
+
+        /* template 을 wrapper 로 교체 */
+        tpl.parentNode.replaceChild(wrapper, tpl);
+
+        descriptors.push({
+          wrapper: wrapper,
+          condExpr: condExpr,
+          deps: extractDeps(condExpr)
+        });
+
+        changed = true;
+      }
+    }
+
+    return descriptors;
+  }
+
+  /**
+   * dom-if 조건을 재평가하여 wrapper 를 show/hide 한다.
+   * changedPath 가 null 이면 전체 평가.
+   */
+  function evaluateDomIfs(domIfs, ctx, changedPath) {
+    for (var i = 0; i < domIfs.length; i++) {
+      var d = domIfs[i];
+      /* changedPath 가 지정되면 관련 조건만 평가 */
+      if (changedPath) {
+        var related = false;
+        for (var k = 0; k < d.deps.length; k++) {
+          if (isPathRelated(d.deps[k], changedPath)) {
+            related = true;
+            break;
+          }
+        }
+        /* 의존 경로가 비어있어도 호스트 내부 상태에 의존할 수 있으므로 재평가 */
+        if (!related && d.deps.length > 0) continue;
+      }
+
+      var show = !!resolveExpression(ctx, d.condExpr);
+      var wasHidden = d.wrapper.style.display === 'none';
+      d.wrapper.style.display = show ? '' : 'none';
+
+      /* 숨김→표시 전환 시 내부 그리드 강제 리프레시 */
+      if (show && wasHidden) {
+        var grids = d.wrapper.querySelectorAll('sc-grid');
+        for (var g = 0; g < grids.length; g++) {
+          if (typeof grids[g]._parseColumns === 'function') {
+            grids[g]._parseColumns();
+            grids[g]._render();
+          }
+        }
+      }
+    }
+  }
+
+  /* ──────────────────────────────────────────────
+     8. dom-repeat 처리 (기본 지원)
+     ────────────────────────────────────────────── */
+  function processDomRepeat(host) {
+    var descriptors = [];
+    var templates = host.querySelectorAll('template[is="dom-repeat"]');
+    for (var i = 0; i < templates.length; i++) {
+      var tpl = templates[i];
+      var itemsAttr = tpl.getAttribute('items') || '';
+      BIND_RE.lastIndex = 0;
+      var m = BIND_RE.exec(itemsAttr);
+      var itemsPath = m ? (m[1] || m[2]).trim() : '';
+
+      var container = document.createElement('div');
+      container.className = '_dom-repeat-container';
+
+      tpl.parentNode.replaceChild(container, tpl);
+
+      descriptors.push({
+        container: container,
+        template: tpl,
+        itemsPath: itemsPath
+      });
+    }
+    return descriptors;
+  }
+
+  function evaluateDomRepeats(repeats, ctx, changedPath) {
+    for (var i = 0; i < repeats.length; i++) {
+      var r = repeats[i];
+      if (changedPath && !isPathRelated(r.itemsPath, changedPath)) continue;
+
+      var items = resolveExpression(ctx, r.itemsPath);
+      if (!Array.isArray(items)) continue;
+
+      /* 기존 콘텐츠 제거 */
+      r.container.innerHTML = '';
+
+      /* 각 항목에 대해 템플릿 stamp */
+      for (var j = 0; j < items.length; j++) {
+        var content = document.importNode(r.template.content, true);
+        /* item 바인딩: 텍스트 노드와 속성에서 item.xxx 를 치환 */
+        var allEls = content.querySelectorAll('*');
+        for (var e = 0; e < allEls.length; e++) {
+          var el = allEls[e];
+          for (var a = 0; a < el.attributes.length; a++) {
+            var attr = el.attributes[a];
+            if (testBind(attr.value)) {
+              BIND_RE.lastIndex = 0;
+              attr.value = attr.value.replace(BIND_RE, function(_, g1, g2) {
+                var expr = (g1 || g2).trim();
+                if (expr === 'item' || expr.indexOf('item.') === 0) {
+                  var itemPath = expr === 'item' ? '' : expr.substring(5);
+                  var val = itemPath ? getByPath(items[j], itemPath) : items[j];
+                  return val == null ? '' : val;
+                }
+                return resolveExpression(ctx, expr);
+              });
+            }
+          }
+        }
+        var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null, false);
+        var node;
+        while ((node = walker.nextNode())) {
+          if (testBind(node.textContent)) {
+            BIND_RE.lastIndex = 0;
+            node.textContent = node.textContent.replace(BIND_RE, function(_, g1, g2) {
+              var expr = (g1 || g2).trim();
+              if (expr === 'item' || expr.indexOf('item.') === 0) {
+                var itemPath = expr === 'item' ? '' : expr.substring(5);
+                var val = itemPath ? getByPath(items[j], itemPath) : items[j];
+                return val == null ? '' : val;
+              }
+              return resolveExpression(ctx, expr);
+            });
+          }
+        }
+        r.container.appendChild(content);
+      }
+    }
+  }
+
+  /* ──────────────────────────────────────────────
+     9. Polymer() — 메인 등록 함수
      ────────────────────────────────────────────── */
   function Polymer(proto) {
     var tagName = proto.is;
@@ -332,16 +619,31 @@
         }
       }
 
-      /* this.$ 구축 */
+      /* ★ dom-if 처리: template 을 wrapper div 로 교체 (콘텐츠를 DOM에 stamp) */
+      me._domIfs = processDomIf(me);
+
+      /* ★ dom-repeat 처리 */
+      me._domRepeats = processDomRepeat(me);
+
+      /* this.$ 구축 (dom-if 콘텐츠 포함) */
       me.$ = buildDollarMap(me);
 
-      /* 바인딩 메타데이터 수집 (한 번만) */
+      /* this.$$ — querySelector 폴백 */
+      me.$$ = function (selector) {
+        return me.querySelector(selector);
+      };
+
+      /* 바인딩 메타데이터 수집 (dom-if 콘텐츠 포함) */
       me._bindings = collectBindings(me);
 
       /* this.set() — path 기반 값 설정 + 스마트 업데이트 */
       me.set = function (path, value) {
         setByPath(me, path, value);
         applyBindings(me._bindings, me, path);
+        /* dom-if 조건 재평가 */
+        evaluateDomIfs(me._domIfs, me, path);
+        /* dom-repeat 재평가 */
+        evaluateDomRepeats(me._domRepeats, me, path);
       };
 
       /* 초기 바인딩 적용 (전체) */
@@ -358,6 +660,12 @@
       /* 이벤트 바인딩 (네이티브 요소만) */
       bindEvents(me, me);
 
+      /* ★ dom-if 초기 조건 평가 (초기 visible 탭 표시) */
+      evaluateDomIfs(me._domIfs, me, null);
+
+      /* ★ dom-repeat 초기 평가 */
+      evaluateDomRepeats(me._domRepeats, me, null);
+
       /* attached() 라이프사이클 */
       if (typeof me.attached === 'function') {
         setTimeout(function () { me.attached(); }, 0);
@@ -370,7 +678,7 @@
   }
 
   /* ──────────────────────────────────────────────
-     8. 전역 등록
+     10. 전역 등록
      ────────────────────────────────────────────── */
   global.Polymer = Polymer;
   global.Polymer._modules = _modules;

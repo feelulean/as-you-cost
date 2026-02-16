@@ -69,84 +69,84 @@
 
         <!-- 라인투자비 - 신규라인 조회 -->
         <sc-ajax id="findNewLineAjax"
-                 url="/bp/cost/cc/detail/findListCcNewLineInvest.do"
+                 url="/bp/cost/cc/detail/findListLineInvest.do"
                  body="{{lineSearchParam}}"
                  on-response="onFindNewLineResponse">
         </sc-ajax>
 
         <!-- 라인투자비 - 신규라인 저장 -->
         <sc-ajax id="saveNewLineAjax"
-                 url="/bp/cost/cc/detail/saveListCcNewLineInvest.do"
+                 url="/bp/cost/cc/detail/saveListLineInvest.do"
                  body="{{newLineSaveParam}}"
                  on-response="onSaveNewLineResponse">
         </sc-ajax>
 
         <!-- 라인투자비 - 신규라인 삭제 -->
         <sc-ajax id="deleteNewLineAjax"
-                 url="/bp/cost/cc/detail/deleteListCcNewLineInvest.do"
+                 url="/bp/cost/cc/detail/deleteListLineInvest.do"
                  body="{{newLineDeleteParam}}"
                  on-response="onDeleteNewLineResponse">
         </sc-ajax>
 
         <!-- 라인투자비 - 기존라인 조회 -->
         <sc-ajax id="findExistLineAjax"
-                 url="/bp/cost/cc/detail/findListCcExistLineInvest.do"
+                 url="/bp/cost/cc/detail/findListLineInvest.do"
                  body="{{lineSearchParam}}"
                  on-response="onFindExistLineResponse">
         </sc-ajax>
 
         <!-- 라인투자비 - 기존라인 저장 -->
         <sc-ajax id="saveExistLineAjax"
-                 url="/bp/cost/cc/detail/saveListCcExistLineInvest.do"
+                 url="/bp/cost/cc/detail/saveListLineInvest.do"
                  body="{{existLineSaveParam}}"
                  on-response="onSaveExistLineResponse">
         </sc-ajax>
 
         <!-- 라인투자비 - 기존라인 삭제 -->
         <sc-ajax id="deleteExistLineAjax"
-                 url="/bp/cost/cc/detail/deleteListCcExistLineInvest.do"
+                 url="/bp/cost/cc/detail/deleteListLineInvest.do"
                  body="{{existLineDeleteParam}}"
                  on-response="onDeleteExistLineResponse">
         </sc-ajax>
 
         <!-- 기타투자비 조회 -->
         <sc-ajax id="findOtherInvestAjax"
-                 url="/bp/cost/cc/detail/findListCcOtherInvest.do"
+                 url="/bp/cost/cc/detail/findListOtherInvest.do"
                  body="{{otherSearchParam}}"
                  on-response="onFindOtherInvestResponse">
         </sc-ajax>
 
         <!-- 기타투자비 저장 -->
         <sc-ajax id="saveOtherInvestAjax"
-                 url="/bp/cost/cc/detail/saveListCcOtherInvest.do"
+                 url="/bp/cost/cc/detail/saveListOtherInvest.do"
                  body="{{otherSaveParam}}"
                  on-response="onSaveOtherInvestResponse">
         </sc-ajax>
 
         <!-- 기타투자비 삭제 -->
         <sc-ajax id="deleteOtherInvestAjax"
-                 url="/bp/cost/cc/detail/deleteListCcOtherInvest.do"
+                 url="/bp/cost/cc/detail/deleteListOtherInvest.do"
                  body="{{otherDeleteParam}}"
                  on-response="onDeleteOtherInvestResponse">
         </sc-ajax>
 
         <!-- 인원계획 조회 -->
         <sc-ajax id="findManpowerAjax"
-                 url="/bp/cost/cc/detail/findListCcManpower.do"
+                 url="/bp/cost/cc/detail/findListManpower.do"
                  body="{{mpSearchParam}}"
                  on-response="onFindManpowerResponse">
         </sc-ajax>
 
         <!-- 인원계획 저장 -->
         <sc-ajax id="saveManpowerAjax"
-                 url="/bp/cost/cc/detail/saveListCcManpower.do"
+                 url="/bp/cost/cc/detail/saveListManpower.do"
                  body="{{mpSaveParam}}"
                  on-response="onSaveManpowerResponse">
         </sc-ajax>
 
         <!-- 인원계획 삭제 -->
         <sc-ajax id="deleteManpowerAjax"
-                 url="/bp/cost/cc/detail/deleteListCcManpower.do"
+                 url="/bp/cost/cc/detail/deleteListManpower.do"
                  body="{{mpDeleteParam}}"
                  on-response="onDeleteManpowerResponse">
         </sc-ajax>

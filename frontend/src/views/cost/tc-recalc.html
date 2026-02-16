@@ -81,68 +81,68 @@
 
         <!-- TAB 1: 현상원가 불러오기 -->
         <sc-ajax id="findCcImportAjax"
-                 url="/bp/cost/tc/detail/findListTcCcImport.do"
+                 url="/bp/cost/tc/detail/findListCcImport.do"
                  body="{{searchParam}}"
                  on-response="onFindCcImportResponse">
         </sc-ajax>
 
         <!-- TAB 2: 부문별 목표 Guide 산출 (재산출) -->
         <sc-ajax id="findGuideAjax"
-                 url="/bp/cost/tc/detail/findListTcRecalcGuide.do"
+                 url="/bp/cost/tc/detail/findListRecalcGuide.do"
                  body="{{searchParam}}"
                  on-response="onFindGuideResponse">
         </sc-ajax>
         <sc-ajax id="calculateGuideAjax"
-                 url="/bp/cost/tc/detail/calculateTcRecalcGuide.do"
+                 url="/bp/cost/tc/detail/calculateRecalcGuide.do"
                  body="{{searchParam}}"
                  on-response="onCalculateGuideResponse">
         </sc-ajax>
         <sc-ajax id="saveGuideAjax"
-                 url="/bp/cost/tc/detail/saveListTcRecalcGuide.do"
+                 url="/bp/cost/tc/detail/saveListRecalcGuide.do"
                  body="{{saveGuideParam}}"
                  on-response="onSaveGuideResponse">
         </sc-ajax>
 
         <!-- TAB 3: 목표원가 등록 (재산출) -->
         <sc-ajax id="findCostRegAjax"
-                 url="/bp/cost/tc/detail/findListTcRecalcCostReg.do"
+                 url="/bp/cost/tc/detail/findListRecalc.do"
                  body="{{costRegSearchParam}}"
                  on-response="onFindCostRegResponse">
         </sc-ajax>
         <sc-ajax id="createCostRegAjax"
-                 url="/bp/cost/tc/detail/createTcRecalcCostReg.do"
+                 url="/bp/cost/tc/detail/generateTcCostReg.do"
                  body="{{searchParam}}"
                  on-response="onCreateCostRegResponse">
         </sc-ajax>
         <sc-ajax id="saveCostRegAjax"
-                 url="/bp/cost/tc/detail/saveListTcRecalcCostReg.do"
+                 url="/bp/cost/tc/detail/saveListRecalc.do"
                  body="{{saveCostRegParam}}"
                  on-response="onSaveCostRegResponse">
         </sc-ajax>
         <sc-ajax id="confirmCostRegAjax"
-                 url="/bp/cost/tc/detail/confirmTcRecalcCostReg.do"
+                 url="/bp/cost/tc/detail/confirmTcCostReg.do"
                  body="{{searchParam}}"
                  on-response="onConfirmCostRegResponse">
         </sc-ajax>
 
         <!-- TAB 4: 목표달성 계획 (재산출) -->
         <sc-ajax id="findAchvPlanAjax"
-                 url="/bp/cost/tc/detail/findListTcRecalcAchvPlan.do"
+                 url="/bp/cost/tc/detail/findListRecalcAchvPlan.do"
                  body="{{searchParam}}"
                  on-response="onFindAchvPlanResponse">
         </sc-ajax>
         <sc-ajax id="createAchvPlanAjax"
-                 url="/bp/cost/tc/detail/createTcRecalcAchvPlan.do"
+                 url="/bp/cost/tc/detail/generateTcAchvPlan.do"
                  body="{{searchParam}}"
                  on-response="onCreateAchvPlanResponse">
         </sc-ajax>
         <sc-ajax id="saveAchvPlanAjax"
-                 url="/bp/cost/tc/detail/saveListTcRecalcAchvPlan.do"
+                 url="/bp/cost/tc/detail/saveListRecalcAchvPlan.do"
                  body="{{saveAchvPlanParam}}"
                  on-response="onSaveAchvPlanResponse">
         </sc-ajax>
         <sc-ajax id="confirmAchvPlanAjax"
-                 url="/bp/cost/tc/detail/confirmTcRecalcAchvPlan.do"
+                 url="/bp/cost/tc/detail/confirmTcAchvPlan.do"
                  body="{{searchParam}}"
                  on-response="onConfirmAchvPlanResponse">
         </sc-ajax>

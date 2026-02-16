@@ -98,14 +98,14 @@
 
         <!-- 수량/할인율 조회 -->
         <sc-ajax id="findQtyDiscAjax"
-                 url="/bp/cost/ec/detail/findListQtyDiscount.do"
+                 url="/bp/cost/ec/detail/findListQtyDisc.do"
                  body="{{detailSearchParam}}"
                  on-response="onFindQtyDiscResponse">
         </sc-ajax>
 
         <!-- 수량/할인율 저장 -->
         <sc-ajax id="saveQtyDiscAjax"
-                 url="/bp/cost/ec/detail/saveListQtyDiscount.do"
+                 url="/bp/cost/ec/detail/saveListQtyDisc.do"
                  body="{{saveQtyDiscParam}}"
                  on-response="onSaveQtyDiscResponse">
         </sc-ajax>

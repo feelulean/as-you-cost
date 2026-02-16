@@ -63,14 +63,14 @@
 
         <!-- 판매관리비 데이터 조회 -->
         <sc-ajax id="findSgaCostAjax"
-                 url="/bp/cost/cc/detail/findListCcSgaCost.do"
+                 url="/bp/cost/cc/detail/findListSgaCost.do"
                  body="{{sgaSearchParam}}"
                  on-response="onFindSgaCostResponse">
         </sc-ajax>
 
         <!-- 판매관리비 계산 요청 -->
         <sc-ajax id="calculateSgaCostAjax"
-                 url="/bp/cost/cc/detail/calculateCcSgaCost.do"
+                 url="/bp/cost/cc/detail/calculateSgaCost.do"
                  body="{{calcParam}}"
                  on-response="onCalculateSgaCostResponse">
         </sc-ajax>
