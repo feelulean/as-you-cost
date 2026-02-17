@@ -34,13 +34,13 @@
           FROM  PCM_CUR_ACHV_EVAL A
          WHERE  A.TEN_ID = #{g.tenant}
         <if test="p.curPjtCd != null and p.curPjtCd != ''">
-           AND  A.CUR_PJT_CD LIKE '%' || #{p.curPjtCd} || '%'
+           AND  A.CUR_PJT_CD LIKE '%' || TRIM(#{p.curPjtCd}) || '%'
         </if>
         <if test="p.bizUnit != null and p.bizUnit != ''">
            AND  A.BIZ_UNIT = #{p.bizUnit}
         </if>
         <if test="p.custNm != null and p.custNm != ''">
-           AND  A.CUST_NM LIKE '%' || #{p.custNm} || '%'
+           AND  A.CUST_NM LIKE '%' || TRIM(#{p.custNm}) || '%'
         </if>
         <if test="p.achvYn != null and p.achvYn != ''">
            AND  A.ACHV_YN = #{p.achvYn}

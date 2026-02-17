@@ -734,7 +734,8 @@
       if (typeof elOrViewId === 'string') {
         /* UT.navigateTo 등에서 viewId 문자열로 호출 */
         url   = 'viewer.html?view=' + elOrViewId;
-        title = titleOverride || elOrViewId;
+        var menuItem = document.querySelector('.lnb-item[data-url="' + url + '"]');
+        title = titleOverride || (menuItem && menuItem.getAttribute('data-title')) || elOrViewId;
       } else {
         var el = elOrViewId;
         url   = el.getAttribute('data-url');
@@ -859,8 +860,8 @@
 
     /* ── 숫자 포맷: 원본 (테이블용) ── */
     function formatNumber(n) {
-      if (n == null) return 'KRW 0';
-      return 'KRW ' + Number(n).toLocaleString('ko-KR');
+      if (n == null) return '0';
+      return Number(n).toLocaleString('ko-KR');
     }
 
     /* ── 숫자 포맷: 가독성 단위 변환 (차트/KPI용) ── */

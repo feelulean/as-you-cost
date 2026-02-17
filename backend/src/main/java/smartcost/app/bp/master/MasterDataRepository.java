@@ -18,6 +18,10 @@ public class MasterDataRepository {
         return sqlSession.selectList(NAMESPACE + "findList" + capitalize(entity), param);
     }
 
+    public Map<String, Object> findOne(String queryId, Map<String, Object> param) {
+        return sqlSession.selectOne(NAMESPACE + queryId, param);
+    }
+
     public void insert(String entity, Map<String, Object> param) {
         sqlSession.insert(NAMESPACE + "insert" + capitalize(entity), param);
     }

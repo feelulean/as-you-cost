@@ -1441,6 +1441,113 @@
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
     </delete>
 
+    <!-- 선행조건 검증용 count (프로젝트 전체) -->
+    <select id="countCostCodeAll" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM PCM_CUR_COST_CODE
+         WHERE TEN_ID = #{g.tenant} AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV = CAST(#{p.ccRev} AS INTEGER)
+    </select>
+
+    <select id="countQtyDiscAll" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM PCM_CUR_QTY_DISC
+         WHERE TEN_ID = #{g.tenant} AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV = CAST(#{p.ccRev} AS INTEGER)
+    </select>
+
+    <!-- 프로젝트/차수 기준 전체 삭제 쿼리 -->
+    <delete id="deleteAllMfgCost" parameterType="map">
+        DELETE FROM PCM_CUR_MFG_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </delete>
+
+    <delete id="deleteAllSgaCost" parameterType="map">
+        DELETE FROM PCM_CUR_SGA_COST
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </delete>
+
+    <delete id="deleteAllPlStmt" parameterType="map">
+        DELETE FROM PCM_CUR_PL_STMT
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </delete>
+
+    <!-- 손익계산서 산출용 INSERT...SELECT (EC 패턴 이식) -->
+    <insert id="insertCalcPlStmt" parameterType="map">
+        INSERT INTO PCM_CUR_PL_STMT (
+            TEN_ID, CC_PJT_CD, CC_REV, VIEW_TYPE, VIEW_KEY,
+            PL_SEQ, COST_ITEM, YEAR_VAL,
+            TOT_AMT, UNIT_AMT, RATE_VAL, CALC_DONE_YN, RMK, STS,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        SELECT #{g.tenant}, #{p.ccPjtCd}, CAST(#{p.ccRev} AS INTEGER), 'PJT', #{p.ccPjtCd},
+               items.pl_seq, items.cost_item, agg.year_val,
+               items.tot_amt, items.unit_amt,
+               CASE WHEN agg.sales_amt > 0
+                    THEN ROUND(items.unit_amt / (agg.sales_amt / NULLIF(agg.sell_qty,0)) * 100, 2)
+                    ELSE 0 END,
+               'Y', NULL, 'Y',
+               #{g.username}, #{g.now}, #{g.username}, #{g.now}
+          FROM (
+              SELECT QD.YEAR_VAL AS year_val,
+                     COALESCE(QD.SELL_QTY, 0) AS sell_qty,
+                     COALESCE(CC.EST_SELL_PRICE, 0) * COALESCE(QD.SELL_QTY, 0)
+                         * (1.0 - COALESCE(QD.DISC_RATE, 0) / 100.0)           AS sales_amt,
+                     COALESCE(MT.unit_mat, 0) * COALESCE(QD.SELL_QTY, 0)       AS mat_cost,
+                     (COALESCE(MC.DIRECT_LABOR_AMT, 0) + COALESCE(MC.INDIRECT_LABOR_AMT, 0))
+                         * COALESCE(QD.SELL_QTY, 0)                             AS labor_cost,
+                     (COALESCE(MC.TOTAL_MFG_AMT, 0)
+                       - COALESCE(MC.DIRECT_LABOR_AMT, 0) - COALESCE(MC.INDIRECT_LABOR_AMT, 0))
+                         * COALESCE(QD.SELL_QTY, 0)                             AS mfg_overhead,
+                     COALESCE(SC.TOTAL_SGA_AMT, 0) * COALESCE(QD.SELL_QTY, 0)  AS sga_cost
+                FROM PCM_CUR_QTY_DISC QD
+                JOIN PCM_CUR_COST_CODE CC
+                  ON CC.TEN_ID = QD.TEN_ID AND CC.CC_PJT_CD = QD.CC_PJT_CD
+                     AND CC.CC_REV = QD.CC_REV AND CC.COST_CD = QD.COST_CD
+                LEFT JOIN PCM_CUR_MFG_COST MC
+                  ON MC.TEN_ID = QD.TEN_ID AND MC.CC_PJT_CD = QD.CC_PJT_CD
+                     AND MC.CC_REV = QD.CC_REV AND MC.COST_CD = QD.COST_CD
+                LEFT JOIN PCM_CUR_SGA_COST SC
+                  ON SC.TEN_ID = QD.TEN_ID AND SC.CC_PJT_CD = QD.CC_PJT_CD
+                     AND SC.CC_REV = QD.CC_REV AND SC.COST_CD = QD.COST_CD
+                LEFT JOIN (
+                    SELECT PP.TEN_ID, PP.CC_PJT_CD, PP.CC_REV, PP.COST_CD,
+                           COALESCE(SUM(PP.CONFIRM_PRICE * B.QTY * (1 + COALESCE(PP.LOSS_RATE,0)/100.0)), 0) AS unit_mat
+                      FROM PCM_CUR_PART_PRICE PP
+                      JOIN PCM_CUR_BOM B
+                        ON B.TEN_ID = PP.TEN_ID AND B.CC_PJT_CD = PP.CC_PJT_CD
+                           AND B.CC_REV = PP.CC_REV AND B.COST_CD = PP.COST_CD
+                           AND B.PART_NO = PP.PART_NO
+                     GROUP BY PP.TEN_ID, PP.CC_PJT_CD, PP.CC_REV, PP.COST_CD
+                ) MT ON MT.TEN_ID = QD.TEN_ID AND MT.CC_PJT_CD = QD.CC_PJT_CD
+                       AND MT.CC_REV = QD.CC_REV AND MT.COST_CD = QD.COST_CD
+               WHERE QD.TEN_ID    = #{g.tenant}
+                 AND QD.CC_PJT_CD = #{p.ccPjtCd}
+                 AND QD.CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+          ) agg
+          CROSS JOIN LATERAL (
+              VALUES
+                  (1, '매출액',     agg.sales_amt,
+                   CASE WHEN agg.sell_qty > 0 THEN agg.sales_amt / agg.sell_qty ELSE 0 END),
+                  (2, '재료비',     agg.mat_cost,
+                   CASE WHEN agg.sell_qty > 0 THEN agg.mat_cost / agg.sell_qty ELSE 0 END),
+                  (3, '노무비',     agg.labor_cost,
+                   CASE WHEN agg.sell_qty > 0 THEN agg.labor_cost / agg.sell_qty ELSE 0 END),
+                  (4, '제조경비',   agg.mfg_overhead,
+                   CASE WHEN agg.sell_qty > 0 THEN agg.mfg_overhead / agg.sell_qty ELSE 0 END),
+                  (5, '판관비',     agg.sga_cost,
+                   CASE WHEN agg.sell_qty > 0 THEN agg.sga_cost / agg.sell_qty ELSE 0 END),
+                  (6, '영업이익',
+                   agg.sales_amt - agg.mat_cost - agg.labor_cost - agg.mfg_overhead - agg.sga_cost,
+                   CASE WHEN agg.sell_qty > 0
+                        THEN (agg.sales_amt - agg.mat_cost - agg.labor_cost - agg.mfg_overhead - agg.sga_cost) / agg.sell_qty
+                        ELSE 0 END)
+          ) AS items(pl_seq, cost_item, tot_amt, unit_amt)
+    </insert>
+
     <!-- EC 손익계산서 합계 (연도별 합산) -->
     <select id="findEcPlSummary" parameterType="map" resultType="map">
         SELECT COALESCE(SUM(SALES_AMT), 0)      AS "salesAmt",

@@ -33,6 +33,7 @@ CREATE TABLE asyoucost.PCM_EC_PJT_MSTR (
     PROD_GRP        VARCHAR(18),                    -- 제품군 코드 (TM / AXLE / SEAT)
     PROD_QTY        BIGINT,                         -- 생산수량
     SOP_DT          VARCHAR(10),                    -- SOP 일자 (YYYY-MM-DD)
+    BASE_CURRENCY   VARCHAR(10)     DEFAULT 'KRW',  -- 기준통화 (KRW/USD/EUR/JPY/CNY)
 
     -- ■ 공통 컬럼 (순서 고정) ──────────────────────
     RMK             VARCHAR(1000),                  -- 비고
@@ -73,6 +74,7 @@ COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.OEM_NM         IS 'OEM명';
 COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.PROD_GRP       IS '제품군 코드';
 COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.PROD_QTY       IS '생산수량';
 COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.SOP_DT         IS 'SOP 일자';
+COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.BASE_CURRENCY  IS '기준통화 (KRW/USD/EUR/JPY/CNY)';
 COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.RMK            IS '비고';
 COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.STS            IS '상태 (T:작성중/P:진행중/A:확정/R:탈락/C:완료)';
 COMMENT ON COLUMN asyoucost.PCM_EC_PJT_MSTR.REGR_ID        IS '등록자 아이디';

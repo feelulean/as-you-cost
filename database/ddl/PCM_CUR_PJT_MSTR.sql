@@ -33,6 +33,7 @@ CREATE TABLE asyoucost.PCM_CUR_PJT_MSTR (
     CAR_TYPE        VARCHAR(100),                   -- 차종
     OEM_NM          VARCHAR(100),                   -- OEM명
     PROD_GRP        VARCHAR(18),                    -- 제품군 코드 (TM / AXLE / SEAT)
+    BASE_CURRENCY   VARCHAR(10)     DEFAULT 'KRW',  -- 기준통화 (KRW/USD/EUR/JPY/CNY)
     PROG_STS        CHAR(1)         DEFAULT 'D',    -- 진행상태 (D:Draft / P:진행중 / A:확정 / C:완료)
 
     -- ■ 공통 컬럼 (순서 고정) ──────────────────────
@@ -78,6 +79,7 @@ COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.CUST_NM        IS '고객사명';
 COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.CAR_TYPE       IS '차종';
 COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.OEM_NM         IS 'OEM명';
 COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.PROD_GRP       IS '제품군 코드';
+COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.BASE_CURRENCY  IS '기준통화 (KRW/USD/EUR/JPY/CNY)';
 COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.PROG_STS       IS '진행상태 (D:Draft/P:진행중/A:확정/C:완료)';
 COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.RMK            IS '비고';
 COMMENT ON COLUMN asyoucost.PCM_CUR_PJT_MSTR.STS            IS '상태 (T:작성중/C:완료)';

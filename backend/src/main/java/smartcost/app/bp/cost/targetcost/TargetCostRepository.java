@@ -1,6 +1,7 @@
 package smartcost.app.bp.cost.targetcost;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -33,8 +34,8 @@ public class TargetCostRepository {
      * 목표원가 프로젝트 코드 자동 채번
      * - 형식: TC + 연도(4자리) + 일련번호(4자리) (예: TC20260001)
      */
-    public String findNewTargetCostPjtCd() {
-        return sqlSession.selectOne(NAMESPACE + "findNewTargetCostPjtCd");
+    public String findNewTargetCostPjtCd(Map<String, Object> param) {
+        return sqlSession.selectOne(NAMESPACE + "findNewTargetCostPjtCd", param);
     }
 
     /**

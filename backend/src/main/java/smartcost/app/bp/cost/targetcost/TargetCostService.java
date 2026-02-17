@@ -46,11 +46,12 @@ public class TargetCostService {
         Map<String, Object> resultMap = new HashMap<>();
 
         for (Map<String, Object> row : saveList) {
-            String rowStatus = (String) row.getOrDefault("_rowStatus", "");
+            String rowStatus = row.containsKey("_rowStatus")
+                    ? (String) row.get("_rowStatus") : "U";
 
             if ("C".equals(rowStatus)) {
                 // 신규: 프로젝트 코드 자동 채번
-                String newPjtCd = targetCostRepository.findNewTargetCostPjtCd();
+                String newPjtCd = targetCostRepository.findNewTargetCostPjtCd(new HashMap<>());
                 row.put("pjtCd", newPjtCd);
                 row.put("sts", "T"); // 초기 상태: Targeting
                 targetCostRepository.insertTargetCostPjt(row);

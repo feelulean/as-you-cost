@@ -21,6 +21,7 @@
               , A.OEM_NM       AS "oemNm"
               , A.PROD_GRP     AS "prodGrp"
               , A.EC_PJT_CD    AS "ecPjtCd"
+              , A.BASE_CURRENCY AS "baseCurrency"
               , A.STS          AS "sts"
               , CASE A.STS
                     WHEN 'T' THEN '대상선정'
@@ -36,16 +37,16 @@
           FROM  PCM_TGT_PJT_MSTR A
          WHERE  A.TEN_ID = #{g.tenant}
         <if test="p.pjtCd != null and p.pjtCd != ''">
-           AND  A.TGT_PJT_CD LIKE '%' || #{p.pjtCd} || '%'
+           AND  A.TGT_PJT_CD LIKE '%' || TRIM(#{p.pjtCd}) || '%'
         </if>
         <if test="p.bizUnit != null and p.bizUnit != ''">
            AND  A.BIZ_UNIT = #{p.bizUnit}
         </if>
         <if test="p.custNm != null and p.custNm != ''">
-           AND  A.CUST_NM LIKE '%' || #{p.custNm} || '%'
+           AND  A.CUST_NM LIKE '%' || TRIM(#{p.custNm}) || '%'
         </if>
         <if test="p.carType != null and p.carType != ''">
-           AND  A.CAR_TYPE LIKE '%' || #{p.carType} || '%'
+           AND  A.CAR_TYPE LIKE '%' || TRIM(#{p.carType}) || '%'
         </if>
          ORDER BY A.REG_DTTM DESC
     </select>
@@ -76,6 +77,7 @@
           , OEM_NM
           , PROD_GRP
           , EC_PJT_CD
+          , BASE_CURRENCY
           , RMK
           , STS
           , REGR_ID
@@ -92,6 +94,7 @@
           , #{p.oemNm}
           , #{p.prodGrp}
           , #{p.ecPjtCd}
+          , #{p.baseCurrency}
           , #{p.rmk}
           , #{p.sts}
           , #{g.username}
@@ -113,6 +116,7 @@
               , OEM_NM    = #{p.oemNm}
               , PROD_GRP  = #{p.prodGrp}
               , EC_PJT_CD = #{p.ecPjtCd}
+              , BASE_CURRENCY = #{p.baseCurrency}
               , RMK       = #{p.rmk}
               , MODR_ID   = #{g.username}
               , MOD_DTTM  = #{g.now}

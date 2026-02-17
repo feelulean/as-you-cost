@@ -50,4 +50,19 @@ public class EcDetailRepository {
         Integer cnt = sqlSession.selectOne(NAMESPACE + "count" + entity, param);
         return cnt != null ? cnt : 0;
     }
+
+    /* ── 프로젝트 단위 삭제 (delete{Entity}ByPjt) ── */
+    public void deleteByPjt(String entity, Map<String, Object> param) {
+        sqlSession.delete(NAMESPACE + "delete" + entity + "ByPjt", param);
+    }
+
+    /* ── 손익계산서 산출 INSERT (집계 쿼리) ── */
+    public void insertCalcPlStmt(Map<String, Object> param) {
+        sqlSession.insert(NAMESPACE + "insertCalcPlStmt", param);
+    }
+
+    /* ── 손익계산서 피벗 조회 ── */
+    public List<Map<String, Object>> findListPlStmtPivot(Map<String, Object> param) {
+        return sqlSession.selectList(NAMESPACE + "findListPlStmtPivot", param);
+    }
 }

@@ -31,17 +31,21 @@
 
         <!-- Grid -->
         <sc-grid id="gridPanel"
-                 items="{{projectList}}"
+                 data-provider="{{projectList}}"
+                 selection-mode="radio"
                  on-item-dblclick="onRowDblClick"
                  style="height:350px">
-            <sc-grid-column header="프로젝트 코드" field="pjtCd"    width="120px"></sc-grid-column>
-            <sc-grid-column header="프로젝트명"    field="pjtNm"    width="200px"></sc-grid-column>
-            <sc-grid-column header="사업부"        field="bizUnit"  width="100px"></sc-grid-column>
-            <sc-grid-column header="고객사"        field="custNm"   width="120px"></sc-grid-column>
-            <sc-grid-column header="차종"          field="carType"  width="100px"></sc-grid-column>
-            <sc-grid-column header="OEM"           field="oemNm"    width="100px"></sc-grid-column>
-            <sc-grid-column header="제품군"        field="prodGrp"  width="100px"></sc-grid-column>
-            <sc-grid-column header="상태"          field="pjtSts"   width="80px"></sc-grid-column>
+
+            <sc-grid-columns>
+                <sc-data-column data-field="pjtCd"    header-text="프로젝트 코드" width="120" text-align="center"></sc-data-column>
+                <sc-data-column data-field="pjtNm"    header-text="프로젝트명"    width="200" text-align="left"></sc-data-column>
+                <sc-data-column data-field="bizUnit"  header-text="사업부"        width="100" text-align="center"></sc-data-column>
+                <sc-data-column data-field="custNm"   header-text="고객사"        width="120" text-align="left"></sc-data-column>
+                <sc-data-column data-field="carType"  header-text="차종"          width="100" text-align="center"></sc-data-column>
+                <sc-data-column data-field="oemNm"    header-text="OEM"           width="100" text-align="center"></sc-data-column>
+                <sc-data-column data-field="prodGrp"  header-text="제품군"        width="100" text-align="center"></sc-data-column>
+                <sc-data-column data-field="stsNm"    header-text="상태"          width="80"  text-align="center"></sc-data-column>
+            </sc-grid-columns>
         </sc-grid>
 
         <!-- Buttons -->
@@ -60,7 +64,7 @@
             },
             attached: function() {
                 var param = UT.getParameter();
-                if (param.pjtCd) this.set('searchParam.pjtCd', param.pjtCd);
+                if (param && param.pjtCd) this.set('searchParam.pjtCd', param.pjtCd);
                 this.$.findListAjax.generateRequest();
             },
             onSearch: function() {
@@ -70,8 +74,8 @@
                 this.set('projectList', e.detail.response || []);
             },
             onRowDblClick: function(e) {
-                var row = e.detail.row;
-                this._returnResult(row);
+                var row = e.detail.data || e.detail.row;
+                if (row) this._returnResult(row);
             },
             onSelect: function() {
                 var grid = this.$.gridPanel;

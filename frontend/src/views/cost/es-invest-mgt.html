@@ -201,7 +201,7 @@
                                             width="130"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number"
+                                            data-type="amount"
                                             format-type="amt">
                             </sc-data-column>
 
@@ -218,7 +218,8 @@
                                             header-text="상각개시연월"
                                             width="110"
                                             editable="true"
-                                            text-align="center">
+                                            text-align="center"
+                                            data-type="yearmonth">
                             </sc-data-column>
 
                             <sc-data-column data-field="capa"
@@ -235,7 +236,7 @@
                                             width="120"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number">
+                                            data-type="rate">
                             </sc-data-column>
 
                             <sc-data-column data-field="useRate"
@@ -243,7 +244,7 @@
                                             width="100"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number">
+                                            data-type="rate">
                             </sc-data-column>
 
                             <sc-data-column data-field="usefulLife"
@@ -311,7 +312,7 @@
                                             width="130"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number"
+                                            data-type="amount"
                                             format-type="amt">
                             </sc-data-column>
 
@@ -336,14 +337,16 @@
                                             header-text="취득연도"
                                             width="90"
                                             editable="true"
-                                            text-align="center">
+                                            text-align="center"
+                                            data-type="year">
                             </sc-data-column>
 
                             <sc-data-column data-field="deprStartYm"
                                             header-text="상각개시연월"
                                             width="110"
                                             editable="true"
-                                            text-align="center">
+                                            text-align="center"
+                                            data-type="yearmonth">
                             </sc-data-column>
 
                             <sc-data-column data-field="availRate"
@@ -351,7 +354,7 @@
                                             width="120"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number">
+                                            data-type="rate">
                             </sc-data-column>
 
                             <sc-data-column data-field="useRate"
@@ -359,7 +362,7 @@
                                             width="100"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number">
+                                            data-type="rate">
                             </sc-data-column>
                         </sc-grid-columns>
 
@@ -426,7 +429,7 @@
                                             width="130"
                                             editable="true"
                                             text-align="right"
-                                            data-type="number"
+                                            data-type="amount"
                                             format-type="amt">
                             </sc-data-column>
 
@@ -663,6 +666,7 @@
                ============================================================== */
 
             onFindPjtList: function() {
+                this._clearDetail();
                 this.$.findPjtListAjax.generateRequest();
             },
 
@@ -995,6 +999,14 @@
             onSaveManpowerResponse: function() {
                 UT.alert('MSG_COM_00003');
                 this._loadTabData();
+            },
+
+            _clearDetail: function() {
+                this.set('selectedPjtCd', '');
+                this.set('activeTab', 'lineInvest');
+                this.set('lineInvestList', []);
+                this.set('otherInvestList', []);
+                this.set('manpowerList', []);
             }
         });
     </script>

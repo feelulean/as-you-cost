@@ -17,6 +17,14 @@ public class MasterDataService {
         return masterDataRepository.findList(entity, param);
     }
 
+    public Map<String, Object> findExchRateByPair(Map<String, Object> param) {
+        Map<String, Object> result = masterDataRepository.findOne("findExchRateByPair", param);
+        if (result == null) {
+            result = new HashMap<>();
+        }
+        return result;
+    }
+
     @Transactional
     @SuppressWarnings("unchecked")
     public Map<String, Object> saveList(String entity, Map<String, Object> param) {
@@ -25,7 +33,7 @@ public class MasterDataService {
         for (Map<String, Object> row : saveList) {
             String rowStatus = row.containsKey("_rowStatus")
                     ? (String) row.get("_rowStatus")
-                    : (String) row.getOrDefault("rowStatus", "");
+                    : "U";
             if ("C".equals(rowStatus)) {
                 masterDataRepository.insert(entity, row);
             } else if ("U".equals(rowStatus)) {

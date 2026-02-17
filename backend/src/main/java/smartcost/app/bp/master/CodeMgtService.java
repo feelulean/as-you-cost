@@ -25,7 +25,7 @@ public class CodeMgtService {
         for (Map<String, Object> row : saveList) {
             String rowStatus = row.containsKey("_rowStatus")
                     ? (String) row.get("_rowStatus")
-                    : (String) row.getOrDefault("rowStatus", "");
+                    : "U";
             if ("C".equals(rowStatus)) {
                 codeMgtRepository.insertGrpCd(row);
             } else if ("U".equals(rowStatus)) {
@@ -48,7 +48,7 @@ public class CodeMgtService {
         for (Map<String, Object> row : saveList) {
             String rowStatus = row.containsKey("_rowStatus")
                     ? (String) row.get("_rowStatus")
-                    : (String) row.getOrDefault("rowStatus", "");
+                    : "U";
             if ("C".equals(rowStatus)) {
                 codeMgtRepository.insertDtlCd(row);
             } else if ("U".equals(rowStatus)) {

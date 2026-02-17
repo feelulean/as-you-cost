@@ -80,6 +80,8 @@
                 deleteParam: { type: Object, value: function() { return {}; } }
             },
 
+            attached: function() { this.onFindList(); },
+
             onFindList: function() {
                 this.$.findListAjax.generateRequest();
             },

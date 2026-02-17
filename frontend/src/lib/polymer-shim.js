@@ -245,7 +245,17 @@
             break;
           }
         }
-        if (!related) continue;
+        if (!related) {
+          /* 함수 호출 표현식의 인자가 모두 문자열 리터럴인 경우
+             내부 호스트 상태(예: activeDetailTab)에 의존할 수 있으므로 재평가 */
+          var hasImplicitDeps = false;
+          for (var q = 0; q < b.paths.length; q++) {
+            if (/^\w+\(/.test(b.paths[q]) && extractDeps(b.paths[q]).length === 0) {
+              hasImplicitDeps = true; break;
+            }
+          }
+          if (!hasImplicitDeps) continue;
+        }
       }
 
       BIND_RE.lastIndex = 0;
@@ -353,6 +363,7 @@
 
   function bindEvents(root, ctx) {
     var all = root.querySelectorAll('*');
+    var boundCount = 0;
     for (var i = 0; i < all.length; i++) {
       var el = all[i];
       if (el._polyBound) continue;
@@ -362,12 +373,17 @@
         continue;
       }
 
-      var attrs = el.attributes;
-      for (var j = 0; j < attrs.length; j++) {
-        var attr = attrs[j];
-        if (attr.name.indexOf('on-') === 0) {
-          var evtName = attr.name.substring(3);
-          var methodName = attr.value;
+      /* 속성을 배열로 복사 (collectBindings 의 attr.value='' 로 인한 라이브 컬렉션 이슈 방지) */
+      var attrList = [];
+      for (var j = 0; j < el.attributes.length; j++) {
+        attrList.push({ name: el.attributes[j].name, value: el.attributes[j].value });
+      }
+      for (var k = 0; k < attrList.length; k++) {
+        var aName = attrList[k].name;
+        var aValue = attrList[k].value;
+        if (aName.indexOf('on-') === 0 && aValue) {
+          var evtName = aName.substring(3);
+          var methodName = aValue;
           if (typeof ctx[methodName] === 'function') {
             (function (mn, en) {
               el.addEventListener(en, function (e) {
@@ -376,10 +392,14 @@
                 }
               });
             })(methodName, evtName);
+            boundCount++;
           }
         }
       }
       el._polyBound = true;
+    }
+    if (boundCount > 0) {
+      console.log('[polymer-shim] bindEvents: ' + boundCount + '개 이벤트 바인딩 완료');
     }
   }
 
@@ -639,6 +659,46 @@
         return me.querySelector(selector);
       };
 
+      /* ★ Event Delegation — on-xxx 속성 이벤트를 호스트 레벨에서 위임 처리
+         (개별 addEventListener 대신 이벤트 버블링을 활용하여 동적으로 핸들러 탐색) */
+      var _delegateEvents = ['click', 'dblclick', 'change', 'input'];
+      for (var _ei = 0; _ei < _delegateEvents.length; _ei++) {
+        (function (evtType) {
+          me.addEventListener(evtType, function (e) {
+            var target = e.target;
+            var attrName = 'on-' + evtType;
+            while (target && target !== me) {
+              if (!isScElement(target)) {
+                var handlerName = target.getAttribute(attrName);
+                if (handlerName && typeof me[handlerName] === 'function') {
+                  try {
+                    me[handlerName]({
+                      target: e.target,
+                      currentTarget: target,
+                      detail: e.detail || {},
+                      preventDefault: function () { e.preventDefault(); },
+                      stopPropagation: function () { e.stopPropagation(); }
+                    });
+                  } catch (err) {
+                    console.error('[polymer-shim] 이벤트 핸들러 오류:', handlerName, err);
+                  }
+                  return;
+                }
+              }
+              target = target.parentElement;
+            }
+          });
+        })(_delegateEvents[_ei]);
+      }
+
+      /* sc-* 컴포넌트에 호스트 참조 주입 */
+      var scEls = me.querySelectorAll('*');
+      for (var i = 0; i < scEls.length; i++) {
+        if (isScElement(scEls[i])) {
+          scEls[i]._polymerHost = me;
+        }
+      }
+
       /* 바인딩 메타데이터 수집 (dom-if 콘텐츠 포함) */
       me._bindings = collectBindings(me);
 
@@ -654,17 +714,6 @@
 
       /* 초기 바인딩 적용 (전체) */
       applyBindings(me._bindings, me, null);
-
-      /* sc-* 컴포넌트에 호스트 참조 주입 */
-      var scEls = me.querySelectorAll('*');
-      for (var i = 0; i < scEls.length; i++) {
-        if (isScElement(scEls[i])) {
-          scEls[i]._polymerHost = me;
-        }
-      }
-
-      /* 이벤트 바인딩 (네이티브 요소만) */
-      bindEvents(me, me);
 
       /* ★ dom-if 초기 조건 평가 (초기 visible 탭 표시) */
       evaluateDomIfs(me._domIfs, me, null);

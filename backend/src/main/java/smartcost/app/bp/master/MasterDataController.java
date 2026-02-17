@@ -111,6 +111,10 @@ public class MasterDataController {
     public Map<String, Object> deleteListExchRate(@RequestBody Map<String, Object> param) {
         return masterDataService.deleteList("exchRate", param);
     }
+    @RequestMapping("/findExchRateByPair.do")
+    public Map<String, Object> findExchRateByPair(@RequestBody Map<String, Object> param) {
+        return masterDataService.findExchRateByPair(param);
+    }
 
     // ── 인상율 ──
     @RequestMapping("/findListRaiseRate.do")

@@ -47,8 +47,7 @@ public class EstimateCostService {
 
         for (Map<String, Object> row : saveList) {
             String rowStatus = row.containsKey("_rowStatus")
-                    ? (String) row.get("_rowStatus")
-                    : (String) row.getOrDefault("rowStatus", "");
+                    ? (String) row.get("_rowStatus") : "U";
 
             if ("C".equals(rowStatus)) {
                 // 신규: 프로젝트 코드 자동 채번 (EC20260001 형식)

@@ -57,6 +57,13 @@
             }
         </style>
 
+        <!-- CC 프로젝트 목록 Ajax -->
+        <sc-ajax id="findPjtListAjax"
+                 url="/bp/cost/cc/findListCurrentCostPjt.do"
+                 body="{{pjtSearchParam}}"
+                 on-response="onFindPjtListResponse">
+        </sc-ajax>
+
         <!-- ============================================================
              Ajax 선언부
              ============================================================ -->
@@ -74,6 +81,41 @@
                  body="{{calcParam}}"
                  on-response="onCalculateSgaCostResponse">
         </sc-ajax>
+
+        <!-- 좌우 분할 레이아웃 -->
+        <div class="hbox flex">
+            <!-- 좌측: CC 프로젝트 목록 -->
+            <div class="vbox flex-3">
+                <sc-search-container on-search="onFindPjtList" auth-code="V">
+                    <table>
+                        <colgroup>
+                            <col style="width:80px"/><col/>
+                        </colgroup>
+                        <tr>
+                            <th><sc-label text="프로젝트"></sc-label></th>
+                            <td><sc-text-field value="{{pjtSearchParam.pjtCd}}" on-enter="onFindPjtList" placeholder="코드/명칭"></sc-text-field></td>
+                        </tr>
+                    </table>
+                </sc-search-container>
+
+                <sc-grid id="pjtGrid"
+                         data-provider="{{pjtList}}"
+                         selection-mode="radio"
+                         on-item-click="onProjectClick"
+                         class="flex">
+                    <sc-grid-columns>
+                        <sc-data-column data-field="pjtCd" header-text="프로젝트코드" width="120" text-align="center"></sc-data-column>
+                        <sc-data-column data-field="pjtNm" header-text="프로젝트명" width="160"></sc-data-column>
+                        <sc-data-column data-field="ccRev" header-text="차수" width="50" text-align="center"></sc-data-column>
+                        <sc-data-column data-field="progStsNm" header-text="상태" width="70" text-align="center"></sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </div>
+
+            <div class="hspace-10"></div>
+
+            <!-- 우측: 상세 콘텐츠 -->
+            <div class="vbox flex-7" style="overflow:auto;">
 
         <!-- ============================================================
              상단: 비율 입력 폼
@@ -141,7 +183,7 @@
         <!-- ============================================================
              하단: 판매관리비 계산 결과 그리드
              ============================================================ -->
-        <div class="section-title" style="margin-top:12px;">판매관리비 계산 결과</div>
+        <div class="section-title" style="margin-top:12px;">판매관리비 계산 결과 (단위: {{baseCurrency}})</div>
 
         <sc-grid id="sgaResultGrid"
                  data-provider="{{sgaResultList}}"
@@ -164,7 +206,7 @@
                 </sc-data-column>
 
                 <sc-data-column data-field="amt"
-                                header-text="금액(원)"
+                                header-text="금액"
                                 width="160"
                                 text-align="right"
                                 data-type="number"
@@ -172,6 +214,9 @@
                 </sc-data-column>
             </sc-grid-columns>
         </sc-grid>
+
+            </div><!-- /vbox flex-7 (우측) -->
+        </div><!-- /hbox flex (좌우분할) -->
 
     </template>
 
@@ -181,8 +226,9 @@
 
             properties: {
                 /* ─── URL 파라미터 ─── */
-                ccPjtCd: { type: String, value: '' },
-                ccRev:   { type: String, value: '' },
+                ccPjtCd:      { type: String, value: '' },
+                ccRev:        { type: String, value: '' },
+                baseCurrency: { type: String, value: 'KRW' },
 
                 /* ─── SGA 비율 입력 데이터 ─── */
                 sgaData: {
@@ -208,6 +254,10 @@
                     value: function() { return []; }
                 },
 
+                /* ─── CC 프로젝트 목록 ─── */
+                pjtSearchParam: { type: Object, value: function() { return {}; } },
+                pjtList:        { type: Array,  value: function() { return []; } },
+
                 /* ─── Ajax 파라미터 ─── */
                 sgaSearchParam: { type: Object, value: function() { return {}; } },
                 calcParam:      { type: Object, value: function() { return {}; } }
@@ -220,16 +270,52 @@
             attached: function() {
                 var param = UT.getParameter();
                 if (param) {
-                    this.ccPjtCd = param.ccPjtCd || '';
-                    this.ccRev   = param.ccRev   || '';
+                    this.ccPjtCd      = param.ccPjtCd      || '';
+                    this.ccRev        = param.ccRev        || '';
+                    this.baseCurrency = param.baseCurrency  || 'KRW';
                 }
+                this.$.findPjtListAjax.generateRequest();
                 if (this.ccPjtCd) {
-                    this.set('sgaSearchParam', {
-                        ccPjtCd: this.ccPjtCd,
-                        ccRev:   this.ccRev
-                    });
-                    this.$.findSgaCostAjax.generateRequest();
+                    this._loadProjectData();
                 }
+            },
+
+            /* ==============================================================
+               CC 프로젝트 목록
+               ============================================================== */
+
+            onFindPjtList: function() {
+                this.$.findPjtListAjax.generateRequest();
+            },
+
+            onFindPjtListResponse: function(e) {
+                this.set('pjtList', e.detail.response || []);
+            },
+
+            onProjectClick: function(e) {
+                var row = e.detail.data;
+                if (!row) return;
+                this._clearDetail();
+                this.ccPjtCd = row.pjtCd;
+                this.ccRev   = row.ccRev || '';
+                this._loadProjectData();
+            },
+
+            _loadProjectData: function() {
+                this.set('sgaSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findSgaCostAjax.generateRequest();
+            },
+
+            _clearDetail: function() {
+                this.set('sgaData', {
+                    salesLaborRate: 0, transportRate: 0, exportRate: 0,
+                    warrantyRate: 0, advertisingRate: 0, researchRate: 0,
+                    assetCostRate: 0, hrCostRate: 0, etcRate: 0
+                });
+                this.set('sgaResultList', []);
             },
 
             /* ==============================================================

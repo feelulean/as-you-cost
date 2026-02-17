@@ -106,6 +106,8 @@
                 deleteParam:  { type: Object, value: function() { return {}; } }
             },
 
+            attached: function() { this.onFindList(); },
+
             /* ── 조회 ── */
             onFindList: function() {
                 this.$.findListAjax.generateRequest();

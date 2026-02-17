@@ -35,6 +35,16 @@
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
     </select>
 
+    <select id="countCostCode" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM PCM_EC_COST_CODE
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </select>
+
+    <select id="countQtyDisc" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM PCM_EC_QTY_DISC
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </select>
+
     <insert id="insertEcDetail" parameterType="map">
         INSERT INTO PCM_EC_DETAIL (TEN_ID, EC_PJT_CD, EC_VER, RECV_DT, SUBMIT_DT,
             PRICE_COMP, ORDER_TYPE, FACTORY_TYPE, FACTORY_CD, CORP_TYPE, CORP_CD,
@@ -67,6 +77,16 @@
                RMK          = COALESCE(#{p.rmk}, RMK),
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </update>
+
+    <!-- 프로젝트 마스터의 기준통화 업데이트 -->
+    <update id="updatePjtBaseCurrency" parameterType="map">
+        UPDATE PCM_EC_PJT_MSTR
+           SET BASE_CURRENCY = #{p.baseCurrency}
+             , MODR_ID = #{g.username}
+             , MOD_DTTM = #{g.now}
+         WHERE TEN_ID = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
     </update>
 
     <!-- ═══════════════════════════════════════════
@@ -194,7 +214,8 @@
          일정
          ═══════════════════════════════════════════ -->
     <select id="findListSchedule" parameterType="map" resultType="map">
-        SELECT TASK_CD       AS "taskDiv",
+        SELECT EC_PJT_CD    AS "ecPjtCd",
+               TASK_CD       AS "taskDiv",
                TASK_NM       AS "taskNm",
                SORT_NO       AS "scheduleSeq",
                START_DT      AS "startDt",
@@ -210,14 +231,14 @@
     <insert id="insertSchedule" parameterType="map">
         INSERT INTO PCM_EC_SCHEDULE (TEN_ID, EC_PJT_CD, TASK_CD, TASK_NM, START_DT, END_DT,
             ACTUAL_END_DT, DELAY_DAYS, SORT_NO, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.taskDiv}, #{p.taskDiv}, #{p.startDt}, #{p.endDt},
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.taskDiv}, #{p.taskNm}, #{p.startDt}, #{p.endDt},
             #{p.actualEndDt}, #{p.delayDays}, #{p.scheduleSeq},
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
     <update id="updateSchedule" parameterType="map">
         UPDATE PCM_EC_SCHEDULE
-           SET TASK_NM = #{p.taskDiv}, START_DT = #{p.startDt}, END_DT = #{p.endDt},
+           SET TASK_NM = #{p.taskNm}, START_DT = #{p.startDt}, END_DT = #{p.endDt},
                ACTUAL_END_DT = #{p.actualEndDt}, DELAY_DAYS = #{p.delayDays},
                SORT_NO = #{p.scheduleSeq}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND TASK_CD = #{p.taskDiv}
@@ -227,7 +248,8 @@
          라인투자비
          ═══════════════════════════════════════════ -->
     <select id="findListLineInvest" parameterType="map" resultType="map">
-        SELECT LINE_SEQ   AS "lineInvestSeq",
+        SELECT EC_PJT_CD  AS "ecPjtCd",
+               LINE_SEQ   AS "lineInvestSeq",
                LINE_TYPE  AS "lineType",
                LINE_CD    AS "lineCd",
                LINE_NM    AS "lineNm",
@@ -278,7 +300,8 @@
          기타투자비
          ═══════════════════════════════════════════ -->
     <select id="findListOtherInvest" parameterType="map" resultType="map">
-        SELECT INVEST_SEQ AS "otherInvestSeq",
+        SELECT EC_PJT_CD  AS "ecPjtCd",
+               INVEST_SEQ AS "otherInvestSeq",
                INVEST_NM  AS "investNm",
                INVEST_TYPE AS "investType",
                CURRENCY   AS "currency",
@@ -326,7 +349,8 @@
          인원계획
          ═══════════════════════════════════════════ -->
     <select id="findListManpower" parameterType="map" resultType="map">
-        SELECT MP_SEQ     AS "mpSeq",
+        SELECT EC_PJT_CD  AS "ecPjtCd",
+               MP_SEQ     AS "mpSeq",
                MP_TYPE    AS "mpType",
                MP_NM      AS "mpNm",
                PROCESS_TYPE AS "processType",
@@ -359,6 +383,19 @@
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND MP_SEQ = #{p.mpSeq}
     </update>
+
+    <!-- ═══════════════════════════════════════════
+         수량/할인율: 연도별 합계 (제조경비/판관비 계산용)
+         ═══════════════════════════════════════════ -->
+    <select id="findListQtyDiscYearSum" parameterType="map" resultType="map">
+        SELECT CAST(YEAR_VAL AS INTEGER) AS "yearVal",
+               SUM(COALESCE(SALES_QTY, 0)) AS "totalQty"
+          FROM PCM_EC_QTY_DISC
+         WHERE TEN_ID = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
+         GROUP BY YEAR_VAL
+         ORDER BY CAST(YEAR_VAL AS INTEGER)
+    </select>
 
     <!-- ═══════════════════════════════════════════
          제조경비
@@ -431,6 +468,12 @@
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND COST_CD = #{p.costCd}
     </update>
 
+    <!-- 제조경비: 프로젝트 단위 일괄 삭제 -->
+    <delete id="deleteMfgCostByPjt" parameterType="map">
+        DELETE FROM PCM_EC_MFG_COST
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </delete>
+
     <!-- ═══════════════════════════════════════════
          판매관리비
          ═══════════════════════════════════════════ -->
@@ -457,6 +500,7 @@
     <select id="countSgaCost" parameterType="map" resultType="int">
         SELECT COUNT(*) FROM PCM_EC_SGA_COST
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+           AND COST_CD = COALESCE(#{p.costCd}, COST_CD)
     </select>
 
     <insert id="insertSgaCost" parameterType="map">
@@ -539,6 +583,96 @@
            AND VIEW_TYPE = #{p.viewType} AND VIEW_KEY = #{p.viewKey} AND YEAR_VAL = #{p.yearVal}
     </update>
 
+    <!-- 손익계산서: 프로젝트 단위 일괄 삭제 -->
+    <delete id="deletePlStmtByPjt" parameterType="map">
+        DELETE FROM PCM_EC_PL_STMT
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </delete>
+
+    <!-- 손익계산서: 원가 데이터 집계 → 일괄 INSERT
+         CostCode + QtyDisc + MfgCost + SgaCost + BOM 조인 후
+         연도별 P&L 행을 생성한다.
+         VIEW_TYPE = #{p.viewType}, VIEW_KEY = EC_PJT_CD (프로젝트 기준) -->
+    <insert id="insertCalcPlStmt" parameterType="map">
+        INSERT INTO PCM_EC_PL_STMT (TEN_ID, EC_PJT_CD, VIEW_TYPE, VIEW_KEY, YEAR_VAL,
+            SALES_AMT, MAT_COST, LABOR_COST, MFG_COST, TOTAL_MFG_COST,
+            GROSS_PROFIT, SGA_COST, OPER_INCOME, OPER_MARGIN,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+        SELECT #{g.tenant}, #{p.ecPjtCd}, 'PJT', #{p.ecPjtCd}, agg.year_val,
+               agg.sales_amt,
+               agg.mat_cost,
+               agg.labor_cost,
+               agg.mfg_overhead,
+               agg.mat_cost + agg.labor_cost + agg.mfg_overhead,
+               agg.sales_amt - (agg.mat_cost + agg.labor_cost + agg.mfg_overhead),
+               agg.sga_cost,
+               agg.sales_amt - (agg.mat_cost + agg.labor_cost + agg.mfg_overhead) - agg.sga_cost,
+               CASE WHEN agg.sales_amt > 0
+                    THEN ROUND((agg.sales_amt - (agg.mat_cost + agg.labor_cost + agg.mfg_overhead) - agg.sga_cost)
+                               / agg.sales_amt * 100, 2)
+                    ELSE 0 END,
+               #{g.username}, #{g.now}, #{g.username}, #{g.now}
+          FROM (
+              SELECT QD.YEAR_VAL AS year_val,
+                     SUM(COALESCE(CC.EST_PRICE,0) * COALESCE(QD.SALES_QTY,0)
+                         * (1.0 - COALESCE(QD.DISC_RATE,0)/100.0))            AS sales_amt,
+                     SUM(COALESCE(BT.unit_mat,0) * COALESCE(QD.SALES_QTY,0))  AS mat_cost,
+                     SUM((COALESCE(MC.DIRECT_LABOR,0) + COALESCE(MC.INDIRECT_LABOR,0))
+                         * COALESCE(QD.SALES_QTY,0))                           AS labor_cost,
+                     SUM((COALESCE(MC.TOTAL_MFG_COST,0)
+                          - COALESCE(MC.DIRECT_LABOR,0) - COALESCE(MC.INDIRECT_LABOR,0))
+                         * COALESCE(QD.SALES_QTY,0))                           AS mfg_overhead,
+                     SUM(COALESCE(SC.TOTAL_SGA_COST,0) * COALESCE(QD.SALES_QTY,0)) AS sga_cost
+                FROM PCM_EC_QTY_DISC QD
+                JOIN PCM_EC_COST_CODE CC
+                  ON CC.TEN_ID = QD.TEN_ID AND CC.EC_PJT_CD = QD.EC_PJT_CD AND CC.COST_CD = QD.COST_CD
+                LEFT JOIN PCM_EC_MFG_COST MC
+                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD
+                LEFT JOIN PCM_EC_SGA_COST SC
+                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD
+                LEFT JOIN (
+                    SELECT TEN_ID, EC_PJT_CD,
+                           COALESCE(SUM(MAT_COST),0) AS unit_mat
+                      FROM PCM_EC_BOM
+                     WHERE (UP_ITEM_CD IS NULL OR UP_ITEM_CD = '')
+                     GROUP BY TEN_ID, EC_PJT_CD
+                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD
+               WHERE QD.TEN_ID = #{g.tenant} AND QD.EC_PJT_CD = #{p.ecPjtCd}
+               GROUP BY QD.YEAR_VAL
+          ) agg
+    </insert>
+
+    <!-- 손익계산서: 피벗 조회 (연도→열 변환)
+         DB 행(연도별) → 그리드 행(항목별)으로 변환 -->
+    <select id="findListPlStmtPivot" parameterType="map" resultType="map">
+        SELECT items.item_nm   AS "itemNm",
+               items.item_cd   AS "itemCd",
+               items.sort_no   AS "sortNo",
+               COALESCE(MAX(CASE WHEN P.YEAR_VAL = '1' THEN items.val END),0) AS "y1",
+               COALESCE(MAX(CASE WHEN P.YEAR_VAL = '2' THEN items.val END),0) AS "y2",
+               COALESCE(MAX(CASE WHEN P.YEAR_VAL = '3' THEN items.val END),0) AS "y3",
+               COALESCE(MAX(CASE WHEN P.YEAR_VAL = '4' THEN items.val END),0) AS "y4",
+               COALESCE(MAX(CASE WHEN P.YEAR_VAL = '5' THEN items.val END),0) AS "y5",
+               COALESCE(SUM(items.val),0) AS "totalAmt"
+          FROM PCM_EC_PL_STMT P
+         CROSS JOIN LATERAL (
+               VALUES
+                 ('매출액',       'REVENUE',      1, P.SALES_AMT),
+                 ('재료비',       'MAT_COST',     2, P.MAT_COST),
+                 ('노무비',       'LABOR_COST',   3, P.LABOR_COST),
+                 ('제조경비',     'MFG_COST',     4, P.MFG_COST),
+                 ('제조원가합계', 'MFG_TOTAL',    5, P.TOTAL_MFG_COST),
+                 ('매출총이익',   'GROSS_PROFIT', 6, P.GROSS_PROFIT),
+                 ('판매관리비',   'SGA_COST',     7, P.SGA_COST),
+                 ('영업이익',     'OPER_INCOME',  8, P.OPER_INCOME),
+                 ('영업이익률(%)', 'OPER_MARGIN', 9, P.OPER_MARGIN)
+         ) AS items(item_nm, item_cd, sort_no, val)
+         WHERE P.TEN_ID    = #{g.tenant}
+           AND P.EC_PJT_CD = #{p.ecPjtCd}
+         GROUP BY items.item_nm, items.item_cd, items.sort_no
+         ORDER BY items.sort_no
+    </select>
+
     <!-- ═══════════════════════════════════════════
          민감도 분석
          ═══════════════════════════════════════════ -->
@@ -572,7 +706,9 @@
          민감도 분석 변수
          ═══════════════════════════════════════════ -->
     <select id="findListSensitivityVar" parameterType="map" resultType="map">
-        SELECT VAR_TYPE   AS "varType",
+        SELECT EC_PJT_CD  AS "ecPjtCd",
+               SENS_VER   AS "seqNo",
+               VAR_TYPE   AS "varType",
                VAR_NM     AS "varNm",
                BEFORE_VAL AS "beforeVal",
                AFTER_VAL  AS "afterVal",
@@ -606,7 +742,8 @@
          자금조달계획
          ═══════════════════════════════════════════ -->
     <select id="findListFundPlan" parameterType="map" resultType="map">
-        SELECT FUND_SEQ     AS "fundSeq",
+        SELECT EC_PJT_CD    AS "ecPjtCd",
+               FUND_SEQ     AS "fundSeq",
                SOURCE_TYPE  AS "sourceType",
                INTEREST_RATE AS "interestRate",
                CURRENCY     AS "currency",
@@ -641,7 +778,8 @@
          NPV 분석
          ═══════════════════════════════════════════ -->
     <select id="findListNpv" parameterType="map" resultType="map">
-        SELECT ANALYSIS_VER  AS "analysisVer",
+        SELECT EC_PJT_CD     AS "ecPjtCd",
+               ANALYSIS_VER  AS "analysisVer",
                ANALYSIS_TYPE AS "analysisType",
                WACC_RATE     AS "waccRate",
                NPV_VAL       AS "npvValue",

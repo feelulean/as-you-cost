@@ -51,10 +51,13 @@ public class TcDetailService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> saveList(String entity, Map<String, Object> param) {
         List<Map<String, Object>> saveList = (List<Map<String, Object>>) param.get("saveList");
+        String tgtPjtCd = (String) param.get("tgtPjtCd");
         Map<String, Object> result = new HashMap<>();
 
         if (saveList != null) {
             for (Map<String, Object> row : saveList) {
+                if (tgtPjtCd != null && !row.containsKey("tgtPjtCd")) row.put("tgtPjtCd", tgtPjtCd);
+
                 String rowStatus = row.containsKey("_rowStatus")
                         ? (String) row.get("_rowStatus") : "U";
 
@@ -75,10 +78,12 @@ public class TcDetailService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> deleteList(String entity, Map<String, Object> param) {
         List<Map<String, Object>> deleteList = (List<Map<String, Object>>) param.get("deleteList");
+        String tgtPjtCd = (String) param.get("tgtPjtCd");
         Map<String, Object> result = new HashMap<>();
 
         if (deleteList != null) {
             for (Map<String, Object> row : deleteList) {
+                if (tgtPjtCd != null && !row.containsKey("tgtPjtCd")) row.put("tgtPjtCd", tgtPjtCd);
                 tcDetailRepository.delete(entity, row);
             }
         }

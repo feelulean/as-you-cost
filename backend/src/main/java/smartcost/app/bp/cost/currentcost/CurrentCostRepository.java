@@ -41,7 +41,7 @@ public class CurrentCostRepository {
      * - 형식: CC + 연도(4자리) + 일련번호(4자리) (예: CC20260001)
      */
     public String findNewCurrentCostPjtCd() {
-        return sqlSession.selectOne(NAMESPACE + "findNewCurrentCostPjtCd");
+        java.util.Map<String, Object> g = new java.util.HashMap<>(); g.put("tenant", "T001"); java.util.Map<String, Object> w = new java.util.HashMap<>(); w.put("g", g); w.put("p", new java.util.HashMap<>()); return sqlSession.selectOne(NAMESPACE + "findNewCurrentCostPjtCd", w);
     }
 
     /**

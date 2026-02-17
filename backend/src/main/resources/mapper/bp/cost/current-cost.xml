@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
@@ -22,6 +22,7 @@
               , A.CAR_TYPE     AS "carType"
               , A.OEM_NM       AS "oemNm"
               , A.PROD_GRP     AS "prodGrp"
+              , A.BASE_CURRENCY AS "baseCurrency"
               , A.PROG_STS     AS "progSts"
               , CASE A.PROG_STS
                     WHEN 'D' THEN 'Draft'
@@ -36,16 +37,16 @@
           FROM  PCM_CUR_PJT_MSTR A
          WHERE  A.TEN_ID = #{g.tenant}
         <if test="p.pjtCd != null and p.pjtCd != ''">
-           AND  A.CC_PJT_CD LIKE '%' || #{p.pjtCd} || '%'
+           AND  A.CC_PJT_CD LIKE '%' || TRIM(#{p.pjtCd}) || '%'
         </if>
         <if test="p.bizUnit != null and p.bizUnit != ''">
            AND  A.BIZ_UNIT = #{p.bizUnit}
         </if>
         <if test="p.custNm != null and p.custNm != ''">
-           AND  A.CUST_NM LIKE '%' || #{p.custNm} || '%'
+           AND  A.CUST_NM LIKE '%' || TRIM(#{p.custNm}) || '%'
         </if>
         <if test="p.carType != null and p.carType != ''">
-           AND  A.CAR_TYPE LIKE '%' || #{p.carType} || '%'
+           AND  A.CAR_TYPE LIKE '%' || TRIM(#{p.carType}) || '%'
         </if>
          ORDER BY A.CC_PJT_CD, A.CC_REV DESC
     </select>
@@ -64,6 +65,7 @@
               , A.CAR_TYPE     AS "carType"
               , A.OEM_NM       AS "oemNm"
               , A.PROD_GRP     AS "prodGrp"
+              , A.BASE_CURRENCY AS "baseCurrency"
               , A.PROG_STS     AS "progSts"
               , CASE A.PROG_STS
                     WHEN 'D' THEN 'Draft'
@@ -89,7 +91,7 @@
          프로젝트 코드 자동 채번
          형식: CC + 연도(4) + 일련번호(4)  예) CC20260001
          ============================================================ -->
-    <select id="findNewCurrentCostPjtCd" resultType="string">
+    <select id="findNewCurrentCostPjtCd" parameterType="map" resultType="string">
         SELECT  'CC' || TO_CHAR(CURRENT_DATE, 'YYYY')
                      || LPAD((COALESCE(MAX(CAST(SUBSTRING(A.CC_PJT_CD FROM 7) AS INTEGER)), 0) + 1)::TEXT, 4, '0')
           FROM  PCM_CUR_PJT_MSTR A
@@ -112,6 +114,7 @@
           , CAR_TYPE
           , OEM_NM
           , PROD_GRP
+          , BASE_CURRENCY
           , PROG_STS
           , RMK
           , STS
@@ -130,6 +133,7 @@
           , #{p.carType}
           , #{p.oemNm}
           , #{p.prodGrp}
+          , #{p.baseCurrency}
           , #{p.progSts}
           , #{p.rmk}
           , #{p.sts}
@@ -178,6 +182,7 @@
           , CAR_TYPE
           , OEM_NM
           , PROD_GRP
+          , BASE_CURRENCY
           , PROG_STS
           , RMK
           , STS
@@ -196,6 +201,7 @@
               , A.CAR_TYPE
               , A.OEM_NM
               , A.PROD_GRP
+              , A.BASE_CURRENCY
               , #{p.progSts}
               , A.RMK
               , 'T'

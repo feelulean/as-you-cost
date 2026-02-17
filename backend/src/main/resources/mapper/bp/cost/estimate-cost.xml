@@ -22,6 +22,7 @@
               , A.PROD_GRP     AS "prodGrp"
               , A.PROD_QTY     AS "prodQty"
               , A.SOP_DT       AS "sopDt"
+              , A.BASE_CURRENCY AS "baseCurrency"
               , A.STS          AS "sts"
               , CASE A.STS
                     WHEN 'T' THEN '작성중'
@@ -36,16 +37,16 @@
           FROM  PCM_EC_PJT_MSTR A
          WHERE  A.TEN_ID = #{g.tenant}
         <if test="p.pjtCd != null and p.pjtCd != ''">
-           AND  A.EC_PJT_CD LIKE '%' || #{p.pjtCd} || '%'
+           AND  A.EC_PJT_CD LIKE '%' || TRIM(#{p.pjtCd}) || '%'
         </if>
         <if test="p.bizUnit != null and p.bizUnit != ''">
            AND  A.BIZ_UNIT = #{p.bizUnit}
         </if>
         <if test="p.custNm != null and p.custNm != ''">
-           AND  A.CUST_NM LIKE '%' || #{p.custNm} || '%'
+           AND  A.CUST_NM LIKE '%' || TRIM(#{p.custNm}) || '%'
         </if>
         <if test="p.carType != null and p.carType != ''">
-           AND  A.CAR_TYPE LIKE '%' || #{p.carType} || '%'
+           AND  A.CAR_TYPE LIKE '%' || TRIM(#{p.carType}) || '%'
         </if>
          ORDER BY A.REG_DTTM DESC
     </select>
@@ -77,6 +78,7 @@
           , PROD_GRP
           , PROD_QTY
           , SOP_DT
+          , BASE_CURRENCY
           , RMK
           , STS
           , REGR_ID
@@ -94,6 +96,7 @@
           , #{p.prodGrp}
           , #{p.prodQty}
           , #{p.sopDt}
+          , #{p.baseCurrency}
           , #{p.rmk}
           , #{p.sts}
           , #{g.username}
@@ -116,6 +119,7 @@
               , PROD_GRP  = #{p.prodGrp}
               , PROD_QTY  = #{p.prodQty}
               , SOP_DT    = #{p.sopDt}
+              , BASE_CURRENCY = #{p.baseCurrency}
               , RMK       = #{p.rmk}
               , MODR_ID   = #{g.username}
               , MOD_DTTM  = #{g.now}

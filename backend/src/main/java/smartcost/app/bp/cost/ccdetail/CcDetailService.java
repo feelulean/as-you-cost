@@ -1,5 +1,6 @@
 package smartcost.app.bp.cost.ccdetail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,10 +53,15 @@ public class CcDetailService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> saveList(String entity, Map<String, Object> param) {
         List<Map<String, Object>> saveList = (List<Map<String, Object>>) param.get("saveList");
+        String ccPjtCd = (String) param.get("ccPjtCd");
+        Object ccRev = param.get("ccRev");
         Map<String, Object> result = new HashMap<>();
 
         if (saveList != null) {
             for (Map<String, Object> row : saveList) {
+                if (ccPjtCd != null && !row.containsKey("ccPjtCd")) row.put("ccPjtCd", ccPjtCd);
+                if (ccRev != null && !row.containsKey("ccRev")) row.put("ccRev", ccRev);
+
                 String rowStatus = row.containsKey("_rowStatus")
                         ? (String) row.get("_rowStatus") : "U";
 
@@ -76,10 +82,14 @@ public class CcDetailService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> deleteList(String entity, Map<String, Object> param) {
         List<Map<String, Object>> deleteList = (List<Map<String, Object>>) param.get("deleteList");
+        String ccPjtCd = (String) param.get("ccPjtCd");
+        Object ccRev = param.get("ccRev");
         Map<String, Object> result = new HashMap<>();
 
         if (deleteList != null) {
             for (Map<String, Object> row : deleteList) {
+                if (ccPjtCd != null && !row.containsKey("ccPjtCd")) row.put("ccPjtCd", ccPjtCd);
+                if (ccRev != null && !row.containsKey("ccRev")) row.put("ccRev", ccRev);
                 ccDetailRepository.delete(entity, row);
             }
         }
@@ -93,17 +103,141 @@ public class CcDetailService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> calculateMfgCost(Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
-        // 제조경비 = 직접노무비 + 간접노무비 + 생산직접경비 + 인건비성경비
-        //          + 기타제조경비 + 감가상각비(건구축물+생산라인+기타)
-        //          + 외주가공비 + 금형비 + 연구개발비 + 기타경비
-        int cnt = ccDetailRepository.count("MfgCost", param);
-        if (cnt > 0) {
-            ccDetailRepository.update("MfgCost", param);
-        } else {
-            ccDetailRepository.insert("MfgCost", param);
+
+        // 선행조건: 원가코드 + 수량/할인율 등록 여부
+        int costCodeCnt = ccDetailRepository.count("CostCodeAll", param);
+        int qtyDiscCnt  = ccDetailRepository.count("QtyDiscAll", param);
+        if (costCodeCnt == 0 || qtyDiscCnt == 0) {
+            result.put("status", "FAIL");
+            result.put("message", "원가코드 및 수량/할인율을 먼저 등록해 주세요.");
+            return result;
         }
+
+        String ccPjtCd = (String) param.get("ccPjtCd");
+        Object ccRev   = param.get("ccRev");
+        String costCd  = (String) param.get("costCd");
+
+        double wageIncRate      = toD(param.get("wageIncRate"));
+        double inflationRate    = toD(param.get("inflationRate"));
+        double prodDirectRate   = toD(param.get("prodDirectRate"));
+        double laborRelatedRate = toD(param.get("laborRelatedRate"));
+        double etcMfgRate       = toD(param.get("etcMfgRate"));
+        double moldCostUnit     = toD(param.get("moldCostUnit"));
+        double outsrcCostUnit   = toD(param.get("outsrcCostUnit"));
+
+        // ── 인원계획 조회 ──
+        Map<String, Object> pjtParam = new HashMap<>();
+        pjtParam.put("ccPjtCd", ccPjtCd);
+        pjtParam.put("ccRev", ccRev);
+        List<Map<String, Object>> manpowerList = ccDetailRepository.findList("Manpower", pjtParam);
+
+        // ── 라인투자비 상세 조회 (감가상각 계산용) ──
+        List<Map<String, Object>> lineInvestDtlList = ccDetailRepository.findList("LineInvestDtl", pjtParam);
+        // 라인투자비 (usefulLife 없으면 상세에서)
+        List<Map<String, Object>> lineInvestList = ccDetailRepository.findList("LineInvest", pjtParam);
+
+        // ── 기타투자비 조회 ──
+        List<Map<String, Object>> otherInvestList = ccDetailRepository.findList("OtherInvest", pjtParam);
+
+        // ── 수량/할인율 조회 (연도별 수량) ──
+        List<Map<String, Object>> qtyList = ccDetailRepository.findList("QtyDisc", pjtParam);
+        Map<String, Double> yearQty = new HashMap<>();
+        for (Map<String, Object> q : qtyList) {
+            yearQty.put(str(q.get("yearVal")), toD(q.get("sellQty")));
+        }
+        // 첫 연도 수량 (단위원가 계산 기준)
+        double firstYearQty = qtyList.isEmpty() ? 0 : toD(qtyList.get(0).get("sellQty"));
+
+        /* ═══ 직접노무비 / 간접노무비 ═══ */
+        double sumDirectLabor = 0, sumIndirectLabor = 0;
+        for (Map<String, Object> mp : manpowerList) {
+            String mpDiv = str(mp.get("mpDiv"));
+            double avgSalary  = toD(mp.get("avgSalary"));
+            double headCount  = toD(mp.get("headCount"));
+            double annualCost = avgSalary * headCount;
+            double unitCost   = firstYearQty > 0 ? Math.round(annualCost / firstYearQty) : 0;
+
+            if ("DIRECT".equalsIgnoreCase(mpDiv)) {
+                sumDirectLabor += unitCost;
+            } else {
+                sumIndirectLabor += unitCost;
+            }
+        }
+
+        /* ═══ 비율 기반 원가 ═══ */
+        double prodDirectAmt   = Math.round(sumDirectLabor * prodDirectRate / 100);
+        double laborRelatedAmt = Math.round((sumDirectLabor + sumIndirectLabor) * laborRelatedRate / 100);
+        double otherMfgAmt     = Math.round((sumDirectLabor + sumIndirectLabor) * etcMfgRate / 100);
+
+        /* ═══ 감가상각비 — 라인투자비 ═══ */
+        double sumDeprLine = 0;
+        if (!lineInvestDtlList.isEmpty()) {
+            for (Map<String, Object> dtl : lineInvestDtlList) {
+                double acqAmt = toD(dtl.get("amt"));
+                int usefulLife = toInt(dtl.get("usefulLife"));
+                if (usefulLife <= 0) usefulLife = 1;
+                double annualDepr = Math.round(acqAmt / usefulLife);
+                sumDeprLine += firstYearQty > 0 ? Math.round(annualDepr / firstYearQty) : 0;
+            }
+        } else {
+            for (Map<String, Object> inv : lineInvestList) {
+                double acqAmt = toD(inv.get("acqAmt"));
+                double capaEa = toD(inv.get("capaEa"));
+                if (capaEa <= 0) capaEa = firstYearQty > 0 ? firstYearQty : 1;
+                sumDeprLine += Math.round(acqAmt / capaEa);
+            }
+        }
+
+        /* ═══ 감가상각비 — 기타투자비 ═══ */
+        double sumDeprBldg = 0, sumDeprOther = 0;
+        for (Map<String, Object> inv : otherInvestList) {
+            String investDiv = str(inv.get("investDiv"));
+            double acqAmt = toD(inv.get("acqAmt"));
+            int usefulLife = toInt(inv.get("usefulLife"));
+            if (usefulLife <= 0) usefulLife = 1;
+            double annualDepr = Math.round(acqAmt / usefulLife);
+            double unitDepr = firstYearQty > 0 ? Math.round(annualDepr / firstYearQty) : 0;
+
+            if ("BLDG".equalsIgnoreCase(investDiv) || "BUILD".equalsIgnoreCase(investDiv)) {
+                sumDeprBldg += unitDepr;
+            } else {
+                sumDeprOther += unitDepr;
+            }
+        }
+
+        /* ═══ 결과 요약 ═══ */
+        double totalMfgAmt = sumDirectLabor + sumIndirectLabor
+                + prodDirectAmt + laborRelatedAmt + otherMfgAmt
+                + sumDeprBldg + sumDeprLine + sumDeprOther
+                + outsrcCostUnit + moldCostUnit;
+
+        // DB 저장
+        Map<String, Object> saveParam = new HashMap<>(param);
+        saveParam.put("directLaborAmt",   sumDirectLabor);
+        saveParam.put("indirectLaborAmt", sumIndirectLabor);
+        saveParam.put("directExpAmt",     prodDirectAmt);
+        saveParam.put("laborExpAmt",      laborRelatedAmt);
+        saveParam.put("otherMfgAmt",      otherMfgAmt);
+        saveParam.put("deprBldgAmt",      sumDeprBldg);
+        saveParam.put("deprLineAmt",      sumDeprLine);
+        saveParam.put("deprOtherAmt",     sumDeprOther);
+        saveParam.put("outsrcAmt",        outsrcCostUnit);
+        saveParam.put("moldAmt",          moldCostUnit);
+        saveParam.put("rndAmt",           0.0);
+        saveParam.put("otherExpAmt",      0.0);
+        saveParam.put("totalMfgAmt",      totalMfgAmt);
+        saveParam.put("calcDoneYn",       "Y");
+
+        int cnt = ccDetailRepository.count("MfgCost", saveParam);
+        if (cnt > 0) {
+            ccDetailRepository.update("MfgCost", saveParam);
+        } else {
+            ccDetailRepository.insert("MfgCost", saveParam);
+        }
+
         result.put("status", "OK");
         result.put("message", "제조경비 계산 완료");
+        result.put("totalMfgAmt", totalMfgAmt);
         return result;
     }
 
@@ -111,14 +245,72 @@ public class CcDetailService {
     @Transactional
     public Map<String, Object> calculateSgaCost(Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
-        int cnt = ccDetailRepository.count("SgaCost", param);
-        if (cnt > 0) {
-            ccDetailRepository.update("SgaCost", param);
-        } else {
-            ccDetailRepository.insert("SgaCost", param);
+
+        // 선행조건: 제조경비 계산 완료 여부
+        Map<String, Object> chkParam = new HashMap<>(param);
+        // costCd 없이 프로젝트 전체에서 확인
+        int mfgCnt = ccDetailRepository.count("MfgCost", chkParam);
+        if (mfgCnt == 0) {
+            result.put("status", "FAIL");
+            result.put("message", "제조경비를 먼저 계산해 주세요.");
+            return result;
         }
+
+        // 비율 추출
+        double salesLaborRate  = toD(param.get("salesLaborRate"));
+        double transportRate   = toD(param.get("transportRate"));
+        double exportRate      = toD(param.get("exportRate"));
+        double warrantyRate    = toD(param.get("warrantyRate"));
+        double advertisingRate = toD(param.get("advertisingRate"));
+        double researchRate    = toD(param.get("researchRate"));
+        double assetCostRate   = toD(param.get("assetCostRate"));
+        double hrCostRate      = toD(param.get("hrCostRate"));
+        double etcRate         = toD(param.get("etcRate"));
+        double totalRate = salesLaborRate + transportRate + exportRate + warrantyRate
+                         + advertisingRate + researchRate + assetCostRate + hrCostRate + etcRate;
+
+        // 제조경비 총액 조회
+        List<Map<String, Object>> mfgList = ccDetailRepository.findList("MfgCost", param);
+        double mfgTotal = 0;
+        for (Map<String, Object> mc : mfgList) {
+            mfgTotal += toD(mc.get("totalMfgAmt"));
+        }
+
+        // 항목별 금액 계산
+        double totalSgaAmt = Math.round(mfgTotal * totalRate / 100.0);
+        double salesLaborAmt  = totalRate > 0 ? Math.round(totalSgaAmt * salesLaborRate / totalRate) : 0;
+        double transportAmt   = totalRate > 0 ? Math.round(totalSgaAmt * transportRate / totalRate) : 0;
+        double exportAmt      = totalRate > 0 ? Math.round(totalSgaAmt * exportRate / totalRate) : 0;
+        double warrantyAmt    = totalRate > 0 ? Math.round(totalSgaAmt * warrantyRate / totalRate) : 0;
+        double advertisingAmt = totalRate > 0 ? Math.round(totalSgaAmt * advertisingRate / totalRate) : 0;
+        double researchAmt    = totalRate > 0 ? Math.round(totalSgaAmt * researchRate / totalRate) : 0;
+        double assetCostAmt   = totalRate > 0 ? Math.round(totalSgaAmt * assetCostRate / totalRate) : 0;
+        double hrCostAmt      = totalRate > 0 ? Math.round(totalSgaAmt * hrCostRate / totalRate) : 0;
+        double etcAmt         = totalRate > 0 ? Math.round(totalSgaAmt * etcRate / totalRate) : 0;
+
+        Map<String, Object> saveParam = new HashMap<>(param);
+        saveParam.put("salesLaborAmt",  salesLaborAmt);
+        saveParam.put("transportAmt",   transportAmt);
+        saveParam.put("exportAmt",      exportAmt);
+        saveParam.put("warrantyAmt",    warrantyAmt);
+        saveParam.put("advertisingAmt", advertisingAmt);
+        saveParam.put("researchAmt",    researchAmt);
+        saveParam.put("assetCostAmt",   assetCostAmt);
+        saveParam.put("hrCostAmt",      hrCostAmt);
+        saveParam.put("etcAmt",         etcAmt);
+        saveParam.put("totalSgaAmt",    totalSgaAmt);
+        saveParam.put("calcDoneYn",     "Y");
+
+        int cnt = ccDetailRepository.count("SgaCost", saveParam);
+        if (cnt > 0) {
+            ccDetailRepository.update("SgaCost", saveParam);
+        } else {
+            ccDetailRepository.insert("SgaCost", saveParam);
+        }
+
         result.put("status", "OK");
         result.put("message", "판매관리비 계산 완료");
+        result.put("totalSgaAmt", totalSgaAmt);
         return result;
     }
 
@@ -126,15 +318,34 @@ public class CcDetailService {
     @Transactional
     public Map<String, Object> calculatePlStmt(Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
-        // 손익계산서 = 매출액 - 재료비 - 노무비 - 제조경비 - 판관비
-        int cnt = ccDetailRepository.count("PlStmt", param);
-        if (cnt > 0) {
-            ccDetailRepository.update("PlStmt", param);
-        } else {
-            ccDetailRepository.insert("PlStmt", param);
+
+        // 선행조건: 제조경비 + 판매관리비
+        Map<String, Object> chkParam = new HashMap<>(param);
+        // costCd가 있으면 그걸로, 없으면 프로젝트 전체
+        int mfgCnt = ccDetailRepository.count("MfgCost", chkParam);
+        if (mfgCnt == 0) {
+            result.put("status", "FAIL");
+            result.put("message", "제조경비를 먼저 계산해 주세요.");
+            return result;
         }
+        int sgaCnt = ccDetailRepository.count("SgaCost", chkParam);
+        if (sgaCnt == 0) {
+            result.put("status", "FAIL");
+            result.put("message", "판매관리비를 먼저 계산해 주세요.");
+            return result;
+        }
+
+        // 기존 P&L 데이터 삭제
+        ccDetailRepository.delete("AllPlStmt", param);
+
+        // INSERT...SELECT로 P&L 산출
+        ccDetailRepository.insert("CalcPlStmt", param);
+
+        // 결과 조회
+        List<Map<String, Object>> plList = ccDetailRepository.findList("PlStmt", param);
         result.put("status", "OK");
         result.put("message", "손익계산서 산출 완료");
+        result.put("plList", plList);
         return result;
     }
 
@@ -242,10 +453,22 @@ public class CcDetailService {
         return result;
     }
 
+    /* ── 유틸리티 ── */
+
     private double toD(Object val) {
         if (val == null) return 0;
         if (val instanceof Number) return ((Number) val).doubleValue();
         try { return Double.parseDouble(val.toString()); } catch (Exception e) { return 0; }
+    }
+
+    private int toInt(Object val) {
+        if (val == null) return 0;
+        if (val instanceof Number) return ((Number) val).intValue();
+        try { return Integer.parseInt(val.toString()); } catch (Exception e) { return 0; }
+    }
+
+    private String str(Object val) {
+        return val != null ? val.toString() : "";
     }
 
     private double round2(double v) { return Math.round(v * 100.0) / 100.0; }

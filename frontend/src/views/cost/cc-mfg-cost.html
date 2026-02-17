@@ -90,6 +90,13 @@
             }
         </style>
 
+        <!-- CC 프로젝트 목록 Ajax -->
+        <sc-ajax id="findPjtListAjax"
+                 url="/bp/cost/cc/findListCurrentCostPjt.do"
+                 body="{{pjtSearchParam}}"
+                 on-response="onFindPjtListResponse">
+        </sc-ajax>
+
         <!-- ============================================================
              Ajax 선언부
              ============================================================ -->
@@ -107,6 +114,41 @@
                  body="{{calculateParam}}"
                  on-response="onCalculateMfgCostResponse">
         </sc-ajax>
+
+        <!-- 좌우 분할 레이아웃 -->
+        <div class="hbox flex">
+            <!-- 좌측: CC 프로젝트 목록 -->
+            <div class="vbox flex-3">
+                <sc-search-container on-search="onFindPjtList" auth-code="V">
+                    <table>
+                        <colgroup>
+                            <col style="width:80px"/><col/>
+                        </colgroup>
+                        <tr>
+                            <th><sc-label text="프로젝트"></sc-label></th>
+                            <td><sc-text-field value="{{pjtSearchParam.pjtCd}}" on-enter="onFindPjtList" placeholder="코드/명칭"></sc-text-field></td>
+                        </tr>
+                    </table>
+                </sc-search-container>
+
+                <sc-grid id="pjtGrid"
+                         data-provider="{{pjtList}}"
+                         selection-mode="radio"
+                         on-item-click="onProjectClick"
+                         class="flex">
+                    <sc-grid-columns>
+                        <sc-data-column data-field="pjtCd" header-text="프로젝트코드" width="120" text-align="center"></sc-data-column>
+                        <sc-data-column data-field="pjtNm" header-text="프로젝트명" width="160"></sc-data-column>
+                        <sc-data-column data-field="ccRev" header-text="차수" width="50" text-align="center"></sc-data-column>
+                        <sc-data-column data-field="progStsNm" header-text="상태" width="70" text-align="center"></sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </div>
+
+            <div class="hspace-10"></div>
+
+            <!-- 우측: 상세 콘텐츠 -->
+            <div class="vbox flex-7" style="overflow:auto;">
 
         <!-- ============================================================
              상단: 입력 파라미터 폼
@@ -167,7 +209,7 @@
         <div style="flex:1; overflow:auto; margin-top:10px; display:flex; flex-direction:column;">
 
             <!-- 결과 요약 테이블 -->
-            <div class="section-title">제조경비 계산 결과</div>
+            <div class="section-title">제조경비 계산 결과 (단위: {{baseCurrency}})</div>
             <table class="result-table">
                 <colgroup>
                     <col style="width:40px"/>
@@ -179,7 +221,7 @@
                     <tr>
                         <th>No</th>
                         <th>원가항목</th>
-                        <th>단위당 금액(KRW)</th>
+                        <th>단위당 금액</th>
                         <th>비고</th>
                     </tr>
                 </thead>
@@ -305,8 +347,8 @@
                             <sc-data-column data-field="lineNm" header-text="라인명" width="140"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="workerCnt" header-text="인원(명)" width="80" text-align="right" data-type="number"></sc-data-column>
-                            <sc-data-column data-field="wagePerPerson" header-text="인당임금(원)" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
-                            <sc-data-column data-field="annualCost" header-text="연간노무비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="wagePerPerson" header-text="인당임금" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualCost" header-text="연간노무비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -323,8 +365,8 @@
                             <sc-data-column data-field="lineNm" header-text="라인명" width="140"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="workerCnt" header-text="인원(명)" width="80" text-align="right" data-type="number"></sc-data-column>
-                            <sc-data-column data-field="wagePerPerson" header-text="인당임금(원)" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
-                            <sc-data-column data-field="annualCost" header-text="연간노무비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="wagePerPerson" header-text="인당임금" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualCost" header-text="연간노무비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -340,7 +382,7 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -357,7 +399,7 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -374,7 +416,7 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -391,9 +433,9 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="assetNm" header-text="자산명" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="acqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="acqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
-                            <sc-data-column data-field="annualDepr" header-text="연간상각비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualDepr" header-text="연간상각비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -409,9 +451,9 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="assetNm" header-text="설비/라인명" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="acqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="acqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
-                            <sc-data-column data-field="annualDepr" header-text="연간상각비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualDepr" header-text="연간상각비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -427,9 +469,9 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="assetNm" header-text="자산명" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="acqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="acqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
-                            <sc-data-column data-field="annualDepr" header-text="연간상각비(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="annualDepr" header-text="연간상각비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -446,7 +488,7 @@
                             <sc-data-column data-field="processNm" header-text="공정명" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="outsrcVendor" header-text="외주업체" width="120"></sc-data-column>
-                            <sc-data-column data-field="unitPrice" header-text="단가(원)" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="unitPrice" header-text="단가" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -462,7 +504,7 @@
                         <sc-grid-columns>
                             <sc-data-column data-field="moldNm" header-text="금형명" width="160"></sc-data-column>
                             <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
-                            <sc-data-column data-field="moldAcqAmt" header-text="취득가액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="moldAcqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="totalProdQty" header-text="총생산수량" width="110" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -478,9 +520,9 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="rndItemNm" header-text="R&D 항목" width="180"></sc-data-column>
-                            <sc-data-column data-field="investAmt" header-text="투자금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="investAmt" header-text="투자금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="allocRate" header-text="배분비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
-                            <sc-data-column data-field="allocAmt" header-text="배분금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="allocAmt" header-text="배분금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -495,7 +537,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="180"></sc-data-column>
-                            <sc-data-column data-field="baseAmt" header-text="기준금액(원)" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
+                            <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY2" header-text="2차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY3" header-text="3차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -506,6 +548,9 @@
             </div><!-- /detail-tab-content -->
 
         </div><!-- /flex overflow -->
+
+            </div><!-- /vbox flex-7 (우측) -->
+        </div><!-- /hbox flex (좌우분할) -->
     </template>
 
     <script>
@@ -514,8 +559,9 @@
 
             properties: {
                 /* ─── URL 파라미터 ─── */
-                ccPjtCd: { type: String, value: '' },
-                ccRev:   { type: String, value: '' },
+                ccPjtCd:      { type: String, value: '' },
+                ccRev:        { type: String, value: '' },
+                baseCurrency: { type: String, value: 'KRW' },
 
                 /* ─── 제조경비 산출 입력 데이터 ─── */
                 mfgCostData: {
@@ -574,6 +620,10 @@
                 detailRnd:           { type: Array, value: function() { return []; } },
                 detailEtcExp:        { type: Array, value: function() { return []; } },
 
+                /* ─── CC 프로젝트 목록 ─── */
+                pjtSearchParam: { type: Object, value: function() { return {}; } },
+                pjtList:        { type: Array,  value: function() { return []; } },
+
                 /* ─── Ajax 파라미터 ─── */
                 mfgCostSearchParam: { type: Object, value: function() { return {}; } },
                 calculateParam:     { type: Object, value: function() { return {}; } }
@@ -586,16 +636,54 @@
             attached: function() {
                 var param = UT.getParameter();
                 if (param) {
-                    this.ccPjtCd = param.ccPjtCd || '';
-                    this.ccRev   = param.ccRev   || '';
+                    this.ccPjtCd      = param.ccPjtCd      || '';
+                    this.ccRev        = param.ccRev        || '';
+                    this.baseCurrency = param.baseCurrency  || 'KRW';
                 }
+                this.$.findPjtListAjax.generateRequest();
                 if (this.ccPjtCd) {
-                    this.set('mfgCostSearchParam', {
-                        ccPjtCd: this.ccPjtCd,
-                        ccRev:   this.ccRev
-                    });
-                    this.$.findMfgCostAjax.generateRequest();
+                    this._loadProjectData();
                 }
+            },
+
+            /* ==============================================================
+               CC 프로젝트 목록
+               ============================================================== */
+
+            onFindPjtList: function() {
+                this.$.findPjtListAjax.generateRequest();
+            },
+
+            onFindPjtListResponse: function(e) {
+                this.set('pjtList', e.detail.response || []);
+            },
+
+            onProjectClick: function(e) {
+                var row = e.detail.data;
+                if (!row) return;
+                this._clearDetail();
+                this.ccPjtCd = row.pjtCd;
+                this.ccRev   = row.ccRev || '';
+                this._loadProjectData();
+            },
+
+            _loadProjectData: function() {
+                this.set('mfgCostSearchParam', {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev
+                });
+                this.$.findMfgCostAjax.generateRequest();
+            },
+
+            _clearDetail: function() {
+                this._initEmptyForm();
+                this.set('mfgCostResult', {
+                    directLaborCost: 0, indirectLaborCost: 0, prodDirectCost: 0,
+                    laborRelatedCost: 0, etcMfgCost: 0, deprBldgCost: 0,
+                    deprLineCost: 0, deprEtcCost: 0, outsrcCost: 0,
+                    moldCost: 0, rndCost: 0, etcCost: 0, totalMfgCost: 0
+                });
+                this._clearDetailGrids();
             },
 
             /* ==============================================================
@@ -724,7 +812,7 @@
                 }
                 this._bindDetailData(data);
 
-                UT.alert('제조경비 계산이 완료되었습니다.\n합계: KRW '
+                UT.alert('제조경비 계산이 완료되었습니다.\n합계: '
                          + (data.resultSummary ? data.resultSummary.totalMfgCost.toLocaleString() : '0'));
             },
 
@@ -746,7 +834,7 @@
 
                 var me = this;
                 var d  = me.mfgCostData;
-                UT.confirm('제조경비 계산 결과를 확정하시겠습니까?\n(합계: KRW ' + total.toLocaleString() + ')', function() {
+                UT.confirm('제조경비 계산 결과를 확정하시겠습니까?\n(합계: ' + total.toLocaleString() + ')', function() {
                     me.set('calculateParam', {
                         ccPjtCd:          me.ccPjtCd,
                         ccRev:            me.ccRev,
@@ -769,7 +857,7 @@
 
             _formatAmt: function(val) {
                 var num = Number(val) || 0;
-                return 'KRW ' + num.toLocaleString();
+                return num.toLocaleString();
             }
         });
     </script>

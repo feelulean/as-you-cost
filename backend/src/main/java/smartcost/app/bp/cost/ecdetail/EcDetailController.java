@@ -125,8 +125,8 @@ public class EcDetailController {
 
     /* ═══ 제조경비 ═══ */
     @RequestMapping("/findListMfgCost.do")
-    public List<Map<String, Object>> findListMfgCost(@RequestBody Map<String, Object> param) {
-        return ecDetailService.findList("MfgCost", param);
+    public Map<String, Object> findListMfgCost(@RequestBody Map<String, Object> param) {
+        return ecDetailService.findMfgCostStructured(param);
     }
     @RequestMapping("/saveMfgCost.do")
     public Map<String, Object> saveMfgCost(@RequestBody Map<String, Object> param) {
@@ -139,8 +139,8 @@ public class EcDetailController {
 
     /* ═══ 판매관리비 ═══ */
     @RequestMapping("/findListSgaCost.do")
-    public List<Map<String, Object>> findListSgaCost(@RequestBody Map<String, Object> param) {
-        return ecDetailService.findList("SgaCost", param);
+    public Map<String, Object> findListSgaCost(@RequestBody Map<String, Object> param) {
+        return ecDetailService.findSgaCostData(param);
     }
     @RequestMapping("/saveSgaCost.do")
     public Map<String, Object> saveSgaCost(@RequestBody Map<String, Object> param) {
@@ -153,8 +153,10 @@ public class EcDetailController {
 
     /* ═══ 손익계산서 ═══ */
     @RequestMapping("/findListPlStmt.do")
-    public List<Map<String, Object>> findListPlStmt(@RequestBody Map<String, Object> param) {
-        return ecDetailService.findList("PlStmt", param);
+    public Map<String, Object> findListPlStmt(@RequestBody Map<String, Object> param) {
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("plList", ecDetailService.findListPlStmtPivot(param));
+        return result;
     }
     @RequestMapping("/calculatePlStmt.do")
     public Map<String, Object> calculatePlStmt(@RequestBody Map<String, Object> param) {

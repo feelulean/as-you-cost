@@ -28,6 +28,94 @@
     return null;
   }
 
+  /* ── 입력 유효성 검증 유틸리티 ── */
+  function digitsOnly(s) { return String(s).replace(/[^\d]/g, ''); }
+  function positiveOnly(s) { return String(s).replace(/[^\d.]/g, ''); }
+  function fmtComma(v) {
+    var n = Number(v); if (isNaN(n) || v === '' || v == null) return v == null ? '' : String(v);
+    var p = n.toString().split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); return p.join('.');
+  }
+  function stripComma(s) { return String(s).replace(/,/g, ''); }
+  function clamp(v, lo, hi) { var n = Number(v); return isNaN(n) ? lo : n < lo ? lo : n > hi ? hi : n; }
+
+  /** 입력 필드에 data-type 기반 유효성 검증 핸들러 부착 */
+  function attachFieldValidation(inp, dataType, hostSetter) {
+    if (!dataType || dataType === 'text') return;
+
+    inp.addEventListener('input', function () {
+      var v = inp.value, pos = inp.selectionStart;
+      var filtered = v;
+      switch (dataType) {
+        case 'year':      filtered = digitsOnly(v); if (filtered.length > 4) filtered = filtered.substring(0, 4); break;
+        case 'yearmonth': filtered = digitsOnly(v); if (filtered.length > 6) filtered = filtered.substring(0, 6); break;
+        case 'date':      filtered = v.replace(/[^\d\-]/g, ''); if (filtered.length > 10) filtered = filtered.substring(0, 10); break;
+        case 'rate':      filtered = positiveOnly(v); break;
+        case 'amount':    filtered = v.replace(/[^\d\-]/g, ''); break;
+        case 'number':    filtered = v.replace(/[^\d.\-]/g, ''); break;
+      }
+      if (filtered !== v) { inp.value = filtered; if (pos > 0) inp.selectionStart = inp.selectionEnd = pos - (v.length - filtered.length); }
+    });
+
+    inp.addEventListener('blur', function () {
+      var raw = stripComma(inp.value);
+      switch (dataType) {
+        case 'year':
+          raw = digitsOnly(raw);
+          if (raw.length > 4) raw = raw.substring(0, 4);
+          inp.value = raw;
+          if (hostSetter) hostSetter(raw);
+          break;
+        case 'yearmonth':
+          raw = digitsOnly(raw);
+          if (raw.length > 6) raw = raw.substring(0, 6);
+          if (raw.length === 6) {
+            var mm = parseInt(raw.substring(4, 6), 10);
+            if (mm < 1) raw = raw.substring(0, 4) + '01';
+            else if (mm > 12) raw = raw.substring(0, 4) + '12';
+          }
+          inp.value = raw;
+          if (hostSetter) hostSetter(raw);
+          break;
+        case 'date':
+          var digits = digitsOnly(raw);
+          if (digits.length >= 8) {
+            var yyyy = digits.substring(0, 4);
+            var mm = Math.min(Math.max(parseInt(digits.substring(4, 6), 10), 1), 12);
+            var dd = Math.min(Math.max(parseInt(digits.substring(6, 8), 10), 1), 31);
+            raw = yyyy + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd);
+          } else if (digits.length > 0 && digits.length < 8) {
+            raw = digits; /* 미완성 입력은 그대로 유지 */
+          }
+          inp.value = raw;
+          if (hostSetter) hostSetter(raw);
+          break;
+        case 'rate':
+          var rv = clamp(parseFloat(raw) || 0, 0, 100);
+          inp.value = rv;
+          if (hostSetter) hostSetter(rv);
+          break;
+        case 'amount':
+          var av = Number(raw) || 0;
+          inp.value = fmtComma(av);
+          if (hostSetter) hostSetter(av);
+          break;
+        case 'number':
+          var nv = Number(raw) || 0;
+          inp.value = nv;
+          if (hostSetter) hostSetter(nv);
+          break;
+      }
+    });
+
+    if (dataType === 'amount') {
+      inp.addEventListener('focus', function () {
+        var raw = stripComma(inp.value);
+        inp.value = raw;
+        inp.select();
+      });
+    }
+  }
+
   /* ================================================================
      sc-ajax  —  서버 Ajax 호출
      ================================================================ */
@@ -191,11 +279,11 @@
     this.appendChild(wrap);
   };
 
-  /** 숫자 포맷 (콤마) — format='amt'이면 통화(KRW) 접두 */
+  /** 숫자 포맷 (콤마) */
   function formatNumber(val, format) {
     var n = Number(val);
     if (isNaN(n)) return val;
-    if (format === 'amt') return 'KRW ' + n.toLocaleString();
+    if (format === 'amt') return n.toLocaleString();
     return n.toLocaleString();
   }
 
@@ -266,29 +354,39 @@
       } else if (mode === 'active') {
         /* ── 편집 가능 입력 필드 ── */
         var inp = document.createElement('input');
-        inp.type = (col.type === 'number') ? 'number' : 'text';
-        inp.value = val;
+        inp.type = 'text';  /* 항상 text (콤마 포맷 대응) */
+        /* 초기값: amount 타입이면 콤마 포맷 적용 */
+        if (col.type === 'amount') {
+          inp.value = fmtComma(val);
+        } else {
+          inp.value = val;
+        }
         inp.style.textAlign = col.align;
 
-        (function (field, rowIdx, input) {
+        (function (field, rowIdx, input, colType) {
+          /* data-type 기반 유효성 검증 부착 (그리드 셀용) */
+          attachFieldValidation(input, colType, function (cleanVal) {
+            me._data[rowIdx][field] = cleanVal;
+            me._modifiedSet[rowIdx] = true;
+            var host = findHost(me);
+            var evtHandler = me.getAttribute('on-cell-value-changed');
+            if (evtHandler && host && typeof host[evtHandler] === 'function') {
+              host[evtHandler]({ detail: { dataField: field, rowIndex: rowIdx, value: cleanVal } });
+            }
+          });
+
           input.addEventListener('change', function () {
             var newVal = input.value;
-            if (col.type === 'number') newVal = Number(newVal) || 0;
+            if (colType === 'number' || colType === 'amount' || colType === 'rate') newVal = Number(stripComma(newVal)) || 0;
             me._data[rowIdx][field] = newVal;
             me._modifiedSet[rowIdx] = true;
             var host = findHost(me);
             var evtHandler = me.getAttribute('on-cell-value-changed');
             if (evtHandler && host && typeof host[evtHandler] === 'function') {
-              host[evtHandler]({
-                detail: {
-                  dataField: field,
-                  rowIndex: rowIdx,
-                  value: newVal
-                }
-              });
+              host[evtHandler]({ detail: { dataField: field, rowIndex: rowIdx, value: newVal } });
             }
           });
-        })(col.field, idx, inp);
+        })(col.field, idx, inp, col.type);
 
         td.appendChild(inp);
       } else if (mode === 'locked') {
@@ -425,7 +523,7 @@
         if (!td) break;
         var inp = td.querySelector('input');
         if (inp) {
-          inp.value = val;
+          inp.value = (col.type === 'amount') ? fmtComma(val) : val;
         } else {
           var col = this._columns[c];
           var displayVal = val;
@@ -596,14 +694,19 @@
   ScTextField.prototype.connectedCallback = function () {
     var ro = this.getAttribute('readonly') === 'true';
     var ph = this.getAttribute('placeholder') || '';
+    var dataType = this.getAttribute('data-type') || 'text';
     var inp = document.createElement('input');
     inp.type = 'text';
     inp.readOnly = ro;
     inp.placeholder = ph;
+    if (dataType === 'number' || dataType === 'amount' || dataType === 'rate') inp.style.textAlign = 'right';
     /* 외부 CSS(sc-text-field input) 가 적용됨 */
 
     var me = this;
-    inp.addEventListener('input', function () {
+    me._dataType = dataType;
+
+    /* 호스트 프로퍼티 갱신 헬퍼 */
+    function setHostValue(val) {
       if (me._valuePath && me._polymerHost) {
         var parts = me._valuePath.split('.');
         var obj = me._polymerHost;
@@ -611,8 +714,13 @@
           if (obj[parts[i]] == null) obj[parts[i]] = {};
           obj = obj[parts[i]];
         }
-        obj[parts[parts.length - 1]] = inp.value;
+        obj[parts[parts.length - 1]] = val;
       }
+    }
+
+    inp.addEventListener('input', function () {
+      /* 기본 타입(text)은 그대로 host에 반영 */
+      if (dataType === 'text') setHostValue(inp.value);
     });
 
     inp.addEventListener('keydown', function (e) {
@@ -625,11 +733,19 @@
       }
     });
 
+    /* data-type 기반 유효성 검증 부착 */
+    if (!ro) attachFieldValidation(inp, dataType, setHostValue);
+
     this.appendChild(inp);
   };
   ScTextField.prototype.setValue = function (v) {
     var inp = this.querySelector('input');
-    if (inp) inp.value = (v == null ? '' : v);
+    if (!inp) return;
+    if (this._dataType === 'amount') {
+      inp.value = fmtComma(v);
+    } else {
+      inp.value = (v == null ? '' : v);
+    }
   };
   define('sc-text-field', ScTextField);
 
@@ -692,11 +808,19 @@
   Object.setPrototypeOf(ScNumber, HTMLElement);
   ScNumber.prototype.connectedCallback = function () {
     var ro = this.getAttribute('readonly') === 'true';
+    var dataType = this.getAttribute('data-type') || '';
     var inp = document.createElement('input');
     inp.type = 'number';
     inp.readOnly = ro;
     /* 외부 CSS(sc-number-field input) 가 적용됨 */
     inp.style.textAlign = 'right';
+
+    /* rate 타입: 0~100 범위 제한 */
+    if (dataType === 'rate') {
+      inp.min = '0';
+      inp.max = '100';
+      inp.step = 'any';
+    }
 
     var me = this;
     inp.addEventListener('input', function () {
@@ -710,6 +834,22 @@
         obj[parts[parts.length - 1]] = Number(inp.value) || 0;
       }
     });
+
+    if (dataType === 'rate' && !ro) {
+      inp.addEventListener('blur', function () {
+        var v = clamp(Number(inp.value) || 0, 0, 100);
+        inp.value = v;
+        if (me._valuePath && me._polymerHost) {
+          var parts = me._valuePath.split('.');
+          var obj = me._polymerHost;
+          for (var i = 0; i < parts.length - 1; i++) {
+            if (obj[parts[i]] == null) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+          }
+          obj[parts[parts.length - 1]] = v;
+        }
+      });
+    }
 
     this.appendChild(inp);
   };

@@ -60,7 +60,7 @@
     /* 부모 portal.html 의 openTab 호출 시도 */
     try {
       if (window.parent && window.parent.openTab) {
-        window.parent.openTab(viewId, viewId);
+        window.parent.openTab(viewId);
       } else {
         /* fallback: viewer.html 직접 이동 */
         window.location.href = '/viewer.html?view=' + viewId;

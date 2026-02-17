@@ -148,7 +148,8 @@
                                 header-text="SOP"
                                 width="100"
                                 editable="true"
-                                text-align="center">
+                                text-align="center"
+                                data-type="yearmonth">
                 </sc-data-column>
 
                 <sc-data-column data-field="stsNm"
@@ -210,6 +211,8 @@
                     }
                 }
             },
+
+            attached: function() { this.onFindList(); },
 
             /**
              * 견적원가 프로젝트 목록 조회
@@ -341,9 +344,8 @@
             onPjtCdClick: function(e) {
                 var row = e.detail.row;
                 if (!row.pjtCd) return;
-                UT.navigateTo('es-ec-bom-list', {
-                    pjtCd: row.pjtCd,
-                    pjtNm: row.pjtNm
+                UT.navigateTo('es-ec-detail', {
+                    pjtCd: row.pjtCd
                 });
             }
         });

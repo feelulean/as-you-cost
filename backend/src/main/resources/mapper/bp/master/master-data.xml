@@ -205,10 +205,10 @@
           FROM  PCM_PL_ITEM
          WHERE  TEN_ID = #{g.tenant}
         <if test="p.itemCd != null and p.itemCd != ''">
-           AND  ITEM_CD LIKE '%' || #{p.itemCd} || '%'
+           AND  ITEM_CD LIKE '%' || TRIM(#{p.itemCd}) || '%'
         </if>
         <if test="p.itemNm != null and p.itemNm != ''">
-           AND  ITEM_NM LIKE '%' || #{p.itemNm} || '%'
+           AND  ITEM_NM LIKE '%' || TRIM(#{p.itemNm}) || '%'
         </if>
          ORDER BY SORT_NO, ITEM_CD
     </select>
@@ -333,6 +333,21 @@
            AND SEQ_NO = #{p.seqNo}
     </delete>
 
+    <!-- 환율 단건 조회 (통화 쌍 + 년도, 해당 년도 없으면 가장 가까운 최근 년도 준용) -->
+    <select id="findExchRateByPair" parameterType="map" resultType="map">
+        SELECT  EXCH_RATE  AS "exchRate"
+              , APPLY_YEAR AS "applyYear"
+              , FROM_CUR   AS "fromCur"
+              , TO_CUR     AS "toCur"
+          FROM  PCM_EXCH_RATE
+         WHERE  TEN_ID   = #{g.tenant}
+           AND  FROM_CUR = #{p.fromCur}
+           AND  TO_CUR   = #{p.toCur}
+           AND  APPLY_YEAR &lt;= #{p.applyYear}
+         ORDER BY APPLY_YEAR DESC
+         LIMIT 1
+    </select>
+
     <!-- ================================================================
          8. 인상률 (PCM_RAISE_RATE)
          ================================================================ -->
@@ -398,7 +413,7 @@
           FROM  PCM_STD_SCHEDULE
          WHERE  TEN_ID = #{g.tenant}
         <if test="p.taskNm != null and p.taskNm != ''">
-           AND  TASK_NM LIKE '%' || #{p.taskNm} || '%'
+           AND  TASK_NM LIKE '%' || TRIM(#{p.taskNm}) || '%'
         </if>
         <if test="p.deptCd != null and p.deptCd != ''">
            AND  DEPT_CD = #{p.deptCd}
@@ -442,7 +457,7 @@
           FROM  PCM_COST_REDU_TYPE
          WHERE  TEN_ID = #{g.tenant}
         <if test="p.class1 != null and p.class1 != ''">
-           AND  CLASS1 LIKE '%' || #{p.class1} || '%'
+           AND  CLASS1 LIKE '%' || TRIM(#{p.class1}) || '%'
         </if>
          ORDER BY ITEM_CD, CLASS1, CLASS2, CLASS3
     </select>
@@ -483,10 +498,10 @@
           FROM  PCM_ERP_ACCT_MAP
          WHERE  TEN_ID = #{g.tenant}
         <if test="p.fromCd != null and p.fromCd != ''">
-           AND  FROM_CD LIKE '%' || #{p.fromCd} || '%'
+           AND  FROM_CD LIKE '%' || TRIM(#{p.fromCd}) || '%'
         </if>
         <if test="p.toCd != null and p.toCd != ''">
-           AND  TO_CD LIKE '%' || #{p.toCd} || '%'
+           AND  TO_CD LIKE '%' || TRIM(#{p.toCd}) || '%'
         </if>
          ORDER BY FROM_CD, TO_CD
     </select>
@@ -527,10 +542,10 @@
           FROM  PCM_REDU_TGT_DEPT
          WHERE  TEN_ID = #{g.tenant}
         <if test="p.itemNm != null and p.itemNm != ''">
-           AND  ITEM_NM LIKE '%' || #{p.itemNm} || '%'
+           AND  ITEM_NM LIKE '%' || TRIM(#{p.itemNm}) || '%'
         </if>
         <if test="p.dtlItemNm != null and p.dtlItemNm != ''">
-           AND  DTL_ITEM_NM LIKE '%' || #{p.dtlItemNm} || '%'
+           AND  DTL_ITEM_NM LIKE '%' || TRIM(#{p.dtlItemNm}) || '%'
         </if>
         <if test="p.deptCd != null and p.deptCd != ''">
            AND  DEPT_CD = #{p.deptCd}

@@ -32,6 +32,7 @@ CREATE TABLE asyoucost.PCM_TGT_PJT_MSTR (
     OEM_NM          VARCHAR(100),                   -- OEM명
     PROD_GRP        VARCHAR(18),                    -- 제품군 코드 (TM / AXLE 등)
     EC_PJT_CD       VARCHAR(18),                    -- 견적원가 프로젝트 코드 (매핑)
+    BASE_CURRENCY   VARCHAR(10)     DEFAULT 'KRW',  -- 기준통화 (KRW/USD/EUR/JPY/CNY)
 
     -- ■ 공통 컬럼 (순서 고정) ──────────────────────
     RMK             VARCHAR(1000),                  -- 비고
@@ -75,6 +76,7 @@ COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.CAR_TYPE       IS '차종';
 COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.OEM_NM         IS 'OEM명';
 COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.PROD_GRP       IS '제품군 코드';
 COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.EC_PJT_CD      IS '견적원가 프로젝트 코드 (매핑)';
+COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.BASE_CURRENCY  IS '기준통화 (KRW/USD/EUR/JPY/CNY)';
 COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.RMK            IS '비고';
 COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.STS             IS '상태 (T:대상선정/P:계획수립/A:배부확정/E:평가중/R:재배부/C:완료)';
 COMMENT ON COLUMN asyoucost.PCM_TGT_PJT_MSTR.REGR_ID        IS '등록자 아이디';

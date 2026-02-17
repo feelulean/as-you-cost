@@ -778,6 +778,14 @@ sc-panel > div:first-child {
   display: none;
 }
 
+/* Tab Button Active State (native <button> with class$ binding) */
+.tab-active {
+  background: #1976d2 !important;
+  color: #fff !important;
+  border-color: #1976d2 !important;
+  font-weight: 600;
+}
+
 
 /* ================================================================
    11. SPLIT LAYOUT — Master / Detail

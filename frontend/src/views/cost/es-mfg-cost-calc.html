@@ -146,38 +146,41 @@
                             <th><sc-label text="임금인상률(%)"></sc-label></th>
                             <td>
                                 <sc-text-field value="{{mfgCostData.wageIncRate}}"
-                                               data-type="number">
+                                               data-type="rate">
                                 </sc-text-field>
                             </td>
                             <th><sc-label text="물가상승률(%)"></sc-label></th>
                             <td>
                                 <sc-text-field value="{{mfgCostData.inflationRate}}"
-                                               data-type="number">
+                                               data-type="rate">
                                 </sc-text-field>
                             </td>
                         </tr>
                         <tr>
                             <th><sc-label text="생산직접경비 비율(%)"></sc-label></th>
                             <td>
-                                <sc-text-field value="{{mfgCostData.prodDirectRate}}">
+                                <sc-text-field value="{{mfgCostData.prodDirectRate}}"
+                                               data-type="rate">
                                 </sc-text-field>
                             </td>
                             <th><sc-label text="인건비성경비 비율(%)"></sc-label></th>
                             <td>
-                                <sc-text-field value="{{mfgCostData.laborRelatedRate}}">
+                                <sc-text-field value="{{mfgCostData.laborRelatedRate}}"
+                                               data-type="rate">
                                 </sc-text-field>
                             </td>
                         </tr>
                         <tr>
                             <th><sc-label text="기타제조경비 비율(%)"></sc-label></th>
                             <td>
-                                <sc-text-field value="{{mfgCostData.etcMfgRate}}">
+                                <sc-text-field value="{{mfgCostData.etcMfgRate}}"
+                                               data-type="rate">
                                 </sc-text-field>
                             </td>
                             <th><sc-label text="금형비 (단위당)"></sc-label></th>
                             <td>
                                 <sc-text-field value="{{mfgCostData.moldCostUnit}}"
-                                               data-type="number">
+                                               data-type="amount">
                                 </sc-text-field>
                             </td>
                         </tr>
@@ -185,7 +188,7 @@
                             <th><sc-label text="외주가공비 (단위당/비율%)"></sc-label></th>
                             <td colspan="3">
                                 <sc-text-field value="{{mfgCostData.outsrcCostUnit}}"
-                                               data-type="number">
+                                               data-type="amount">
                                 </sc-text-field>
                             </td>
                         </tr>
@@ -193,7 +196,7 @@
                 </sc-panel>
 
                 <!-- ── 제조경비 계산 결과 ── -->
-                <sc-panel title-text="제조경비 계산 결과">
+                <sc-panel title-text="제조경비 계산 결과 (단위: {{baseCurrency}})">
                     <table class="result-table">
                         <colgroup>
                             <col style="width:40px"/>
@@ -205,7 +208,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>원가항목</th>
-                                <th>단위당 금액(KRW)</th>
+                                <th>단위당 금액</th>
                                 <th>비고</th>
                             </tr>
                         </thead>
@@ -343,14 +346,14 @@
                                                     data-type="number">
                                     </sc-data-column>
                                     <sc-data-column data-field="wagePerPerson"
-                                                    header-text="인당임금(원)"
+                                                    header-text="인당임금"
                                                     width="120"
                                                     text-align="right"
                                                     data-type="number"
                                                     format-type="amt">
                                     </sc-data-column>
                                     <sc-data-column data-field="annualCost"
-                                                    header-text="연간노무비(원)"
+                                                    header-text="연간노무비"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -405,14 +408,14 @@
                                                     data-type="number">
                                     </sc-data-column>
                                     <sc-data-column data-field="wagePerPerson"
-                                                    header-text="인당임금(원)"
+                                                    header-text="인당임금"
                                                     width="120"
                                                     text-align="right"
                                                     data-type="number"
                                                     format-type="amt">
                                     </sc-data-column>
                                     <sc-data-column data-field="annualCost"
-                                                    header-text="연간노무비(원)"
+                                                    header-text="연간노무비"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -461,7 +464,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="baseAmt"
-                                                    header-text="기준금액(원)"
+                                                    header-text="기준금액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -516,7 +519,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="baseAmt"
-                                                    header-text="기준금액(원)"
+                                                    header-text="기준금액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -571,7 +574,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="baseAmt"
-                                                    header-text="기준금액(원)"
+                                                    header-text="기준금액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -626,7 +629,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="acqAmt"
-                                                    header-text="취득가액(원)"
+                                                    header-text="취득가액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -639,7 +642,7 @@
                                                     data-type="number">
                                     </sc-data-column>
                                     <sc-data-column data-field="annualDepr"
-                                                    header-text="연간상각비(원)"
+                                                    header-text="연간상각비"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -688,7 +691,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="acqAmt"
-                                                    header-text="취득가액(원)"
+                                                    header-text="취득가액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -701,7 +704,7 @@
                                                     data-type="number">
                                     </sc-data-column>
                                     <sc-data-column data-field="annualDepr"
-                                                    header-text="연간상각비(원)"
+                                                    header-text="연간상각비"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -750,7 +753,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="acqAmt"
-                                                    header-text="취득가액(원)"
+                                                    header-text="취득가액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -763,7 +766,7 @@
                                                     data-type="number">
                                     </sc-data-column>
                                     <sc-data-column data-field="annualDepr"
-                                                    header-text="연간상각비(원)"
+                                                    header-text="연간상각비"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -817,7 +820,7 @@
                                                     text-align="left">
                                     </sc-data-column>
                                     <sc-data-column data-field="unitPrice"
-                                                    header-text="단가(원)"
+                                                    header-text="단가"
                                                     width="120"
                                                     text-align="right"
                                                     data-type="number"
@@ -866,7 +869,7 @@
                                                     text-align="center">
                                     </sc-data-column>
                                     <sc-data-column data-field="moldAcqAmt"
-                                                    header-text="취득가액(원)"
+                                                    header-text="취득가액"
                                                     width="130"
                                                     text-align="right"
                                                     data-type="number"
@@ -931,6 +934,12 @@
                 selectedPjt: {
                     type: Object,
                     value: function() { return {}; }
+                },
+
+                /* ── 기준통화 ── */
+                baseCurrency: {
+                    type: String,
+                    value: 'KRW'
                 },
 
                 /* ── 제조경비 산출 입력 데이터 ── */
@@ -1008,11 +1017,14 @@
                 }
             },
 
+            attached: function() { this.onFindList(); },
+
             /* ==============================================================
                프로젝트 목록 조회 (좌측 그리드)
                ============================================================== */
 
             onFindList: function() {
+                this._clearDetail();
                 this.$.findListAjax.generateRequest();
             },
 
@@ -1029,6 +1041,7 @@
                 if (!row || !row.pjtCd) return;
 
                 this.set('selectedPjt', row);
+                this.set('baseCurrency', row.baseCurrency || 'KRW');
                 this.set('mfgCostSearchParam', { ecPjtCd: row.pjtCd });
                 this.$.findMfgCostAjax.generateRequest();
             },
@@ -1157,6 +1170,10 @@
                     UT.alert('계산 결과를 수신하지 못했습니다.');
                     return;
                 }
+                if (data.status === 'FAIL') {
+                    UT.alert(data.message);
+                    return;
+                }
 
                 // 결과 요약 바인딩
                 if (data.resultSummary) {
@@ -1175,7 +1192,7 @@
                 this.set('detailOutsrc',        data.detailOutsrc        || []);
                 this.set('detailMold',          data.detailMold          || []);
 
-                UT.alert('제조경비 계산이 완료되었습니다.\n합계: KRW '
+                UT.alert('제조경비 계산이 완료되었습니다.\n합계: '
                          + (data.resultSummary ? data.resultSummary.totalMfgCost.toLocaleString() : '0'));
             },
 
@@ -1200,7 +1217,7 @@
                 }
 
                 var me = this;
-                UT.confirm('제조경비 계산 결과를 확정하시겠습니까?\n(합계: KRW ' + total.toLocaleString() + ')', function() {
+                UT.confirm('제조경비 계산 결과를 확정하시겠습니까?\n(합계: ' + total.toLocaleString() + ')', function() {
                     // 계산완료 시 동일 Ajax로 completeYn='Y' 플래그를 추가하여 전송
                     var d = me.mfgCostData;
                     me.set('calculateParam', {
@@ -1258,7 +1275,24 @@
              */
             _formatAmt: function(val) {
                 var num = Number(val) || 0;
-                return 'KRW ' + num.toLocaleString();
+                return num.toLocaleString();
+            },
+
+            _clearDetail: function() {
+                this.set('selectedPjt', {});
+                this.set('baseCurrency', 'KRW');
+                this.set('mfgCostData', {});
+                this.set('mfgCostResult', {});
+                this.set('detailDirectLabor', []);
+                this.set('detailIndirectLabor', []);
+                this.set('detailProdDirect', []);
+                this.set('detailLaborRelated', []);
+                this.set('detailEtcMfg', []);
+                this.set('detailDeprBldg', []);
+                this.set('detailDeprLine', []);
+                this.set('detailDeprEtc', []);
+                this.set('detailOutsrc', []);
+                this.set('detailMold', []);
             }
         });
     </script>

@@ -45,6 +45,11 @@ public class DataInitController {
         return executeSqlFile("init/excel-master-data.sql", "기준정보 Excel 데이터 Import 완료");
     }
 
+    @RequestMapping("/add-base-currency")
+    public Map<String, Object> addBaseCurrency() {
+        return executeSqlFile("init/add-base-currency.sql", "BASE_CURRENCY 칼럼 추가 완료 (3 Tables)");
+    }
+
     private Map<String, Object> executeSqlFile(String resourcePath, String successMessage) {
         Map<String, Object> result = new HashMap<>();
 

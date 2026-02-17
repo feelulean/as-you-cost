@@ -29,10 +29,10 @@
           FROM  PCM_EC_PJT_MSTR A
          WHERE  A.TEN_ID = #{g.tenant}
         <if test="p.pjtCd != null and p.pjtCd != ''">
-           AND  A.EC_PJT_CD LIKE '%' || #{p.pjtCd} || '%'
+           AND  A.EC_PJT_CD LIKE '%' || TRIM(#{p.pjtCd}) || '%'
         </if>
         <if test="p.custNm != null and p.custNm != ''">
-           AND  A.CUST_NM LIKE '%' || #{p.custNm} || '%'
+           AND  A.CUST_NM LIKE '%' || TRIM(#{p.custNm}) || '%'
         </if>
          ORDER BY A.REG_DTTM DESC
     </select>
