@@ -624,6 +624,14 @@
             },
 
             /* ==============================================================
+               라이프사이클
+               ============================================================== */
+
+            attached: function() {
+                this.$.findPjtListAjax.generateRequest();
+            },
+
+            /* ==============================================================
                탭 헬퍼
                ============================================================== */
 
@@ -1003,7 +1011,7 @@
 
             _clearDetail: function() {
                 this.set('selectedPjtCd', '');
-                this.set('activeTab', 'lineInvest');
+                this.set('activeTab', 'line');
                 this.set('lineInvestList', []);
                 this.set('otherInvestList', []);
                 this.set('manpowerList', []);

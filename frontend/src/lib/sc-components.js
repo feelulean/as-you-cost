@@ -890,7 +890,13 @@
     if (inp) inp.value = (v == null ? '' : v);
   };
   define('sc-datepicker', ScDate);
-  define('sc-date-field', ScDate);
+
+  var ScDateField = function () { return Reflect.construct(HTMLElement, [], ScDateField); };
+  Object.setPrototypeOf(ScDateField.prototype, HTMLElement.prototype);
+  Object.setPrototypeOf(ScDateField, HTMLElement);
+  ScDateField.prototype.connectedCallback = ScDate.prototype.connectedCallback;
+  ScDateField.prototype.setValue = ScDate.prototype.setValue;
+  define('sc-date-field', ScDateField);
 
   /* ================================================================
      마크업 전용 (내부 자식 요소, 렌더링 불필요)

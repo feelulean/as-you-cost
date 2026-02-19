@@ -102,12 +102,29 @@
     var match = search.match(/[?&]view=([^&]+)/);
     var viewId = match ? match[1] : '';
 
-    /* 세션에서 파라미터 읽기 */
-    var stored = sessionStorage.getItem('__UT_PARAM__' + viewId);
+    /* 세션에서 파라미터 읽기 후 즉시 제거 (1회성) */
+    var key = '__UT_PARAM__' + viewId;
+    var stored = sessionStorage.getItem(key);
     if (stored) {
+      sessionStorage.removeItem(key);
       try { return JSON.parse(stored); } catch (e) { return {}; }
     }
     return {};
+  };
+
+  /**
+   * UT.close — 현재 화면(탭) 닫기
+   */
+  UT.close = function () {
+    try {
+      if (window.parent && window.parent.closeCurrentTab) {
+        window.parent.closeCurrentTab();
+      } else {
+        window.history.back();
+      }
+    } catch (e) {
+      window.history.back();
+    }
   };
 
   global.UT = UT;

@@ -31,12 +31,22 @@
       display: flex;
       flex-direction: column;
     }
+    #page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px 8px;
+      flex-shrink: 0;
+    }
+    #page-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1A1D2B;
+      letter-spacing: -0.3px;
+    }
     #breadcrumb-bar {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      padding: 0 2px 6px;
-      flex-shrink: 0;
     }
     #breadcrumb-bar span {
       font-size: 11px;
@@ -61,7 +71,10 @@
 </head>
 <body>
 
-  <div id="breadcrumb-bar"></div>
+  <div id="page-header">
+    <div id="page-title"></div>
+    <div id="breadcrumb-bar"></div>
+  </div>
   <div id="component-host"></div>
 
   <script>
@@ -117,10 +130,13 @@
       var match = search.match(/[?&]view=([^&]+)/);
       var viewId = match ? decodeURIComponent(match[1]) : '';
 
-      /* Breadcrumb 렌더링 */
+      /* 제목 + Breadcrumb 렌더링 */
+      var pageHeader = document.getElementById('page-header');
+      var pageTitle = document.getElementById('page-title');
       var bcBar = document.getElementById('breadcrumb-bar');
       var crumbs = BREADCRUMB[viewId];
-      if (crumbs && bcBar) {
+      if (crumbs && crumbs.length > 0) {
+        pageTitle.textContent = crumbs[crumbs.length - 1];
         var html = '<span>Home</span>';
         for (var b = 0; b < crumbs.length; b++) {
           html += '<span class="bc-sep">></span>';
@@ -131,8 +147,8 @@
           }
         }
         bcBar.innerHTML = html;
-      } else if (bcBar) {
-        bcBar.style.display = 'none';
+      } else if (pageHeader) {
+        pageHeader.style.display = 'none';
       }
 
       if (!viewId) {

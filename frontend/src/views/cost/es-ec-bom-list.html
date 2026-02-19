@@ -33,6 +33,13 @@
                  on-response="onInterfacePriceResponse">
         </sc-ajax>
 
+        <!-- 프로젝트 목록 조회 -->
+        <sc-ajax id="findPjtListAjax"
+                 url="/bp/cost/ec/findListEstimateCostPjt.do"
+                 body="{{pjtSearchParam}}"
+                 on-response="onFindPjtListResponse">
+        </sc-ajax>
+
         <!-- ============================================================
              엑셀 업로드 (hidden file input)
              ============================================================ -->
@@ -42,34 +49,66 @@
                on-change="_onExcelFileSelected">
 
         <!-- ============================================================
-             프로젝트 기본 정보 패널
+             조회 조건 영역
              ============================================================ -->
-        <sc-panel title-text="프로젝트 기본 정보" collapsible="true">
-            <table class="tb-form">
+        <sc-search-container on-search="onFindPjtList" auth-code="V">
+            <table>
                 <colgroup>
-                    <col style="width:120px"/>
-                    <col/>
-                    <col style="width:120px"/>
-                    <col/>
-                    <col style="width:120px"/>
-                    <col/>
+                    <col style="width:120px"/><col/>
+                    <col style="width:120px"/><col/>
                 </colgroup>
                 <tr>
                     <th><sc-label text="프로젝트 코드"></sc-label></th>
                     <td>
-                        <sc-text-field value="{{pjtInfo.pjtCd}}" readonly="true"></sc-text-field>
-                    </td>
-                    <th><sc-label text="프로젝트명"></sc-label></th>
-                    <td>
-                        <sc-text-field value="{{pjtInfo.pjtNm}}" readonly="true"></sc-text-field>
+                        <sc-text-field value="{{pjtSearchParam.pjtCd}}" on-enter="onFindPjtList" placeholder="코드/명칭"></sc-text-field>
                     </td>
                     <th><sc-label text="고객사"></sc-label></th>
                     <td>
-                        <sc-text-field value="{{pjtInfo.custNm}}" readonly="true"></sc-text-field>
+                        <sc-text-field value="{{pjtSearchParam.custNm}}"></sc-text-field>
                     </td>
                 </tr>
             </table>
-        </sc-panel>
+        </sc-search-container>
+
+        <!-- ============================================================
+             좌우 Split 레이아웃
+             ============================================================ -->
+        <div class="hbox flex">
+
+            <!-- ========== 좌측: 프로젝트 목록 (flex-3) ========== -->
+            <sc-grid id="pjtGrid"
+                     data-provider="{{pjtList}}"
+                     on-item-click="onProjectClick"
+                     selection-mode="radio"
+                     class="flex-3"
+                     use-state="false">
+                <sc-grid-columns>
+                    <sc-data-column data-field="pjtCd"
+                                    header-text="프로젝트코드"
+                                    width="130"
+                                    text-align="center"
+                                    on-item-click="onProjectClick">
+                    </sc-data-column>
+                    <sc-data-column data-field="pjtNm"
+                                    header-text="프로젝트명"
+                                    width="180">
+                    </sc-data-column>
+                    <sc-data-column data-field="custNm"
+                                    header-text="고객사"
+                                    width="120">
+                    </sc-data-column>
+                    <sc-data-column data-field="stsNm"
+                                    header-text="상태"
+                                    width="80"
+                                    text-align="center">
+                    </sc-data-column>
+                </sc-grid-columns>
+            </sc-grid>
+
+            <div class="hspace-10"></div>
+
+            <!-- ========== 우측: BOM 영역 (flex-7) ========== -->
+            <div class="vbox flex-7">
 
         <!-- ============================================================
              BOM Tree Grid
@@ -167,6 +206,9 @@
                 <sc-grid-field data-field="ecPjtCd"></sc-grid-field>
             </sc-grid-fields>
         </sc-grid>
+
+            </div><!-- /우측 vbox flex-7 -->
+        </div><!-- /좌우 hbox flex -->
     </template>
 
     <script>
@@ -174,6 +216,16 @@
             is: 'es-ec-bom-list',
 
             properties: {
+                // 프로젝트 검색 파라미터
+                pjtSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 프로젝트 목록
+                pjtList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
                 // 프로젝트 기본 정보
                 pjtInfo: {
                     type: Object,
@@ -206,27 +258,71 @@
             attached: function() {
                 var param = UT.getParameter();
                 if (param && param.pjtCd) {
-                    this.set('pjtInfo.pjtCd', param.pjtCd);
-                    this.set('pjtInfo.pjtNm', param.pjtNm || '');
-                    this.set('pjtInfo.custNm', param.custNm || '');
-                    this.set('pjtInfo.sts', param.sts || 'T');
-                    this.set('searchParam.ecPjtCd', param.pjtCd);
-
-                    // 작성중(T) 상태가 아니면 편집 비활성화
-                    if (param.sts && param.sts !== 'T') {
-                        this.$.gridPanel.editable = false;
-                        this._readOnly = true;
-                    }
-
-                    this.onFindList();
+                    this._initialPjtCd = param.pjtCd;
+                    this.set('pjtSearchParam', { pjtCd: param.pjtCd });
                 }
+                this.$.findPjtListAjax.generateRequest();
             },
 
             /* ==============================================================
-               조회
+               프로젝트 목록 조회/선택
+               ============================================================== */
+
+            onFindPjtList: function() {
+                this._initialPjtCd = null;
+                this.set('pjtInfo', {});
+                this.set('resultList', []);
+                this.$.findPjtListAjax.generateRequest();
+            },
+
+            onFindPjtListResponse: function(e) {
+                var list = e.detail.response || [];
+                this.set('pjtList', list);
+
+                if (this._initialPjtCd && list.length > 0) {
+                    var targetPjtCd = this._initialPjtCd;
+                    this._initialPjtCd = null;
+                    for (var i = 0; i < list.length; i++) {
+                        if (list[i].pjtCd === targetPjtCd) {
+                            this._selectProject(list[i]);
+                            break;
+                        }
+                    }
+                }
+            },
+
+            onProjectClick: function(e) {
+                var row = e.detail.data;
+                if (!row || !row.pjtCd) return;
+                this._selectProject(row);
+            },
+
+            _selectProject: function(row) {
+                this.set('pjtInfo', {
+                    pjtCd:  row.pjtCd,
+                    pjtNm:  row.pjtNm || '',
+                    custNm: row.custNm || '',
+                    sts:    row.sts || 'T'
+                });
+                this.set('searchParam', { ecPjtCd: row.pjtCd });
+
+                if (row.sts && row.sts !== 'T') {
+                    this.$.gridPanel.editable = false;
+                    this._readOnly = true;
+                } else {
+                    this.$.gridPanel.editable = true;
+                    this._readOnly = false;
+                }
+
+                this.onFindList();
+            },
+
+            /* ==============================================================
+               BOM 조회
                ============================================================== */
 
             onFindList: function() {
+                if (!this.pjtInfo || !this.pjtInfo.pjtCd) return;
                 this.$.findListAjax.generateRequest();
             },
 

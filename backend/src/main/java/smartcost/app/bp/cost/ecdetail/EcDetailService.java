@@ -10,6 +10,8 @@ import javax.inject.Inject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import smartcost.app.bp.cost.ecprofit.EcProfitRepository;
+
 /**
  * 견적원가 상세 기능 Service
  * - 견적정보 등록(6탭), 투자비, 제조경비, 판관비, 손익, 민감도, NPV
@@ -19,6 +21,9 @@ public class EcDetailService {
 
     @Inject
     private EcDetailRepository ecDetailRepository;
+
+    @Inject
+    private EcProfitRepository ecProfitRepository;
 
     /* ═══ 범용 목록 조회 ═══ */
     public List<Map<String, Object>> findList(String entity, Map<String, Object> param) {
@@ -53,6 +58,32 @@ public class EcDetailService {
                     totalAmt += unitVal;
                 }
                 row.put("totalAmt", totalAmt);
+            }
+        }
+
+        // TOTAL 영업이익률 보정: 연도별 %의 단순합산이 아닌
+        // (TOTAL 영업이익 / TOTAL 매출액) * 100 으로 재계산
+        if (result != null && !result.isEmpty()) {
+            double totalRevenue = 0;
+            double totalOperIncome = 0;
+            Map<String, Object> operMarginRow = null;
+
+            for (Map<String, Object> row : result) {
+                String itemCd = str(row.get("itemCd"));
+                if ("REVENUE".equals(itemCd)) {
+                    totalRevenue = toDouble(row.get("totalAmt"));
+                } else if ("OPER_INCOME".equals(itemCd)) {
+                    totalOperIncome = toDouble(row.get("totalAmt"));
+                } else if ("OPER_MARGIN".equals(itemCd)) {
+                    operMarginRow = row;
+                }
+            }
+
+            if (operMarginRow != null) {
+                double correctMargin = totalRevenue > 0
+                        ? Math.round(totalOperIncome / totalRevenue * 10000.0) / 100.0
+                        : 0;
+                operMarginRow.put("totalAmt", correctMargin);
             }
         }
 
@@ -702,19 +733,330 @@ public class EcDetailService {
         return result;
     }
 
-    /* ═══ NPV 계산 ═══ */
+    /* ═══════════════════════════════════════════════════════════════
+       NPV 수익성 분석
+       PL손익계산서 + 투자비 + WACC 데이터로부터 7개년 Cash Flow를
+       계산하고 NPV, IRR, PI, Payback Period 지표를 산출한다.
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* ═══ NPV 계산 (계산 + DB 저장 + 반환) ═══ */
     @Transactional
+    @SuppressWarnings("unchecked")
     public Map<String, Object> calculateNpv(Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
+        String ecPjtCd = (String) param.get("ecPjtCd");
+        Map<String, Object> pjtParam = new HashMap<>();
+        pjtParam.put("ecPjtCd", ecPjtCd);
+
+        // 1) WACC Rate, Tax Rate 조회
+        Map<String, Object> profitData = ecProfitRepository.findEcProfit(param);
+        if (profitData == null) {
+            result.put("status", "FAIL");
+            result.put("message", "수익성 분석 기준정보(WACC)를 먼저 등록해 주세요.");
+            return result;
+        }
+        double waccRate = toDouble(profitData.get("waccRate"));
+        double taxRate  = toDouble(profitData.get("taxRate"));
+
+        // 2) 손익계산서 연도별 영업이익 조회
+        Map<String, Object> plParam = new HashMap<>(pjtParam);
+        plParam.put("viewType", "PJT");
+        List<Map<String, Object>> plList = ecDetailRepository.findList("PlStmt", plParam);
+        Map<Integer, Double> yearOperIncome = new HashMap<>();
+        for (Map<String, Object> pl : plList) {
+            yearOperIncome.put(toInt(pl.get("yearVal")), toDouble(pl.get("operIncome")));
+        }
+
+        // 3) 투자비 조회
+        List<Map<String, Object>> lineInvest  = ecDetailRepository.findList("LineInvest", new HashMap<>(pjtParam));
+        List<Map<String, Object>> otherInvest = ecDetailRepository.findList("OtherInvest", new HashMap<>(pjtParam));
+
+        // 4) Cash Flow 계산
+        Map<String, Object> cfResult = computeCashFlows(waccRate, taxRate, yearOperIncome, lineInvest, otherInvest);
+        List<Map<String, Object>> cashFlowList = (List<Map<String, Object>>) cfResult.get("cashFlowList");
+        double[] fcfArray    = (double[]) cfResult.get("fcfArray");
+        double totalPv       = toDouble(cfResult.get("totalPv"));
+        double pvInflows     = toDouble(cfResult.get("pvInflows"));
+        double pvInvestments = toDouble(cfResult.get("pvInvestments"));
+
+        // 5) 지표 산출
+        double npvValue      = Math.round(totalPv);
+        double irr           = calcIrr(fcfArray);
+        double paybackPeriod = calcPaybackPeriod(fcfArray);
+        double piValue       = pvInvestments > 0
+                ? Math.round(pvInflows / pvInvestments * 100.0) / 100.0 : 0;
+
+        Map<String, Object> npvData = new HashMap<>();
+        npvData.put("waccRate",      waccRate);
+        npvData.put("npvValue",      npvValue);
+        npvData.put("irrValue",      Math.round(irr * 100.0) / 100.0);
+        npvData.put("paybackPeriod", Math.round(paybackPeriod * 100.0) / 100.0);
+        npvData.put("piValue",       piValue);
+
+        // 6) DB 저장
+        Map<String, Object> saveParam = new HashMap<>(param);
+        saveParam.put("analysisVer",   1);
+        saveParam.put("analysisType",  "NPV");
+        saveParam.put("waccRate",      waccRate);
+        saveParam.put("npvValue",      npvValue);
+        saveParam.put("irrValue",      Math.round(irr * 100.0) / 100.0);
+        saveParam.put("paybackPeriod", Math.round(paybackPeriod * 100.0) / 100.0);
+        saveParam.put("piValue",       piValue);
+
         int cnt = ecDetailRepository.count("Npv", param);
         if (cnt > 0) {
-            ecDetailRepository.update("Npv", param);
+            ecDetailRepository.update("Npv", saveParam);
         } else {
-            ecDetailRepository.insert("Npv", param);
+            ecDetailRepository.insert("Npv", saveParam);
         }
+
+        // 7) 반환
         result.put("status", "OK");
-        result.put("message", "NPV 분석 완료");
+        result.put("message", "NPV 수익성 분석 완료");
+        result.put("npvData", npvData);
+        result.put("cashFlowList", cashFlowList);
         return result;
+    }
+
+    /* ═══ NPV 데이터 조회 (저장된 요약 + Cash Flow 재계산) ═══ */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> findNpvData(Map<String, Object> param) {
+        Map<String, Object> result = new HashMap<>();
+        String ecPjtCd = (String) param.get("ecPjtCd");
+        Map<String, Object> pjtParam = new HashMap<>();
+        pjtParam.put("ecPjtCd", ecPjtCd);
+
+        // 저장된 NPV 요약 조회
+        List<Map<String, Object>> npvList = ecDetailRepository.findList("Npv", param);
+        Map<String, Object> savedNpv = (npvList != null && !npvList.isEmpty()) ? npvList.get(0) : null;
+
+        // WACC / Tax Rate 조회
+        Map<String, Object> profitData = ecProfitRepository.findEcProfit(param);
+        if (profitData == null) {
+            // 기준정보 없으면 저장된 NPV만 반환
+            if (savedNpv != null) {
+                result.put("npvData", buildNpvDataFromSaved(savedNpv));
+            }
+            return result;
+        }
+
+        double waccRate = toDouble(profitData.get("waccRate"));
+        double taxRate  = toDouble(profitData.get("taxRate"));
+
+        // PL Statement 조회
+        Map<String, Object> plParam = new HashMap<>(pjtParam);
+        plParam.put("viewType", "PJT");
+        List<Map<String, Object>> plList = ecDetailRepository.findList("PlStmt", plParam);
+        Map<Integer, Double> yearOperIncome = new HashMap<>();
+        for (Map<String, Object> pl : plList) {
+            yearOperIncome.put(toInt(pl.get("yearVal")), toDouble(pl.get("operIncome")));
+        }
+
+        // 투자비 조회
+        List<Map<String, Object>> lineInvest  = ecDetailRepository.findList("LineInvest", new HashMap<>(pjtParam));
+        List<Map<String, Object>> otherInvest = ecDetailRepository.findList("OtherInvest", new HashMap<>(pjtParam));
+
+        // Cash Flow 재계산
+        Map<String, Object> cfResult = computeCashFlows(waccRate, taxRate, yearOperIncome, lineInvest, otherInvest);
+        result.put("cashFlowList", cfResult.get("cashFlowList"));
+
+        // NPV 요약 데이터
+        if (savedNpv != null) {
+            result.put("npvData", buildNpvDataFromSaved(savedNpv));
+        } else {
+            Map<String, Object> npvData = new HashMap<>();
+            npvData.put("waccRate",      waccRate);
+            npvData.put("npvValue",      0);
+            npvData.put("irrValue",      0);
+            npvData.put("paybackPeriod", 0);
+            npvData.put("piValue",       0);
+            result.put("npvData", npvData);
+        }
+
+        return result;
+    }
+
+    private Map<String, Object> buildNpvDataFromSaved(Map<String, Object> saved) {
+        Map<String, Object> npvData = new HashMap<>();
+        npvData.put("waccRate",      toDouble(saved.get("waccRate")));
+        npvData.put("npvValue",      toDouble(saved.get("npvValue")));
+        npvData.put("irrValue",      toDouble(saved.get("irrValue")));
+        npvData.put("paybackPeriod", toDouble(saved.get("paybackPeriod")));
+        npvData.put("piValue",       toDouble(saved.get("piValue")));
+        return npvData;
+    }
+
+    /* ═══ NPV 데이터 저장 ═══ */
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> saveNpvData(Map<String, Object> param) {
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> npvData = (Map<String, Object>) param.get("npvData");
+        if (npvData == null) {
+            result.put("status", "FAIL");
+            result.put("message", "저장할 NPV 데이터가 없습니다.");
+            return result;
+        }
+
+        Map<String, Object> saveParam = new HashMap<>(param);
+        saveParam.put("analysisVer",   1);
+        saveParam.put("analysisType",  "NPV");
+        saveParam.put("waccRate",      npvData.get("waccRate"));
+        saveParam.put("npvValue",      npvData.get("npvValue"));
+        saveParam.put("irrValue",      npvData.get("irrValue"));
+        saveParam.put("paybackPeriod", npvData.get("paybackPeriod"));
+        saveParam.put("piValue",       npvData.get("piValue"));
+
+        int cnt = ecDetailRepository.count("Npv", param);
+        if (cnt > 0) {
+            ecDetailRepository.update("Npv", saveParam);
+        } else {
+            ecDetailRepository.insert("Npv", saveParam);
+        }
+
+        result.put("status", "OK");
+        return result;
+    }
+
+    /* ═══ Cash Flow 계산 공통 로직 (7개년) ═══ */
+    private Map<String, Object> computeCashFlows(double waccRate, double taxRate,
+            Map<Integer, Double> yearOperIncome,
+            List<Map<String, Object>> lineInvestList,
+            List<Map<String, Object>> otherInvestList) {
+
+        List<Map<String, Object>> cashFlowList = new ArrayList<>();
+        double[] fcfArray = new double[7];
+        double totalInvest = 0, totalOper = 0, totalDepr = 0;
+        double totalTax = 0, totalFcf = 0, totalPv = 0;
+        double pvInflows = 0, pvInvestments = 0;
+
+        for (int t = 1; t <= 7; t++) {
+            // ── 투자비: 해당 연도 취득분 합계 ──
+            double investAmt = 0;
+            for (Map<String, Object> inv : lineInvestList) {
+                // LineInvest: acqYear 없으므로 1년차 취득으로 간주
+                if (t == 1) investAmt += toDouble(inv.get("acqAmt"));
+            }
+            for (Map<String, Object> inv : otherInvestList) {
+                int acqYear = toInt(inv.get("acqYear"));
+                if (acqYear <= 0) acqYear = 1;
+                if (acqYear == t) investAmt += toDouble(inv.get("acqAmt"));
+            }
+
+            // ── 영업이익 ──
+            double operProfit = yearOperIncome.getOrDefault(t, 0.0);
+
+            // ── 감가상각비: 정액법 (acqAmt / usefulLife) ──
+            double depreciation = 0;
+            for (Map<String, Object> inv : lineInvestList) {
+                int usefulLife = toInt(inv.get("usefulLife"));
+                if (usefulLife <= 0) usefulLife = 1;
+                if (t >= 1 && t < 1 + usefulLife) {
+                    depreciation += toDouble(inv.get("acqAmt")) / usefulLife;
+                }
+            }
+            for (Map<String, Object> inv : otherInvestList) {
+                int acqYear = toInt(inv.get("acqYear"));
+                if (acqYear <= 0) acqYear = 1;
+                int usefulLife = toInt(inv.get("usefulLife"));
+                if (usefulLife <= 0) usefulLife = 1;
+                if (t >= acqYear && t < acqYear + usefulLife) {
+                    depreciation += toDouble(inv.get("acqAmt")) / usefulLife;
+                }
+            }
+            depreciation = Math.round(depreciation);
+
+            // ── 세금 ──
+            double taxAmt = operProfit > 0 ? Math.round(operProfit * taxRate / 100) : 0;
+
+            // ── Free Cash Flow ──
+            double freeCashFlow = operProfit - taxAmt + depreciation - investAmt;
+            fcfArray[t - 1] = freeCashFlow;
+
+            // ── 할인율 & 현재가치 ──
+            double discountFactor = 1.0 / Math.pow(1 + waccRate / 100, t);
+            double presentValue = Math.round(freeCashFlow * discountFactor);
+
+            Map<String, Object> cfRow = new HashMap<>();
+            cfRow.put("yearNm",       "Y+" + t);
+            cfRow.put("investAmt",    Math.round(investAmt));
+            cfRow.put("operProfit",   Math.round(operProfit));
+            cfRow.put("depreciation", Math.round(depreciation));
+            cfRow.put("taxAmt",       Math.round(taxAmt));
+            cfRow.put("freeCashFlow", Math.round(freeCashFlow));
+            cfRow.put("discountRate", Math.round(discountFactor * 10000.0) / 10000.0);
+            cfRow.put("presentValue", presentValue);
+            cashFlowList.add(cfRow);
+
+            totalInvest += investAmt;
+            totalOper   += operProfit;
+            totalDepr   += depreciation;
+            totalTax    += taxAmt;
+            totalFcf    += freeCashFlow;
+            totalPv     += presentValue;
+
+            // PI 구성요소
+            double operCf = operProfit - taxAmt + depreciation;
+            pvInflows     += operCf * discountFactor;
+            pvInvestments += investAmt * discountFactor;
+        }
+
+        // Total 행
+        Map<String, Object> totalRow = new HashMap<>();
+        totalRow.put("yearNm",       "Total");
+        totalRow.put("investAmt",    Math.round(totalInvest));
+        totalRow.put("operProfit",   Math.round(totalOper));
+        totalRow.put("depreciation", Math.round(totalDepr));
+        totalRow.put("taxAmt",       Math.round(totalTax));
+        totalRow.put("freeCashFlow", Math.round(totalFcf));
+        totalRow.put("discountRate", 0);
+        totalRow.put("presentValue", Math.round(totalPv));
+        cashFlowList.add(totalRow);
+
+        Map<String, Object> cfResult = new HashMap<>();
+        cfResult.put("cashFlowList",  cashFlowList);
+        cfResult.put("fcfArray",      fcfArray);
+        cfResult.put("totalPv",       totalPv);
+        cfResult.put("pvInflows",     pvInflows);
+        cfResult.put("pvInvestments", pvInvestments);
+        return cfResult;
+    }
+
+    /** IRR 계산: Newton-Raphson 반복법 (max 100회, 수렴 허용오차 1e-7) */
+    private double calcIrr(double[] fcf) {
+        double r = 0.1;
+        for (int iter = 0; iter < 100; iter++) {
+            double f = 0, fPrime = 0;
+            for (int t = 0; t < fcf.length; t++) {
+                double denom = Math.pow(1 + r, t + 1);
+                if (Math.abs(denom) < 1e-12) return r * 100;
+                f      += fcf[t] / denom;
+                fPrime -= (t + 1) * fcf[t] / Math.pow(1 + r, t + 2);
+            }
+            if (Math.abs(fPrime) < 1e-12) break;
+            double rNew = r - f / fPrime;
+            if (rNew < -0.99) rNew = -0.99;
+            if (rNew > 10.0)  rNew = 10.0;
+            if (Math.abs(rNew - r) < 1e-7) { r = rNew; break; }
+            r = rNew;
+        }
+        return r * 100;
+    }
+
+    /** Payback Period 계산: 누적 FCF 보간법 */
+    private double calcPaybackPeriod(double[] fcf) {
+        double cumulative = 0;
+        for (int t = 0; t < fcf.length; t++) {
+            double prevCum = cumulative;
+            cumulative += fcf[t];
+            if (cumulative >= 0) {
+                if (fcf[t] > 0) {
+                    return t + Math.abs(prevCum) / fcf[t];
+                }
+                return t + 1;
+            }
+        }
+        return fcf.length;
     }
 
     /* ── 유틸리티 ── */

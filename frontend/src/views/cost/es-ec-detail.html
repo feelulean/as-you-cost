@@ -942,8 +942,11 @@
                 if (param && param.pjtCd) {
                     this._initialPjtCd = param.pjtCd;
                     this.set('searchParam', { pjtCd: param.pjtCd });
-                    this.$.findPjtListAjax.generateRequest();
+                } else {
+                    this._initialPjtCd = null;
+                    this.set('searchParam', {});
                 }
+                this.$.findPjtListAjax.generateRequest();
             },
 
             /* ==============================================================

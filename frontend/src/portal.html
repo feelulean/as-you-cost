@@ -76,11 +76,21 @@
 
     /* Logo */
     .top-header__logo {
-      font-size: 17px; font-weight: 700; color: #fff;
-      letter-spacing: -0.5px; white-space: nowrap;
+      display: flex; align-items: center; gap: 8px;
       margin-right: 32px; cursor: pointer;
+      height: 100%; text-decoration: none;
     }
-    .top-header__logo span { font-weight: 300; color: var(--primary-500); font-size: 12px; margin-left: 6px; }
+    .top-header__logo img {
+      height: 22px; width: auto;
+    }
+    .top-header__logo-text {
+      font-size: 15px; font-weight: 700; color: #fff;
+      letter-spacing: -0.3px; line-height: 1;
+    }
+    .top-header__logo-sub {
+      font-size: 10px; font-weight: 400; color: var(--primary-400);
+      letter-spacing: 0.2px;
+    }
 
     /* GNB (Top Menu) */
     .gnb { display: flex; gap: 2px; height: 100%; }
@@ -387,7 +397,11 @@
        ════════════════════════════════════════════ -->
   <header class="top-header">
     <div class="top-header__logo" onclick="showWelcome()">
-      As-You-Cost <span>v1.0</span>
+      <img src="assets/logo-icon.svg" alt="">
+      <div>
+        <div class="top-header__logo-text">AYC</div>
+        <div class="top-header__logo-sub">As-You-Cost</div>
+      </div>
     </div>
 
     <nav class="gnb" id="gnb">
@@ -814,6 +828,11 @@
         }
       }
       renderTabs();
+    }
+
+    /* ── 현재 활성 탭 닫기 (UT.close 에서 호출) ── */
+    function closeCurrentTab() {
+      if (activeTabId) closeTab(activeTabId);
     }
 
     /* ── Welcome 화면 표시 ── */

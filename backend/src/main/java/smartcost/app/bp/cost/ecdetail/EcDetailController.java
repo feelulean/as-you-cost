@@ -203,12 +203,12 @@ public class EcDetailController {
 
     /* ═══ NPV 분석 ═══ */
     @RequestMapping("/findListNpv.do")
-    public List<Map<String, Object>> findListNpv(@RequestBody Map<String, Object> param) {
-        return ecDetailService.findList("Npv", param);
+    public Map<String, Object> findListNpv(@RequestBody Map<String, Object> param) {
+        return ecDetailService.findNpvData(param);
     }
     @RequestMapping("/saveNpv.do")
     public Map<String, Object> saveNpv(@RequestBody Map<String, Object> param) {
-        return ecDetailService.saveList("Npv", param);
+        return ecDetailService.saveNpvData(param);
     }
     @RequestMapping("/calculateNpv.do")
     public Map<String, Object> calculateNpv(@RequestBody Map<String, Object> param) {
