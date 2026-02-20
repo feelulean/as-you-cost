@@ -216,7 +216,8 @@
         type: c.getAttribute('data-type') || c.getAttribute('type') || 'text',
         format: c.getAttribute('format-type') || c.getAttribute('format') || '',
         tag: c.tagName.toLowerCase(),
-        onItemClick: c.getAttribute('on-item-click') || ''
+        onItemClick: c.getAttribute('on-item-click') || '',
+        visible: c.getAttribute('visible') !== 'false'
       };
       /* sc-combobox-column: items 데이터 해석 */
       if (colDef.tag === 'sc-combobox-column') {
@@ -255,6 +256,7 @@
     var thead = document.createElement('thead');
     var htr = document.createElement('tr');
     for (var i = 0; i < this._columns.length; i++) {
+      if (this._columns[i].visible === false) continue;
       var th = document.createElement('th');
       th.textContent = this._columns[i].header;
       th.style.textAlign = this._columns[i].align;
@@ -339,6 +341,7 @@
 
     for (var c = 0; c < this._columns.length; c++) {
       var col = this._columns[c];
+      if (col.visible === false) continue;
       var td = document.createElement('td');
       td.style.textAlign = col.align;
       var val = row[col.field];
@@ -479,6 +482,7 @@
 
       for (var c = 0; c < this._columns.length; c++) {
         var col = this._columns[c];
+        if (col.visible === false) continue;
         var td = document.createElement('td');
         td.style.textAlign = col.align;
         var val = row[col.field];
