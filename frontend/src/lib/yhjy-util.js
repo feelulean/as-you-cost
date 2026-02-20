@@ -127,6 +127,35 @@
     }
   };
 
+  /**
+   * 공통코드 일괄 로딩
+   * @param {Object} codeMap  { propertyName: grpCd, ... }  예: { currencyList: 'T041', processTypeList: 'T006' }
+   * @param {Function} callback  function(codes) — codes = { currencyList: [{label,data},...], ... }
+   */
+  UT.loadCodes = function (codeMap, callback) {
+    var grpCds = [];
+    var keys = Object.keys(codeMap);
+    for (var i = 0; i < keys.length; i++) {
+      var grp = codeMap[keys[i]];
+      if (grpCds.indexOf(grp) === -1) grpCds.push(grp);
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/bp/master/code/findListDtlCdMulti.do', true);
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) return;
+      if (xhr.status === 200) {
+        var raw = JSON.parse(xhr.responseText);
+        var codes = {};
+        for (var j = 0; j < keys.length; j++) {
+          codes[keys[j]] = raw[codeMap[keys[j]]] || [];
+        }
+        if (typeof callback === 'function') callback(codes);
+      }
+    };
+    xhr.send(JSON.stringify({ grpCds: grpCds }));
+  };
+
   global.UT = UT;
 
 })(window);

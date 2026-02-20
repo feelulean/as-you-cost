@@ -59,6 +59,27 @@ public class CodeMgtService {
         return resultMap;
     }
 
+    /**
+     * 여러 그룹코드의 상세코드를 한번에 조회하여 그룹별 Map으로 반환
+     * { "T006": [{ "data":"MACH", "label":"가공" }, ...], "T007": [...] }
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> findListDtlCdMulti(Map<String, Object> param) {
+        List<Map<String, Object>> rows = codeMgtRepository.findListDtlCdMulti(param);
+        Map<String, Object> result = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            String grpCd = (String) row.get("grpCd");
+            @SuppressWarnings("rawtypes")
+            List list = (List) result.computeIfAbsent(grpCd, k -> new java.util.ArrayList<>());
+            Map<String, Object> item = new HashMap<>();
+            item.put("data", row.get("dtlCd"));
+            item.put("label", row.get("cdNm"));
+            if (row.get("attr1") != null) item.put("attr1", row.get("attr1"));
+            list.add(item);
+        }
+        return result;
+    }
+
     @Transactional
     @SuppressWarnings("unchecked")
     public Map<String, Object> deleteListDtlCd(Map<String, Object> param) {

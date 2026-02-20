@@ -799,32 +799,10 @@
                     value: function() { return {}; }
                 },
 
-                /* ─── 공통코드 ─── */
+                /* ─── 공통코드 (DB 조회) ─── */
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            deptDivList: [
-                                { label: '영업',   data: 'SALES' },
-                                { label: '설계',   data: 'DESIGN' },
-                                { label: '원가',   data: 'COST' },
-                                { label: '품질',   data: 'QA' },
-                                { label: '생산',   data: 'PROD' },
-                                { label: '구매',   data: 'PURCH' }
-                            ],
-                            roleList: [
-                                { label: 'PM', data: 'PM' },
-                                { label: 'PL', data: 'PL' }
-                            ],
-                            currencyList: [
-                                { label: 'KRW', data: 'KRW' },
-                                { label: 'USD', data: 'USD' },
-                                { label: 'EUR', data: 'EUR' },
-                                { label: 'JPY', data: 'JPY' },
-                                { label: 'CNY', data: 'CNY' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
@@ -833,6 +811,12 @@
                ============================================================== */
 
             attached: function() {
+                var me = this;
+                UT.loadCodes({
+                    deptDivList:  'T046',
+                    roleList:     'T047',
+                    currencyList: 'T041'
+                }, function(codes) { me.set('codes', codes); });
                 // URL 파라미터에서 tgtPjtCd 추출
                 var params = new URLSearchParams(window.location.search);
                 var pjtCd = params.get('tgtPjtCd') || '';

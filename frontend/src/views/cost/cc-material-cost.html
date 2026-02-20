@@ -579,17 +579,10 @@
                 pjtSearchParam: { type: Object, value: function() { return {}; } },
                 pjtList:        { type: Array,  value: function() { return []; } },
 
-                /* ─── 공통코드 ─── */
+                /* ─── 공통코드 (DB 조회) ─── */
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            partDivList: [
-                                { label: 'C/O',  data: 'CO' },
-                                { label: '신규', data: 'NEW' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
@@ -598,6 +591,8 @@
                ============================================================== */
 
             attached: function() {
+                var me = this;
+                UT.loadCodes({ partDivList: 'T051' }, function(codes) { me.set('codes', codes); });
                 var param = UT.getParameter();
                 if (param) {
                     this.ccPjtCd = param.ccPjtCd || '';

@@ -470,9 +470,8 @@ public class EcDetailService {
             detail.put("unitCostY2", ucY2);
             detail.put("unitCostY3", ucY3);
 
-            boolean isBldg = "BLDG".equalsIgnoreCase(investType)
-                    || "BUILD".equalsIgnoreCase(investType)
-                    || (investType != null && investType.contains("건"));
+            boolean isBldg = "BUILDING".equalsIgnoreCase(investType)
+                    || "LAND".equalsIgnoreCase(investType);
             if (isBldg) {
                 detailDeprBldg.add(detail);
                 sumDeprBldgY1 += ucY1;

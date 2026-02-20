@@ -625,42 +625,10 @@
                 saveScheduleParam:    { type: Object, value: function() { return {}; } },
                 deleteScheduleParam:  { type: Object, value: function() { return {}; } },
 
-                /* ─── 공통코드 ─── */
+                /* ─── 공통코드 (DB 조회) ─── */
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            factoryDivList: [
-                                { label: '신규', data: 'NEW' },
-                                { label: '기존', data: 'EXIST' }
-                            ],
-                            corpDivList: [
-                                { label: '신규', data: 'NEW' },
-                                { label: '기존', data: 'EXIST' }
-                            ],
-                            currencyList: [
-                                { label: 'KRW', data: 'KRW' },
-                                { label: 'USD', data: 'USD' },
-                                { label: 'EUR', data: 'EUR' },
-                                { label: 'JPY', data: 'JPY' },
-                                { label: 'CNY', data: 'CNY' }
-                            ],
-                            deptDivList: [
-                                { label: '영업',       data: 'SALES' },
-                                { label: '설계',       data: 'DESIGN' },
-                                { label: '설계원가',   data: 'DESIGN_COST' },
-                                { label: '구매',       data: 'PURCHASE' },
-                                { label: '생산기술',   data: 'PROD_TECH' },
-                                { label: '총무',       data: 'GA' },
-                                { label: 'IT',         data: 'IT' },
-                                { label: '원가관리',   data: 'COST_MGT' }
-                            ],
-                            roleList: [
-                                { label: 'PM', data: 'PM' },
-                                { label: 'PL', data: 'PL' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
@@ -669,6 +637,14 @@
                ============================================================== */
 
             attached: function() {
+                var me = this;
+                UT.loadCodes({
+                    factoryDivList: 'T038',
+                    corpDivList:    'T038',
+                    currencyList:   'T041',
+                    deptDivList:    'T046',
+                    roleList:       'T047'
+                }, function(codes) { me.set('codes', codes); });
                 var param = UT.getParameter();
                 if (param) {
                     this.ccPjtCd = param.ccPjtCd || '';

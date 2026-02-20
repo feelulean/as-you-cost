@@ -540,21 +540,10 @@
                 saveMatParam:       { type: Object, value: function() { return {}; } },
                 evalSearchParam:    { type: Object, value: function() { return {}; } },
 
-                /* ── 공통코드 ── */
+                /* ── 공통코드 (DB 조회) ── */
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            tgtCostCodeList: [],
-                            currencyList: [
-                                { label: 'KRW', data: 'KRW' },
-                                { label: 'USD', data: 'USD' },
-                                { label: 'EUR', data: 'EUR' },
-                                { label: 'JPY', data: 'JPY' },
-                                { label: 'CNY', data: 'CNY' }
-                            ]
-                        };
-                    }
+                    value: function() { return { tgtCostCodeList: [] }; }
                 }
             },
 
@@ -563,6 +552,12 @@
                ============================================================== */
 
             attached: function() {
+                var me = this;
+                UT.loadCodes({ currencyList: 'T041' }, function(codes) {
+                    var c = me.codes || {};
+                    c.currencyList = codes.currencyList;
+                    me.set('codes', c);
+                });
                 var param = UT.getParameter();
                 if (param) {
                     this.ccPjtCd = param.ccPjtCd || '';

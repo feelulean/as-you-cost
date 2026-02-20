@@ -94,6 +94,25 @@
     </update>
 
     <!-- ============================================================
+         다중 그룹코드 상세코드 일괄 조회 (화면 공통코드 로딩용)
+         ============================================================ -->
+    <select id="findListDtlCdMulti" parameterType="map" resultType="map">
+        SELECT  GRP_CD   AS "grpCd"
+              , DTL_CD   AS "dtlCd"
+              , CD_NM    AS "cdNm"
+              , SORT_NO  AS "sortNo"
+              , ATTR1    AS "attr1"
+          FROM  PCM_COM_DTL_CD
+         WHERE  TEN_ID = #{g.tenant}
+           AND  USE_YN = 'Y'
+           AND  GRP_CD IN
+                <foreach collection="p.grpCds" item="cd" open="(" separator="," close=")">
+                    #{cd}
+                </foreach>
+         ORDER BY GRP_CD, SORT_NO, DTL_CD
+    </select>
+
+    <!-- ============================================================
          상세코드 삭제
          ============================================================ -->
     <delete id="deleteDtlCd" parameterType="map">

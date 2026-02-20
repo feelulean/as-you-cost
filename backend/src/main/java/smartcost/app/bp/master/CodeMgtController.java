@@ -38,4 +38,10 @@ public class CodeMgtController {
     public Map<String, Object> deleteListDtlCd(@RequestBody Map<String, Object> param) {
         return codeMgtService.deleteListDtlCd(param);
     }
+
+    /** 다중 그룹코드 상세코드 일괄 조회 */
+    @RequestMapping("/findListDtlCdMulti.do")
+    public Map<String, Object> findListDtlCdMulti(@RequestBody Map<String, Object> param) {
+        return codeMgtService.findListDtlCdMulti(param);
+    }
 }

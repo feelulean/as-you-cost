@@ -41,4 +41,8 @@ public class CodeMgtRepository {
     public void deleteDtlCd(Map<String, Object> param) {
         sqlSession.delete(NAMESPACE + "deleteDtlCd", param);
     }
+
+    public List<Map<String, Object>> findListDtlCdMulti(Map<String, Object> param) {
+        return sqlSession.selectList(NAMESPACE + "findListDtlCdMulti", param);
+    }
 }

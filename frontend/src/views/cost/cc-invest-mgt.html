@@ -673,42 +673,10 @@
                 mpSaveParam:         { type: Object, value: function() { return {}; } },
                 mpDeleteParam:       { type: Object, value: function() { return {}; } },
 
-                /* ─── 공통코드 ─── */
+                /* ─── 공통코드 (DB 조회) ─── */
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            processTypeList: [
-                                { label: '가공',   data: 'MACH' },
-                                { label: '조립',   data: 'ASSY' },
-                                { label: '열처리', data: 'HEAT' },
-                                { label: 'SEAT',   data: 'SEAT' }
-                            ],
-                            investDivList: [
-                                { label: '건구축물', data: 'BUILDING' },
-                                { label: '연구개발', data: 'RND' },
-                                { label: '토지',     data: 'LAND' },
-                                { label: '기타',     data: 'ETC' }
-                            ],
-                            deprDivList: [
-                                { label: '내용연수 상각', data: 'USEFUL_LIFE' },
-                                { label: '지출연도 비용', data: 'EXPENSE' },
-                                { label: '자산',           data: 'ASSET' }
-                            ],
-                            mpDivList: [
-                                { label: '생산직접', data: 'DIRECT' },
-                                { label: '생산간접', data: 'INDIRECT' },
-                                { label: '판매관리', data: 'SGA' }
-                            ],
-                            currencyList: [
-                                { label: 'KRW', data: 'KRW' },
-                                { label: 'USD', data: 'USD' },
-                                { label: 'EUR', data: 'EUR' },
-                                { label: 'CNY', data: 'CNY' },
-                                { label: 'JPY', data: 'JPY' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
@@ -717,6 +685,14 @@
                ============================================================== */
 
             attached: function() {
+                var me = this;
+                UT.loadCodes({
+                    processTypeList: 'T006',
+                    investDivList:   'T039',
+                    deprDivList:     'T040',
+                    mpDivList:       'T007',
+                    currencyList:    'T041'
+                }, function(codes) { me.set('codes', codes); });
                 var param = UT.getParameter();
                 if (param) {
                     this.ccPjtCd = param.ccPjtCd || '';

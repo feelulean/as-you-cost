@@ -318,27 +318,13 @@
                 deleteBetauParam:   { type: Object, value: function() { return {}; } },
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            countryList: [
-                                { label: '한국',   data: '한국' },
-                                { label: '미국',   data: '미국' },
-                                { label: '중국',   data: '중국' },
-                                { label: '일본',   data: '일본' },
-                                { label: '독일',   data: '독일' },
-                                { label: '인도',   data: '인도' },
-                                { label: '체코',   data: '체코' },
-                                { label: '브라질', data: '브라질' },
-                                { label: '멕시코', data: '멕시코' },
-                                { label: '터키',   data: '터키' }
-                            ],
-                            bizUnitList: [
-                                { label: 'SEAT', data: 'SEAT' },
-                                { label: 'PT',   data: 'PT' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
+            },
+
+            attached: function() {
+                var me = this;
+                UT.loadCodes({ countryList: 'T052', bizUnitList: 'T004' }, function(codes) { me.set('codes', codes); });
             },
 
             /* ================================================================

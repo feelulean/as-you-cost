@@ -205,7 +205,7 @@
       var colLocked   = this._editable && c.getAttribute('editable') === 'false';
       /* editMode: 'active' = 편집 가능, 'locked' = 회색 읽기전용, 'text' = 텍스트 표시 */
       var editMode = colEditable ? 'active' : (colLocked ? 'locked' : 'text');
-      this._columns.push({
+      var colDef = {
         field:  isSimple ? (c.getAttribute('field') || '') : (c.getAttribute('data-field') || ''),
         header: isSimple ? (c.getAttribute('header') || '') : (c.getAttribute('header-text') || ''),
         width: c.getAttribute('width') || 'auto',
@@ -217,7 +217,25 @@
         format: c.getAttribute('format-type') || c.getAttribute('format') || '',
         tag: c.tagName.toLowerCase(),
         onItemClick: c.getAttribute('on-item-click') || ''
-      });
+      };
+      /* sc-combobox-column: items 데이터 해석 */
+      if (colDef.tag === 'sc-combobox-column') {
+        colDef.displayField = c.getAttribute('display-field') || 'label';
+        colDef.valueField   = c.getAttribute('value-field')   || 'data';
+        /* polymer-shim이 저장한 _itemsPath / _polymerHost 에서 items 해석 */
+        var comboItems = [];
+        if (c._itemsPath && c._polymerHost) {
+          var pathParts = c._itemsPath.split('.');
+          var cur = c._polymerHost;
+          for (var p = 0; p < pathParts.length; p++) {
+            if (cur == null) break;
+            cur = cur[pathParts[p]];
+          }
+          if (Array.isArray(cur)) comboItems = cur;
+        }
+        colDef.comboItems = comboItems;
+      }
+      this._columns.push(colDef);
     }
   };
 
@@ -351,6 +369,34 @@
           });
           td.appendChild(link);
         })(col, val, row, idx);
+      } else if (mode === 'active' && col.tag === 'sc-combobox-column' && col.comboItems && col.comboItems.length > 0) {
+        /* ── 콤보박스 (select) 입력 필드 ── */
+        var sel = document.createElement('select');
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = '선택';
+        sel.appendChild(opt0);
+        for (var ci = 0; ci < col.comboItems.length; ci++) {
+          var opt = document.createElement('option');
+          opt.value = col.comboItems[ci][col.valueField] || '';
+          opt.textContent = col.comboItems[ci][col.displayField] || '';
+          sel.appendChild(opt);
+        }
+        sel.value = (val == null ? '' : String(val));
+
+        (function (field, rowIdx, select) {
+          select.addEventListener('change', function () {
+            me._data[rowIdx][field] = select.value;
+            me._modifiedSet[rowIdx] = true;
+            var host = findHost(me);
+            var evtHandler = me.getAttribute('on-cell-value-changed');
+            if (evtHandler && host && typeof host[evtHandler] === 'function') {
+              host[evtHandler]({ detail: { dataField: field, rowIndex: rowIdx, value: select.value } });
+            }
+          });
+        })(col.field, idx, sel);
+
+        td.appendChild(sel);
       } else if (mode === 'active') {
         /* ── 편집 가능 입력 필드 ── */
         var inp = document.createElement('input');
@@ -393,7 +439,14 @@
         /* ── 읽기전용 입력 필드 (회색 배경) ── */
         var roInp = document.createElement('input');
         roInp.type = 'text';
-        roInp.value = (col.format === 'amt' || col.format === '#,###') ? formatNumber(val, col.format) : val;
+        var roVal = (col.format === 'amt' || col.format === '#,###') ? formatNumber(val, col.format) : val;
+        /* combobox 컬럼: 코드값 → 라벨 변환 */
+        if (col.tag === 'sc-combobox-column' && col.comboItems) {
+          for (var li = 0; li < col.comboItems.length; li++) {
+            if (String(col.comboItems[li][col.valueField]) === String(val)) { roVal = col.comboItems[li][col.displayField]; break; }
+          }
+        }
+        roInp.value = roVal;
         roInp.readOnly = true;
         roInp.style.cssText = 'text-align:' + col.align + '; background:#F0F1F5; color:#8A94A6; cursor:default;';
         td.appendChild(roInp);
@@ -404,6 +457,12 @@
         }
         if (col.tag === 'sc-checkbox-column') {
           val = (String(val) === 'Y') ? 'Y' : 'N';
+        }
+        /* combobox 컬럼: 코드값 → 라벨 변환 */
+        if (col.tag === 'sc-combobox-column' && col.comboItems) {
+          for (var di = 0; di < col.comboItems.length; di++) {
+            if (String(col.comboItems[di][col.valueField]) === String(val)) { val = col.comboItems[di][col.displayField]; break; }
+          }
         }
         td.textContent = val;
       }

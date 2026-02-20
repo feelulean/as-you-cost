@@ -356,28 +356,18 @@
                 saveSensitivityParam:   { type: Object, value: function() { return {}; } },
                 varSearchParam:         { type: Object, value: function() { return {}; } },
                 saveVarParam:           { type: Object, value: function() { return {}; } },
-                // 공통코드
+                // 공통코드 (DB 조회)
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            bizUnitList: [
-                                { label: 'PT',   data: 'PT' },
-                                { label: 'SEAT', data: 'SEAT' }
-                            ],
-                            varTypeList: [
-                                { label: '환율',   data: 'EXCH' },
-                                { label: '수량',   data: 'QTY' },
-                                { label: '판가',   data: 'PRICE' },
-                                { label: '재료비', data: 'MAT' },
-                                { label: 'TCI',    data: 'TCI' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
-            attached: function() { this.onFindList(); },
+            attached: function() {
+                var me = this;
+                UT.loadCodes({ bizUnitList: 'T004', varTypeList: 'T050' }, function(codes) { me.set('codes', codes); });
+                this.onFindList();
+            },
 
             /* ==============================================================
                프로젝트 목록 조회 (좌측 상단 그리드)

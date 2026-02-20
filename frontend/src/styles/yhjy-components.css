@@ -598,6 +598,27 @@ sc-toolbar,
   box-shadow: 0 0 0 2px rgba(105, 84, 254, 0.15);
 }
 
+/* Grid inline edit select (combobox) */
+.sc-grid-wrap table tbody td select {
+  width: 100%;
+  height: 26px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  box-sizing: border-box;
+  outline: none;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.sc-grid-wrap table tbody td select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px rgba(105, 84, 254, 0.15);
+}
+
 /* Cell Alignment */
 .cell-center { text-align: center; }
 .cell-right  { text-align: right; }
