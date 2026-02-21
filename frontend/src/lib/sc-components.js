@@ -240,6 +240,32 @@
     }
   };
 
+  ScGrid.prototype._refreshComboItems = function () {
+    if (!this._columns) return;
+    var cols = this.querySelectorAll('sc-combobox-column');
+    for (var i = 0; i < cols.length; i++) {
+      var c = cols[i];
+      var field = c.getAttribute('data-field');
+      /* 매칭되는 _columns 엔트리 찾기 */
+      for (var j = 0; j < this._columns.length; j++) {
+        if (this._columns[j].field === field && this._columns[j].tag === 'sc-combobox-column') {
+          var comboItems = [];
+          if (c._itemsPath && c._polymerHost) {
+            var pathParts = c._itemsPath.split('.');
+            var cur = c._polymerHost;
+            for (var p = 0; p < pathParts.length; p++) {
+              if (cur == null) break;
+              cur = cur[pathParts[p]];
+            }
+            if (Array.isArray(cur)) comboItems = cur;
+          }
+          this._columns[j].comboItems = comboItems;
+          break;
+        }
+      }
+    }
+  };
+
   ScGrid.prototype._render = function () {
     var old = this.querySelector('.sc-grid-wrap');
     if (old) old.remove();
@@ -536,6 +562,7 @@
     }
     newSet[idx] = true;
     this._modifiedSet = newSet;
+    this._refreshComboItems();
     this._render();
   };
   ScGrid.prototype.deleteRow = function (idx) {
@@ -642,6 +669,8 @@
     if (!this._columns || this._columns.length === 0) {
       this._parseColumns();
     }
+    /* combobox 컬럼의 items가 비동기 로딩으로 늦게 설정된 경우 재해석 */
+    this._refreshComboItems();
     this._render();
   };
 

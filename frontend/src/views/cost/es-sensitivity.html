@@ -125,12 +125,13 @@
                 <sc-grid id="versionGrid"
                          data-provider="{{sensitivityVersionList}}"
                          on-item-click="onVersionClick"
+                         editable="true"
                          class="flex-5"
                          use-state="false">
 
                     <sc-toolbar>
                         <sc-button text="신규" on-click="onAddVersion"  auth-code="S"></sc-button>
-                        <sc-button text="수정" on-click="onEditVersion" auth-code="S"></sc-button>
+                        <sc-button text="저장" on-click="onSaveVersion" auth-code="S"></sc-button>
                     </sc-toolbar>
 
                     <sc-grid-columns>
@@ -143,7 +144,9 @@
                         <sc-data-column data-field="analysisNm"
                                         header-text="분석명"
                                         width="180"
-                                        text-align="left">
+                                        text-align="left"
+                                        editable="true"
+                                        required="true">
                         </sc-data-column>
 
                         <sc-data-column data-field="completeYn"
@@ -409,11 +412,7 @@
 
             onFindSensitivityResponse: function(e) {
                 var data = e.detail.response;
-                if (data && data.versionList) {
-                    this.set('sensitivityVersionList', data.versionList);
-                } else {
-                    this.set('sensitivityVersionList', []);
-                }
+                this.set('sensitivityVersionList', Array.isArray(data) ? data : []);
             },
 
             /* ==============================================================
@@ -434,16 +433,8 @@
 
             onFindVarListResponse: function(e) {
                 var data = e.detail.response;
-                if (data && data.varList) {
-                    this.set('varList', data.varList);
-                } else {
-                    this.set('varList', []);
-                }
-                if (data && data.resultList) {
-                    this.set('sensitivityResultList', data.resultList);
-                } else {
-                    this.set('sensitivityResultList', []);
-                }
+                this.set('varList', Array.isArray(data) ? data : []);
+                this.set('sensitivityResultList', []);
             },
 
             /* ==============================================================
@@ -456,27 +447,51 @@
                     return;
                 }
 
+                // 기존 차수 목록에서 최대 seqNo + 1
+                var list = this.sensitivityVersionList || [];
+                var maxSeq = 0;
+                for (var i = 0; i < list.length; i++) {
+                    var s = parseInt(list[i].seqNo) || 0;
+                    if (s > maxSeq) maxSeq = s;
+                }
+
                 var versionGrid = this.$.versionGrid;
                 versionGrid.insertRow(0, {
                     ecPjtCd:    this.selectedPjtCd,
-                    seqNo:      '',
+                    seqNo:      maxSeq + 1,
                     analysisNm: '',
                     completeYn: 'N',
-                    modDttm:    ''
+                    modDttm:    '',
+                    _rowStatus: 'C'
                 });
             },
 
-            onEditVersion: function() {
-                if (!this.selectedVersion || !this.selectedVersion.seqNo) {
-                    UT.alert('수정할 민감도분석 차수를 선택해 주세요.');
+            onSaveVersion: function() {
+                if (!this.selectedPjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
                     return;
                 }
-                if (this.selectedVersion.completeYn === 'Y') {
-                    UT.alert('종료된 차수는 수정할 수 없습니다.');
+                var versionGrid = this.$.versionGrid;
+                var modifiedRows = versionGrid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
                     return;
                 }
-                // 선택된 차수의 편집 모드 활성화는 그리드 셀 클릭으로 처리
-                UT.alert('그리드에서 직접 분석명을 수정한 후 임시저장 해주세요.');
+                // 필수값 검증
+                for (var i = 0; i < modifiedRows.length; i++) {
+                    if (!modifiedRows[i].analysisNm) {
+                        UT.alert('분석명을 입력해 주세요.');
+                        return;
+                    }
+                }
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('saveSensitivityParam', {
+                        ecPjtCd:  me.selectedPjtCd,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveSensitivityAjax.generateRequest();
+                });
             },
 
             /* ==============================================================
@@ -500,7 +515,10 @@
                     varType:   '',
                     varNm:     '',
                     beforeVal: 0,
-                    afterVal:  0
+                    afterVal:  0,
+                    yearVal:   '',
+                    costCd:    '',
+                    _rowStatus: 'C'
                 });
             },
 
@@ -600,16 +618,21 @@
                 var me = this;
                 UT.confirm('민감도 분석을 종료 처리하시겠습니까?\n종료 후에는 수정할 수 없습니다.', function() {
                     me.set('saveSensitivityParam', {
-                        ecPjtCd:    me.selectedPjtCd,
-                        seqNo:      me.selectedVersion.seqNo,
-                        completeYn: 'Y'
+                        ecPjtCd:  me.selectedPjtCd,
+                        saveList: [{
+                            ecPjtCd:    me.selectedPjtCd,
+                            seqNo:      me.selectedVersion.seqNo,
+                            analysisNm: me.selectedVersion.analysisNm,
+                            completeYn: 'Y',
+                            _rowStatus: 'U'
+                        }]
                     });
                     me.$.saveSensitivityAjax.generateRequest();
                 });
             },
 
             onSaveSensitivityResponse: function(e) {
-                UT.alert('민감도 분석이 종료 처리되었습니다.');
+                UT.alert('MSG_COM_00003');
                 // 차수 목록 재조회
                 this.set('sensitivitySearchParam', { ecPjtCd: this.selectedPjtCd });
                 this.$.findSensitivityAjax.generateRequest();

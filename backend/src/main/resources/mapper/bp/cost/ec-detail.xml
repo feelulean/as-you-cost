@@ -726,7 +726,8 @@
             VAR_NM, BEFORE_VAL, AFTER_VAL, YEAR_VAL, COST_CD,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.seqNo}, #{p.varType},
-            #{p.varNm}, #{p.beforeVal}, #{p.afterVal}, #{p.yearVal}, #{p.costCd},
+            #{p.varNm}, #{p.beforeVal}, #{p.afterVal},
+            COALESCE(#{p.yearVal}, ''), COALESCE(#{p.costCd}, ''),
             #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
