@@ -233,23 +233,18 @@
                 /* ─── 공통코드 ─── */
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            bizUnitList: [
-                                { label: 'PT',   data: 'PT' },
-                                { label: 'SEAT', data: 'SEAT' }
-                            ],
-                            prodGrpList: [
-                                { label: 'T/M',  data: 'TM' },
-                                { label: 'AXLE', data: 'AXLE' },
-                                { label: 'SEAT', data: 'SEAT' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
-            attached: function() { this.onFindList(); },
+            attached: function() {
+                var me = this;
+                UT.loadCodes({
+                    bizUnitList: 'T004',
+                    prodGrpList: 'T033'
+                }, function(codes) { me.set('codes', codes); });
+                this.onFindList();
+            },
 
             /* ==============================================================
                조회

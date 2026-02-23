@@ -259,18 +259,15 @@
                 // 공통코드
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            bizUnitList: [
-                                { label: 'PT',   data: 'PT' },
-                                { label: 'SEAT', data: 'SEAT' }
-                            ]
-                        };
-                    }
+                    value: function() { return {}; }
                 }
             },
 
-            attached: function() { this.onFindList(); },
+            attached: function() {
+                var me = this;
+                UT.loadCodes({ bizUnitList: 'T004' }, function(codes) { me.set('codes', codes); });
+                this.onFindList();
+            },
 
             /* ==============================================================
                프로젝트 목록 조회 (좌측 그리드)

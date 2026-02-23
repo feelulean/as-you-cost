@@ -256,10 +256,6 @@
                     type: Object,
                     value: function() {
                         return {
-                            bizUnitList: [
-                                { label: 'PT',   data: 'PT' },
-                                { label: 'SEAT', data: 'SEAT' }
-                            ],
                             viewTypeList: [
                                 { label: '프로젝트',  data: 'PJT' },
                                 { label: '원가그룹',  data: 'GRP' },
@@ -274,7 +270,14 @@
                 }
             },
 
-            attached: function() { this.onFindList(); },
+            attached: function() {
+                var me = this;
+                UT.loadCodes({ bizUnitList: 'T004' }, function(codes) {
+                    var merged = Object.assign({}, me.codes, codes);
+                    me.set('codes', merged);
+                });
+                this.onFindList();
+            },
 
             /* ==============================================================
                프로젝트 목록 조회 (좌측 그리드)

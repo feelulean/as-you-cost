@@ -232,10 +232,6 @@
                     type: Object,
                     value: function() {
                         return {
-                            bizUnitList: [
-                                { label: 'PT',   data: 'PT' },
-                                { label: 'SEAT', data: 'SEAT' }
-                            ],
                             achvYnList: [
                                 { label: '달성(Y)', data: 'Y' },
                                 { label: '미달(N)', data: 'N' }
@@ -245,7 +241,14 @@
                 }
             },
 
-            attached: function() { this.onFindList(); },
+            attached: function() {
+                var me = this;
+                UT.loadCodes({ bizUnitList: 'T004' }, function(codes) {
+                    var merged = Object.assign({}, me.codes, codes);
+                    me.set('codes', merged);
+                });
+                this.onFindList();
+            },
 
             /* ==============================================================
                조회

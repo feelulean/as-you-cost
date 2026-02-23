@@ -193,15 +193,7 @@
                 },
                 codes: {
                     type: Object,
-                    value: function() {
-                        return {
-                            bizUnitList:  [ { label: 'PT', data: 'PT' }, { label: 'SEAT', data: 'SEAT' } ],
-                            prodGrpList:  [ { label: 'T/M', data: 'TM' }, { label: 'AXLE', data: 'AXLE' } ],
-                            oemList:      [],
-                            carTypeList:  [],
-                            specList:     []
-                        };
-                    }
+                    value: function() { return {}; }
                 },
                 /**
                  * 금액 표시 모드
@@ -211,6 +203,14 @@
                     type: String,
                     value: 'total'
                 }
+            },
+
+            attached: function() {
+                var me = this;
+                UT.loadCodes({
+                    bizUnitList: 'T004',
+                    prodGrpList: 'T033'
+                }, function(codes) { me.set('codes', codes); });
             },
 
             /* =============================================================
