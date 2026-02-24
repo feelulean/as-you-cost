@@ -77,6 +77,47 @@ public class CcDetailService {
         return result;
     }
 
+    /* ═══ 수량/할인율 저장 (열→행 언피벗) ═══ */
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> saveQtyDisc(Map<String, Object> param) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 1) 기존 데이터 전체 삭제
+        ccDetailRepository.delete("QtyDiscByPjt", param);
+
+        // 2) 프론트엔드 행(yr1Qty~yr5Qty, yr1DiscRate~yr5DiscRate) → 개별 row 변환
+        List<Map<String, Object>> saveList = (List<Map<String, Object>>) param.get("saveList");
+        int insertCnt = 0;
+        if (saveList != null) {
+            String ccPjtCd = (String) param.get("ccPjtCd");
+            Object ccRev = param.get("ccRev");
+            int seq = 1;
+            for (Map<String, Object> row : saveList) {
+                String costCd = (String) row.get("costCd");
+                for (int yr = 1; yr <= 5; yr++) {
+                    Object qty  = row.get("yr" + yr + "Qty");
+                    Object disc = row.get("yr" + yr + "DiscRate");
+                    if (qty == null && disc == null) continue;
+
+                    Map<String, Object> dbRow = new HashMap<>();
+                    dbRow.put("ccPjtCd", ccPjtCd);
+                    dbRow.put("ccRev", ccRev);
+                    dbRow.put("qtyDiscSeq", seq++);
+                    dbRow.put("costCd", costCd);
+                    dbRow.put("yearVal", String.valueOf(yr));
+                    dbRow.put("sellQty", qty);
+                    dbRow.put("discRate", disc);
+                    ccDetailRepository.insert("QtyDisc", dbRow);
+                    insertCnt++;
+                }
+            }
+        }
+        result.put("status", "OK");
+        result.put("count", insertCnt);
+        return result;
+    }
+
     /* ═══ 범용 목록 삭제 ═══ */
     @Transactional
     @SuppressWarnings("unchecked")
@@ -314,6 +355,59 @@ public class CcDetailService {
         return result;
     }
 
+    /* ═══ 손익계산서 피벗 조회 ═══ */
+    public List<Map<String, Object>> findListPlStmtPivot(Map<String, Object> param) {
+        // viewType에 따라 viewKey 설정
+        Map<String, Object> pivotParam = new HashMap<>(param);
+        String viewType = (String) pivotParam.get("viewType");
+        if ("PJT".equals(viewType) || viewType == null || viewType.isEmpty()) {
+            pivotParam.put("viewType", "PJT");
+            pivotParam.put("viewKey", pivotParam.get("ccPjtCd"));
+        } else if ("GRP".equals(viewType)) {
+            pivotParam.put("viewKey", pivotParam.get("costGrpCd"));
+        } else if ("CODE".equals(viewType)) {
+            pivotParam.put("viewKey", pivotParam.get("costCd"));
+        }
+
+        List<Map<String, Object>> rows = ccDetailRepository.findList("PlStmtPivot", pivotParam);
+
+        // 영업이익률(%) 행 추가
+        if (rows != null && !rows.isEmpty()) {
+            Map<String, Object> revenueRow = null;
+            Map<String, Object> profitRow = null;
+            for (Map<String, Object> row : rows) {
+                String itemCd = str(row.get("itemCd"));
+                if ("REVENUE".equals(itemCd))     revenueRow = row;
+                if ("OPER_PROFIT".equals(itemCd))  profitRow = row;
+            }
+
+            Map<String, Object> marginRow = new HashMap<>();
+            marginRow.put("sortNo", 7);
+            marginRow.put("itemNm", "영업이익률(%)");
+            marginRow.put("itemCd", "OPER_MARGIN");
+            marginRow.put("itemLevel", 0);
+            marginRow.put("sopYear", 0);
+
+            String[] yearKeys = {"y1", "y2", "y3", "y4", "y5"};
+            for (String yk : yearKeys) {
+                double rev = revenueRow != null ? toD(revenueRow.get(yk)) : 0;
+                double prf = profitRow != null ? toD(profitRow.get(yk)) : 0;
+                double rate = rev != 0 ? Math.round(prf / rev * 10000.0) / 100.0 : 0;
+                marginRow.put(yk, rate);
+            }
+
+            double totalRev = revenueRow != null ? toD(revenueRow.get("totalAmt")) : 0;
+            double totalPrf = profitRow != null ? toD(profitRow.get("totalAmt")) : 0;
+            double totalRate = totalRev != 0
+                    ? Math.round(totalPrf / totalRev * 10000.0) / 100.0 : 0;
+            marginRow.put("totalAmt", totalRate);
+
+            rows.add(marginRow);
+        }
+
+        return rows;
+    }
+
     /* ═══ 손익계산서 산출 ═══ */
     @Transactional
     public Map<String, Object> calculatePlStmt(Map<String, Object> param) {
@@ -321,7 +415,6 @@ public class CcDetailService {
 
         // 선행조건: 제조경비 + 판매관리비
         Map<String, Object> chkParam = new HashMap<>(param);
-        // costCd가 있으면 그걸로, 없으면 프로젝트 전체
         int mfgCnt = ccDetailRepository.count("MfgCost", chkParam);
         if (mfgCnt == 0) {
             result.put("status", "FAIL");
@@ -341,8 +434,8 @@ public class CcDetailService {
         // INSERT...SELECT로 P&L 산출
         ccDetailRepository.insert("CalcPlStmt", param);
 
-        // 결과 조회
-        List<Map<String, Object>> plList = ccDetailRepository.findList("PlStmt", param);
+        // 피벗 결과 조회
+        List<Map<String, Object>> plList = findListPlStmtPivot(param);
         result.put("status", "OK");
         result.put("message", "손익계산서 산출 완료");
         result.put("plList", plList);

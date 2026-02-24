@@ -338,7 +338,7 @@
                                                     header-text="구분"
                                                     width="80"
                                                     text-align="center"
-                                                    items="{{codes.lineTypeList}}"
+                                                    items="{{codes.mpTypeList}}"
                                                     display-field="label"
                                                     value-field="data">
                                     </sc-combobox-column>
@@ -403,7 +403,7 @@
                                                     header-text="구분"
                                                     width="80"
                                                     text-align="center"
-                                                    items="{{codes.lineTypeList}}"
+                                                    items="{{codes.mpTypeList}}"
                                                     display-field="label"
                                                     value-field="data">
                                     </sc-combobox-column>
@@ -464,14 +464,7 @@
                                                     width="160"
                                                     text-align="left">
                                     </sc-data-column>
-                                    <sc-combobox-column data-field="lineType"
-                                                    header-text="구분"
-                                                    width="80"
-                                                    text-align="center"
-                                                    items="{{codes.lineTypeList}}"
-                                                    display-field="label"
-                                                    value-field="data">
-                                    </sc-combobox-column>
+                                    <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                                     <sc-data-column data-field="baseAmt"
                                                     header-text="기준금액"
                                                     width="130"
@@ -522,14 +515,7 @@
                                                     width="160"
                                                     text-align="left">
                                     </sc-data-column>
-                                    <sc-combobox-column data-field="lineType"
-                                                    header-text="구분"
-                                                    width="80"
-                                                    text-align="center"
-                                                    items="{{codes.lineTypeList}}"
-                                                    display-field="label"
-                                                    value-field="data">
-                                    </sc-combobox-column>
+                                    <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                                     <sc-data-column data-field="baseAmt"
                                                     header-text="기준금액"
                                                     width="130"
@@ -580,14 +566,7 @@
                                                     width="160"
                                                     text-align="left">
                                     </sc-data-column>
-                                    <sc-combobox-column data-field="lineType"
-                                                    header-text="구분"
-                                                    width="80"
-                                                    text-align="center"
-                                                    items="{{codes.lineTypeList}}"
-                                                    display-field="label"
-                                                    value-field="data">
-                                    </sc-combobox-column>
+                                    <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                                     <sc-data-column data-field="baseAmt"
                                                     header-text="기준금액"
                                                     width="130"
@@ -642,7 +621,7 @@
                                                     header-text="구분"
                                                     width="80"
                                                     text-align="center"
-                                                    items="{{codes.lineTypeList}}"
+                                                    items="{{codes.investTypeList}}"
                                                     display-field="label"
                                                     value-field="data">
                                     </sc-combobox-column>
@@ -707,7 +686,7 @@
                                                     header-text="구분"
                                                     width="80"
                                                     text-align="center"
-                                                    items="{{codes.lineTypeList}}"
+                                                    items="{{codes.lineNewList}}"
                                                     display-field="label"
                                                     value-field="data">
                                     </sc-combobox-column>
@@ -772,7 +751,7 @@
                                                     header-text="구분"
                                                     width="80"
                                                     text-align="center"
-                                                    items="{{codes.lineTypeList}}"
+                                                    items="{{codes.investTypeList}}"
                                                     display-field="label"
                                                     value-field="data">
                                     </sc-combobox-column>
@@ -833,14 +812,7 @@
                                                     width="160"
                                                     text-align="left">
                                     </sc-data-column>
-                                    <sc-combobox-column data-field="lineType"
-                                                    header-text="구분"
-                                                    width="80"
-                                                    text-align="center"
-                                                    items="{{codes.lineTypeList}}"
-                                                    display-field="label"
-                                                    value-field="data">
-                                    </sc-combobox-column>
+                                    <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                                     <sc-data-column data-field="outsrcVendor"
                                                     header-text="외주업체"
                                                     width="120"
@@ -890,14 +862,7 @@
                                                     width="160"
                                                     text-align="left">
                                     </sc-data-column>
-                                    <sc-combobox-column data-field="lineType"
-                                                    header-text="구분"
-                                                    width="80"
-                                                    text-align="center"
-                                                    items="{{codes.lineTypeList}}"
-                                                    display-field="label"
-                                                    value-field="data">
-                                    </sc-combobox-column>
+                                    <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                                     <sc-data-column data-field="moldAcqAmt"
                                                     header-text="취득가액"
                                                     width="130"
@@ -1043,8 +1008,10 @@
             attached: function() {
                 var me = this;
                 UT.loadCodes({
-                    bizUnitList:  'T004',
-                    lineTypeList: 'T038'
+                    bizUnitList:    'T004',
+                    mpTypeList:     'T007',
+                    lineNewList:    'T038',
+                    investTypeList: 'T039'
                 }, function(codes) { me.set('codes', codes); });
                 this.onFindList();
             },

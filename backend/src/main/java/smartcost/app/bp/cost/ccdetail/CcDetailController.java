@@ -50,15 +50,11 @@ public class CcDetailController {
     /* ═══ 수량/할인율 ═══ */
     @RequestMapping("/findListQtyDisc.do")
     public List<Map<String, Object>> findListQtyDisc(@RequestBody Map<String, Object> param) {
-        return ccDetailService.findList("QtyDisc", param);
+        return ccDetailService.findList("QtyDiscPivot", param);
     }
     @RequestMapping("/saveListQtyDisc.do")
     public Map<String, Object> saveListQtyDisc(@RequestBody Map<String, Object> param) {
-        return ccDetailService.saveList("QtyDisc", param);
-    }
-    @RequestMapping("/deleteListQtyDisc.do")
-    public Map<String, Object> deleteListQtyDisc(@RequestBody Map<String, Object> param) {
-        return ccDetailService.deleteList("QtyDisc", param);
+        return ccDetailService.saveQtyDisc(param);
     }
 
     /* ═══ 담당자 ═══ */
@@ -231,8 +227,10 @@ public class CcDetailController {
 
     /* ═══ 손익계산서 ═══ */
     @RequestMapping("/findListPlStmt.do")
-    public List<Map<String, Object>> findListPlStmt(@RequestBody Map<String, Object> param) {
-        return ccDetailService.findList("PlStmt", param);
+    public Map<String, Object> findListPlStmt(@RequestBody Map<String, Object> param) {
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("plList", ccDetailService.findListPlStmtPivot(param));
+        return result;
     }
     @RequestMapping("/savePlStmt.do")
     public Map<String, Object> savePlStmt(@RequestBody Map<String, Object> param) {

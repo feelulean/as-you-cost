@@ -345,7 +345,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="lineNm" header-text="라인명" width="140"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.mpTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
                             <sc-data-column data-field="workerCnt" header-text="인원(명)" width="80" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="wagePerPerson" header-text="인당임금" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="annualCost" header-text="연간노무비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -363,7 +363,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="lineNm" header-text="라인명" width="140"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.mpTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
                             <sc-data-column data-field="workerCnt" header-text="인원(명)" width="80" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="wagePerPerson" header-text="인당임금" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="annualCost" header-text="연간노무비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -381,7 +381,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -398,7 +398,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -415,7 +415,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="costItemNm" header-text="경비항목" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="baseAmt" header-text="기준금액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="rateApplied" header-text="적용비율(%)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -432,7 +432,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="assetNm" header-text="자산명" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.investTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
                             <sc-data-column data-field="acqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="annualDepr" header-text="연간상각비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -450,7 +450,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="assetNm" header-text="설비/라인명" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineNewList}}" display-field="label" value-field="data"></sc-combobox-column>
                             <sc-data-column data-field="acqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="annualDepr" header-text="연간상각비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -468,7 +468,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="assetNm" header-text="자산명" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.investTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
                             <sc-data-column data-field="acqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="usefulLife" header-text="내용연수(년)" width="100" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="annualDepr" header-text="연간상각비" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -486,7 +486,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="processNm" header-text="공정명" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="outsrcVendor" header-text="외주업체" width="120"></sc-data-column>
                             <sc-data-column data-field="unitPrice" header-text="단가" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -503,7 +503,7 @@
                              class="flex" use-state="false">
                         <sc-grid-columns>
                             <sc-data-column data-field="moldNm" header-text="금형명" width="160"></sc-data-column>
-                            <sc-combobox-column data-field="lineType" header-text="구분" width="80" text-align="center" items="{{codes.lineTypeList}}" display-field="label" value-field="data"></sc-combobox-column>
+                            <sc-data-column data-field="lineType" header-text="구분" width="80" text-align="center"></sc-data-column>
                             <sc-data-column data-field="moldAcqAmt" header-text="취득가액" width="130" text-align="right" data-type="number" format-type="amt"></sc-data-column>
                             <sc-data-column data-field="totalProdQty" header-text="총생산수량" width="110" text-align="right" data-type="number"></sc-data-column>
                             <sc-data-column data-field="unitCostY1" header-text="1차년도 단위당" width="120" text-align="right" data-type="number" format-type="amt"></sc-data-column>
@@ -638,7 +638,9 @@
 
             attached: function() {
                 var me = this;
-                UT.loadCodes({ lineTypeList: 'T038' }, function(codes) { me.set('codes', codes); });
+                UT.loadCodes({ mpTypeList: 'T007', lineNewList: 'T038', investTypeList: 'T039' }, function(codes) {
+                    me.set('codes', codes);
+                });
                 var param = UT.getParameter();
                 if (param) {
                     this.ccPjtCd      = param.ccPjtCd      || '';

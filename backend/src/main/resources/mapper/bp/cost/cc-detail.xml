@@ -240,6 +240,39 @@
            AND QTY_SEQ   = #{p.qtyDiscSeq}
     </delete>
 
+    <!-- 수량/할인율 피벗 조회 (UI 표시용) — YEAR_VAL이 실제 연도(2026,2027..)이므로 순번으로 변환 -->
+    <select id="findListQtyDiscPivot" parameterType="map" resultType="map">
+        SELECT COST_CD AS "costCd",
+               MAX(CASE WHEN yr_seq = 1 THEN SELL_QTY  END) AS "yr1Qty",
+               MAX(CASE WHEN yr_seq = 2 THEN SELL_QTY  END) AS "yr2Qty",
+               MAX(CASE WHEN yr_seq = 3 THEN SELL_QTY  END) AS "yr3Qty",
+               MAX(CASE WHEN yr_seq = 4 THEN SELL_QTY  END) AS "yr4Qty",
+               MAX(CASE WHEN yr_seq = 5 THEN SELL_QTY  END) AS "yr5Qty",
+               MAX(CASE WHEN yr_seq = 1 THEN DISC_RATE END) AS "yr1DiscRate",
+               MAX(CASE WHEN yr_seq = 2 THEN DISC_RATE END) AS "yr2DiscRate",
+               MAX(CASE WHEN yr_seq = 3 THEN DISC_RATE END) AS "yr3DiscRate",
+               MAX(CASE WHEN yr_seq = 4 THEN DISC_RATE END) AS "yr4DiscRate",
+               MAX(CASE WHEN yr_seq = 5 THEN DISC_RATE END) AS "yr5DiscRate"
+          FROM (
+              SELECT COST_CD, YEAR_VAL, SELL_QTY, DISC_RATE,
+                     ROW_NUMBER() OVER (PARTITION BY COST_CD ORDER BY YEAR_VAL) AS yr_seq
+                FROM PCM_CUR_QTY_DISC
+               WHERE TEN_ID    = #{g.tenant}
+                 AND CC_PJT_CD = #{p.ccPjtCd}
+                 AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+          ) T
+         GROUP BY COST_CD
+         ORDER BY COST_CD
+    </select>
+
+    <!-- 수량/할인율 프로젝트+리비전 단위 전체 삭제 (저장 시 사용) -->
+    <delete id="deleteQtyDiscByPjt" parameterType="map">
+        DELETE FROM PCM_CUR_QTY_DISC
+         WHERE TEN_ID    = #{g.tenant}
+           AND CC_PJT_CD = #{p.ccPjtCd}
+           AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+    </delete>
+
     <!-- ═══════════════════════════════════════════
          4. 담당자 (PCM_CUR_MANAGER)
          PK: TEN_ID, CC_PJT_CD, CC_REV, MGR_SEQ
@@ -1080,7 +1113,9 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.costCd != null and p.costCd != ''">
            AND COST_CD   = #{p.costCd}
+        </if>
     </select>
 
     <insert id="insertMfgCost" parameterType="map">
@@ -1194,7 +1229,9 @@
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}
            AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+        <if test="p.costCd != null and p.costCd != ''">
            AND COST_CD   = #{p.costCd}
+        </if>
     </select>
 
     <insert id="insertSgaCost" parameterType="map">
@@ -1290,6 +1327,49 @@
            AND VIEW_KEY  = #{p.viewKey}
         </if>
          ORDER BY VIEW_TYPE, VIEW_KEY, PL_SEQ, YEAR_VAL
+    </select>
+
+    <!-- 손익계산서 피벗 조회 (UI 표시용) — YEAR_VAL이 실제 연도이므로 순번으로 변환 -->
+    <select id="findListPlStmtPivot" parameterType="map" resultType="map">
+        SELECT PL_SEQ       AS "sortNo",
+               COST_ITEM    AS "itemNm",
+               CASE COST_ITEM
+                   WHEN '매출액'   THEN 'REVENUE'
+                   WHEN '재료비'   THEN 'MAT_COST'
+                   WHEN '노무비'   THEN 'LABOR_COST'
+                   WHEN '제조경비' THEN 'MFG_COST'
+                   WHEN '판관비'   THEN 'SGA_COST'
+                   WHEN '영업이익' THEN 'OPER_PROFIT'
+                   ELSE 'ETC'
+               END AS "itemCd",
+               0 AS "itemLevel",
+               0 AS "sopYear",
+               COALESCE(MAX(CASE WHEN yr_seq = 1 THEN AMT END), 0) AS "y1",
+               COALESCE(MAX(CASE WHEN yr_seq = 2 THEN AMT END), 0) AS "y2",
+               COALESCE(MAX(CASE WHEN yr_seq = 3 THEN AMT END), 0) AS "y3",
+               COALESCE(MAX(CASE WHEN yr_seq = 4 THEN AMT END), 0) AS "y4",
+               COALESCE(MAX(CASE WHEN yr_seq = 5 THEN AMT END), 0) AS "y5",
+               COALESCE(SUM(AMT), 0) AS "totalAmt"
+          FROM (
+              SELECT PL_SEQ, COST_ITEM,
+                     DENSE_RANK() OVER (ORDER BY YEAR_VAL) AS yr_seq,
+                     <choose>
+                         <when test="p.basisType == 'UNIT'">UNIT_AMT</when>
+                         <otherwise>TOT_AMT</otherwise>
+                     </choose> AS AMT
+                FROM PCM_CUR_PL_STMT
+               WHERE TEN_ID    = #{g.tenant}
+                 AND CC_PJT_CD = #{p.ccPjtCd}
+                 AND CC_REV    = CAST(#{p.ccRev} AS INTEGER)
+              <if test="p.viewType != null and p.viewType != ''">
+                 AND VIEW_TYPE = #{p.viewType}
+              </if>
+              <if test="p.viewKey != null and p.viewKey != ''">
+                 AND VIEW_KEY  = #{p.viewKey}
+              </if>
+          ) T
+         GROUP BY PL_SEQ, COST_ITEM
+         ORDER BY PL_SEQ
     </select>
 
     <select id="countPlStmt" parameterType="map" resultType="int">

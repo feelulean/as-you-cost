@@ -117,13 +117,6 @@
                  on-response="onSaveQtyDiscResponse">
         </sc-ajax>
 
-        <!-- 수량/할인율 삭제 -->
-        <sc-ajax id="deleteQtyDiscAjax"
-                 url="/bp/cost/cc/detail/deleteListQtyDisc.do"
-                 body="{{deleteQtyDiscParam}}"
-                 on-response="onDeleteQtyDiscResponse">
-        </sc-ajax>
-
         <!-- 담당자 조회 -->
         <sc-ajax id="findManagerAjax"
                  url="/bp/cost/cc/detail/findListManager.do"
@@ -339,63 +332,129 @@
                  TAB 3: 수량/할인율
                  ====================================================== -->
             <template is="dom-if" if="{{_isTab(activeTab,'qtyDisc')}}">
-                <sc-grid id="qtyDiscGrid"
-                         data-provider="{{qtyDiscList}}"
+                <sc-toolbar>
+                    <sc-button text="행추가" on-click="onAddQtyDiscRow"  auth-code="S"></sc-button>
+                    <sc-button text="삭제"   on-click="onDeleteQtyDiscRow"  auth-code="S"></sc-button>
+                    <sc-button text="저장"   on-click="onSaveQtyDisc"    auth-code="S"></sc-button>
+                </sc-toolbar>
+
+                <div class="section-title">수량</div>
+                <sc-grid id="qtyGrid"
+                         data-provider="{{qtyList}}"
                          editable="true"
-                         selection-mode="checkbox"
                          class="flex">
-
-                    <sc-toolbar>
-                        <sc-button text="행추가" on-click="onAddQtyDiscRow"  auth-code="S"></sc-button>
-                        <sc-button text="삭제"   on-click="onDeleteQtyDisc"  auth-code="S"></sc-button>
-                        <sc-button text="저장"   on-click="onSaveQtyDisc"    auth-code="S"></sc-button>
-                    </sc-toolbar>
-
                     <sc-grid-columns>
-                        <sc-data-column data-field="seqNo"
-                                        header-text="순번"
-                                        width="60"
-                                        text-align="center"
-                                        editable="false">
-                        </sc-data-column>
-
                         <sc-data-column data-field="costCd"
                                         header-text="원가코드"
                                         width="120"
                                         editable="false"
                                         text-align="center">
                         </sc-data-column>
-
-                        <sc-data-column data-field="yearVal"
-                                        header-text="년도"
-                                        width="80"
-                                        editable="true"
-                                        text-align="center">
-                        </sc-data-column>
-
-                        <sc-data-column data-field="sellQty"
-                                        header-text="매출수량"
-                                        width="120"
+                        <sc-data-column data-field="yr1Qty"
+                                        header-text="1차년도"
+                                        width="110"
                                         editable="true"
                                         text-align="right"
                                         data-type="number"
                                         format="#,###">
                         </sc-data-column>
+                        <sc-data-column data-field="yr2Qty"
+                                        header-text="2차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,###">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr3Qty"
+                                        header-text="3차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,###">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr4Qty"
+                                        header-text="4차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,###">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr5Qty"
+                                        header-text="5차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,###">
+                        </sc-data-column>
+                    </sc-grid-columns>
+                    <sc-grid-fields>
+                        <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
+                        <sc-grid-field data-field="ccRev"></sc-grid-field>
+                    </sc-grid-fields>
+                </sc-grid>
 
-                        <sc-data-column data-field="discRate"
-                                        header-text="할인율(%)"
-                                        width="100"
+                <div style="height:10px;"></div>
+
+                <div class="section-title">할인율(%)</div>
+                <sc-grid id="discGrid"
+                         data-provider="{{discRateList}}"
+                         editable="true"
+                         class="flex">
+                    <sc-grid-columns>
+                        <sc-data-column data-field="costCd"
+                                        header-text="원가코드"
+                                        width="120"
+                                        editable="false"
+                                        text-align="center">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr1DiscRate"
+                                        header-text="1차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,##0.0">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr2DiscRate"
+                                        header-text="2차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,##0.0">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr3DiscRate"
+                                        header-text="3차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,##0.0">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr4DiscRate"
+                                        header-text="4차년도"
+                                        width="110"
+                                        editable="true"
+                                        text-align="right"
+                                        data-type="number"
+                                        format="#,##0.0">
+                        </sc-data-column>
+                        <sc-data-column data-field="yr5DiscRate"
+                                        header-text="5차년도"
+                                        width="110"
                                         editable="true"
                                         text-align="right"
                                         data-type="number"
                                         format="#,##0.0">
                         </sc-data-column>
                     </sc-grid-columns>
-
                     <sc-grid-fields>
                         <sc-grid-field data-field="ccPjtCd"></sc-grid-field>
                         <sc-grid-field data-field="ccRev"></sc-grid-field>
-                        <sc-grid-field data-field="qtyDiscSeq"></sc-grid-field>
                     </sc-grid-fields>
                 </sc-grid>
             </template>
@@ -595,7 +654,11 @@
                 },
 
                 /* ─── TAB 3: 수량/할인율 ─── */
-                qtyDiscList: {
+                qtyList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                discRateList: {
                     type: Array,
                     value: function() { return []; }
                 },
@@ -619,7 +682,6 @@
                 saveCostCodeParam:    { type: Object, value: function() { return {}; } },
                 deleteCostCodeParam:  { type: Object, value: function() { return {}; } },
                 saveQtyDiscParam:     { type: Object, value: function() { return {}; } },
-                deleteQtyDiscParam:   { type: Object, value: function() { return {}; } },
                 saveManagerParam:     { type: Object, value: function() { return {}; } },
                 deleteManagerParam:   { type: Object, value: function() { return {}; } },
                 saveScheduleParam:    { type: Object, value: function() { return {}; } },
@@ -849,58 +911,84 @@
                ============================================================== */
 
             onFindQtyDiscResponse: function(e) {
-                this.set('qtyDiscList', e.detail.response || []);
+                var data = e.detail.response || [];
+                this.set('qtyList', data);
+                this.set('discRateList', JSON.parse(JSON.stringify(data)));
             },
 
             onAddQtyDiscRow: function() {
-                var grid = this.$$('#qtyDiscGrid');
-                if (!grid) return;
+                var qtyGrid  = this.$$('#qtyGrid');
+                var discGrid = this.$$('#discGrid');
 
-                var seqNo = (this.qtyDiscList ? this.qtyDiscList.length : 0) + 1;
-                grid.insertRow(0, {
-                    ccPjtCd:   this.ccPjtCd,
-                    ccRev:     this.ccRev,
-                    seqNo:     seqNo,
-                    costCd:    '',
-                    yearVal:   '',
-                    sellQty:   0,
-                    discRate:  0
-                });
+                var newRow = {
+                    ccPjtCd: this.ccPjtCd,
+                    ccRev:   this.ccRev,
+                    costCd:  '',
+                    yr1Qty: 0, yr2Qty: 0, yr3Qty: 0, yr4Qty: 0, yr5Qty: 0,
+                    yr1DiscRate: 0, yr2DiscRate: 0, yr3DiscRate: 0, yr4DiscRate: 0, yr5DiscRate: 0
+                };
+                if (qtyGrid)  qtyGrid.insertRow(0, JSON.parse(JSON.stringify(newRow)));
+                if (discGrid) discGrid.insertRow(0, JSON.parse(JSON.stringify(newRow)));
             },
 
-            onDeleteQtyDisc: function() {
-                var grid = this.$$('#qtyDiscGrid');
-                if (!grid) return;
+            onDeleteQtyDiscRow: function() {
+                var qtyGrid  = this.$$('#qtyGrid');
+                var discGrid = this.$$('#discGrid');
+                if (!qtyGrid) return;
 
-                var selectedRows = grid.getSelectedRows();
+                var selectedRows = qtyGrid.getSelectedRows();
                 if (!selectedRows || selectedRows.length === 0) {
                     UT.alert('MSG_COM_00007');
                     return;
                 }
-                var me = this;
-                UT.confirm('MSG_COM_00004', function() {
-                    me.set('deleteQtyDiscParam', {
-                        ccPjtCd:    me.ccPjtCd,
-                        ccRev:      me.ccRev,
-                        deleteList: selectedRows
-                    });
-                    me.$.deleteQtyDiscAjax.generateRequest();
-                });
-            },
 
-            onDeleteQtyDiscResponse: function() {
-                UT.alert('MSG_COM_00005');
-                this._loadTabData('qtyDisc');
+                // 수량 그리드에서 선택된 행의 인덱스를 구해 할인율 그리드에서도 동일 행 삭제
+                if (discGrid && discGrid._data) {
+                    var indices = [];
+                    for (var i = 0; i < selectedRows.length; i++) {
+                        var idx = qtyGrid._data.indexOf(selectedRows[i]);
+                        if (idx >= 0) indices.push(idx);
+                    }
+                    var discSelected = [];
+                    for (var j = 0; j < indices.length; j++) {
+                        if (discGrid._data[indices[j]]) {
+                            discSelected.push(discGrid._data[indices[j]]);
+                        }
+                    }
+                    if (discSelected.length > 0) discGrid.removeRows(discSelected);
+                }
+                qtyGrid.removeRows(selectedRows);
             },
 
             onSaveQtyDisc: function() {
-                var grid = this.$$('#qtyDiscGrid');
-                if (!grid) return;
+                var qtyGrid  = this.$$('#qtyGrid');
+                var discGrid = this.$$('#discGrid');
+                if (!qtyGrid) return;
 
-                var modifiedRows = grid.getModifiedRows();
-                if (!modifiedRows || modifiedRows.length === 0) {
+                var qtyData  = qtyGrid._data  || [];
+                var discData = discGrid ? (discGrid._data || []) : [];
+
+                if (qtyData.length === 0) {
                     UT.alert('MSG_COM_00006');
                     return;
+                }
+
+                // 두 그리드의 모든 행을 병합하여 저장
+                var saveList = [];
+                for (var i = 0; i < qtyData.length; i++) {
+                    var q = qtyData[i]  || {};
+                    var d = discData[i] || {};
+                    var merged = {
+                        ccPjtCd:     q.ccPjtCd || d.ccPjtCd || this.ccPjtCd,
+                        ccRev:       q.ccRev || d.ccRev || this.ccRev,
+                        costCd:      q.costCd || d.costCd,
+                        yr1Qty: q.yr1Qty, yr2Qty: q.yr2Qty, yr3Qty: q.yr3Qty,
+                        yr4Qty: q.yr4Qty, yr5Qty: q.yr5Qty,
+                        yr1DiscRate: d.yr1DiscRate, yr2DiscRate: d.yr2DiscRate,
+                        yr3DiscRate: d.yr3DiscRate, yr4DiscRate: d.yr4DiscRate,
+                        yr5DiscRate: d.yr5DiscRate
+                    };
+                    saveList.push(merged);
                 }
 
                 var me = this;
@@ -908,7 +996,7 @@
                     me.set('saveQtyDiscParam', {
                         ccPjtCd:  me.ccPjtCd,
                         ccRev:    me.ccRev,
-                        saveList: modifiedRows
+                        saveList: saveList
                     });
                     me.$.saveQtyDiscAjax.generateRequest();
                 });

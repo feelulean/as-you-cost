@@ -316,6 +316,12 @@
       /* 컬럼 정의 요소의 items 경로를 저장 → sc-grid 렌더링 시 참조 */
       el._itemsPath = binding.paths[0];
       el._polymerHost = ctx;
+      /* 비동기 코드 로딩 후 부모 sc-grid 에 combo items 갱신 통지 */
+      var parentGrid = el.closest('sc-grid');
+      if (parentGrid && typeof parentGrid._refreshComboItems === 'function' && parentGrid._columns) {
+        parentGrid._refreshComboItems();
+        parentGrid._render();
+      }
       return;
     }
 
