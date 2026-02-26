@@ -118,6 +118,12 @@
                  on-response="onCalculatePlStmtResponse">
         </sc-ajax>
 
+        <sc-ajax id="validateCalcAjax"
+                 url="/bp/cost/cc/detail/validateCalcPrereq.do"
+                 body="{{validateParam}}"
+                 on-response="onValidateCalcResponse">
+        </sc-ajax>
+
         <sc-ajax id="findCostGrpListAjax"
                  url="/bp/cost/cc/detail/findListCostGrp.do"
                  body="{{grpSearchParam}}"
@@ -171,7 +177,7 @@
         <div class="info-bar">
             <div class="info-item">
                 <label>프로젝트코드:</label>
-                <span>{{pjtInfo.ccPjtCd}}</span>
+                <span>{{pjtInfo.pjtCd}}</span>
             </div>
             <div class="info-item">
                 <label>프로젝트명:</label>
@@ -239,6 +245,7 @@
             </div>
 
             <sc-button text="조회"           on-click="onFindPlStmt"       auth-code="V"></sc-button>
+            <sc-button text="데이터 점검"    on-click="onValidateCalc"     auth-code="V"></sc-button>
             <sc-button text="현상원가산출"   on-click="onCalculatePlStmt"  auth-code="S"></sc-button>
             <sc-button text="엑셀다운로드"   on-click="onExcelDownload"    auth-code="V"></sc-button>
         </sc-toolbar>
@@ -448,6 +455,7 @@
                 this._loadPjtInfo();
                 this._loadCostGrpList();
                 this._loadCostCodeList();
+                this.onFindPlStmt();
             },
 
             _clearDetail: function() {
@@ -627,28 +635,82 @@
                현상원가 산출
                ============================================================== */
 
+            /* ── 데이터 점검 (Validation) ── */
+            onValidateCalc: function() {
+                if (!this.ccPjtCd) {
+                    UT.alert('프로젝트 코드가 지정되지 않았습니다.');
+                    return;
+                }
+                this.set('validateParam', { ccPjtCd: this.ccPjtCd, ccRev: this.ccRev });
+                this._validateMode = 'CHECK';
+                this.$.validateCalcAjax.generateRequest();
+            },
+
+            onValidateCalcResponse: function(e) {
+                var data = e.detail.response;
+                if (!data || data.status !== 'OK') return;
+
+                var msgs = data.messages || [];
+                if (msgs.length === 0) {
+                    if (this._validateMode === 'CALC') {
+                        this._doCalculate();
+                    } else {
+                        UT.alert(data.summary);
+                    }
+                    return;
+                }
+
+                var lines = [];
+                var icons = { 'ERROR': '[오류]', 'WARNING': '[경고]', 'INFO': '[참고]' };
+                for (var i = 0; i < msgs.length; i++) {
+                    var m = msgs[i];
+                    lines.push(icons[m.level] + ' ' + m.category + ': ' + m.message);
+                }
+                var summary = data.summary + '\n\n' + lines.join('\n');
+
+                if (this._validateMode === 'CALC') {
+                    if (data.errorCount > 0) {
+                        UT.alert('계산을 수행할 수 없습니다.\n\n' + summary);
+                    } else {
+                        var me = this;
+                        UT.confirm(summary + '\n\n계속 산출하시겠습니까?', function() {
+                            me._doCalculate();
+                        });
+                    }
+                } else {
+                    UT.alert(summary);
+                }
+            },
+
             onCalculatePlStmt: function() {
                 if (!this.ccPjtCd) {
                     UT.alert('프로젝트 코드가 지정되지 않았습니다.');
                     return;
                 }
+                this.set('validateParam', { ccPjtCd: this.ccPjtCd, ccRev: this.ccRev });
+                this._validateMode = 'CALC';
+                this.$.validateCalcAjax.generateRequest();
+            },
 
+            _doCalculate: function() {
                 var me = this;
-                UT.confirm('현상원가를 산출하시겠습니까?', function() {
-                    me.set('calcParam', {
-                        ccPjtCd:   me.ccPjtCd,
-                        ccRev:     me.ccRev,
-                        viewType:  me.plParam.viewType,
-                        basisType: me.plParam.basisType,
-                        costGrpCd: me.plParam.costGrpCd || '',
-                        costCd:    me.plParam.costCd || ''
-                    });
-                    me.$.calculatePlStmtAjax.generateRequest();
+                me.set('calcParam', {
+                    ccPjtCd:   me.ccPjtCd,
+                    ccRev:     me.ccRev,
+                    viewType:  me.plParam.viewType,
+                    basisType: me.plParam.basisType,
+                    costGrpCd: me.plParam.costGrpCd || '',
+                    costCd:    me.plParam.costCd || ''
                 });
+                me.$.calculatePlStmtAjax.generateRequest();
             },
 
             onCalculatePlStmtResponse: function(e) {
                 var data = e.detail.response;
+                if (data && data.status === 'FAIL') {
+                    UT.alert(data.message);
+                    return;
+                }
                 if (data && data.plList) {
                     this.set('plResultList', data.plList);
                 } else if (Array.isArray(data)) {

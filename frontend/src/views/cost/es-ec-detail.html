@@ -402,7 +402,7 @@
                                                    value-field="data">
                                 </sc-combobox-column>
 
-                                <sc-data-column data-field="estmSellingPrice"
+                                <sc-data-column data-field="estSellPrice"
                                                 header-text="견적판가"
                                                 width="120"
                                                 editable="true"
@@ -653,6 +653,12 @@
                                                    value-field="data"
                                                    required="true">
                                 </sc-combobox-column>
+
+                                <sc-data-column data-field="taskNm"
+                                                header-text="업무명"
+                                                width="180"
+                                                editable="true">
+                                </sc-data-column>
 
                                 <sc-data-column data-field="startDt"
                                                 header-text="시작일"
@@ -986,7 +992,8 @@
                         corpDiv:          '',
                         orderPossibility: '',
                         competitor:       '',
-                        devPossibility:   ''
+                        devPossibility:   '',
+                        baseCurrency:     ''
                     });
                 }
             },
@@ -1006,6 +1013,7 @@
 
             onSaveDetailResponse: function() {
                 UT.alert('MSG_COM_00003');
+                this._loadTabData('detail');
             },
 
             /* ==============================================================
@@ -1028,7 +1036,7 @@
                     costGrp:          '',
                     costCd:           '',
                     estmCurrency:     'KRW',
-                    estmSellingPrice: 0,
+                    estSellPrice: 0,
                     sopDt:            '',
                     eopDt:            ''
                 });
@@ -1266,9 +1274,12 @@
                 var grid = this.$['scheduleGrid'] || this.$$('#scheduleGrid');
                 if (!grid) return;
 
+                var seqNo = (this.scheduleList ? this.scheduleList.length : 0) + 1;
                 grid.insertRow(0, {
                     ecPjtCd:     this.selectedPjt.pjtCd,
                     taskDiv:     '',
+                    taskNm:      '',
+                    scheduleSeq: seqNo,
                     startDt:     '',
                     endDt:       '',
                     actualEndDt: '',
@@ -1349,6 +1360,7 @@
 
             onSaveOrderResultResponse: function() {
                 UT.alert('MSG_COM_00003');
+                this._loadTabData('orderResult');
             }
         });
     </script>

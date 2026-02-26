@@ -21,6 +21,12 @@
                  on-response="onCalculatePlStmtResponse">
         </sc-ajax>
 
+        <sc-ajax id="validateCalcAjax"
+                 url="/bp/cost/ec/detail/validateCalcPrereq.do"
+                 body="{{validateParam}}"
+                 on-response="onValidateCalcResponse">
+        </sc-ajax>
+
         <style>
             .tab-btn { padding:6px 14px; border:none; background:#f0f1f5; cursor:pointer; font-size:12px; border-radius:4px 4px 0 0; }
             .tab-btn.active { background:#6954FE; color:#fff; font-weight:600; }
@@ -129,6 +135,7 @@
                         </sc-combobox-field>
                     </div>
                     <sc-button text="조회"         on-click="onFindPlStmt"      auth-code="V"></sc-button>
+                    <sc-button text="데이터 점검"   on-click="onValidateCalc"    auth-code="V"></sc-button>
                     <sc-button text="견적원가 산출" on-click="onCalculatePlStmt" auth-code="S"></sc-button>
                 </sc-toolbar>
 
@@ -369,21 +376,73 @@
                견적원가 산출
                ============================================================== */
 
+            /* ── 데이터 점검 (Validation) ── */
+            onValidateCalc: function() {
+                if (!this.selectedPjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
+                    return;
+                }
+                this.set('validateParam', { ecPjtCd: this.selectedPjtCd });
+                this._validateMode = 'CHECK';
+                this.$.validateCalcAjax.generateRequest();
+            },
+
+            onValidateCalcResponse: function(e) {
+                var data = e.detail.response;
+                if (!data || data.status !== 'OK') return;
+
+                var msgs = data.messages || [];
+                if (msgs.length === 0) {
+                    if (this._validateMode === 'CALC') {
+                        this._doCalculate();
+                    } else {
+                        UT.alert(data.summary);
+                    }
+                    return;
+                }
+
+                // 검증 결과 메시지 구성
+                var lines = [];
+                var icons = { 'ERROR': '[오류]', 'WARNING': '[경고]', 'INFO': '[참고]' };
+                for (var i = 0; i < msgs.length; i++) {
+                    var m = msgs[i];
+                    lines.push(icons[m.level] + ' ' + m.category + ': ' + m.message);
+                }
+                var summary = data.summary + '\n\n' + lines.join('\n');
+
+                if (this._validateMode === 'CALC') {
+                    if (data.errorCount > 0) {
+                        UT.alert('계산을 수행할 수 없습니다.\n\n' + summary);
+                    } else {
+                        var me = this;
+                        UT.confirm(summary + '\n\n계속 산출하시겠습니까?', function() {
+                            me._doCalculate();
+                        });
+                    }
+                } else {
+                    UT.alert(summary);
+                }
+            },
+
             onCalculatePlStmt: function() {
                 if (!this.selectedPjtCd) {
                     UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
                     return;
                 }
+                // 산출 전 자동 점검
+                this.set('validateParam', { ecPjtCd: this.selectedPjtCd });
+                this._validateMode = 'CALC';
+                this.$.validateCalcAjax.generateRequest();
+            },
 
+            _doCalculate: function() {
                 var me = this;
-                UT.confirm('견적원가를 산출하시겠습니까?', function() {
-                    me.set('calcParam', {
-                        ecPjtCd:   me.selectedPjtCd,
-                        viewType:  me.plParam.viewType,
-                        basisType: me.plParam.basisType
-                    });
-                    me.$.calculatePlStmtAjax.generateRequest();
+                me.set('calcParam', {
+                    ecPjtCd:   me.selectedPjtCd,
+                    viewType:  me.plParam.viewType,
+                    basisType: me.plParam.basisType
                 });
+                me.$.calculatePlStmtAjax.generateRequest();
             },
 
             onCalculatePlStmtResponse: function(e) {

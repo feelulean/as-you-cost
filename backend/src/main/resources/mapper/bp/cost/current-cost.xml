@@ -79,7 +79,7 @@
               , A.RMK          AS "rmk"
           FROM  PCM_CUR_PJT_MSTR A
          WHERE  A.TEN_ID    = #{g.tenant}
-           AND  A.CC_PJT_CD = #{p.pjtCd}
+           AND  A.CC_PJT_CD = COALESCE(#{p.ccPjtCd}, #{p.pjtCd})
         <if test="p.ccRev != null">
            AND  A.CC_REV    = #{p.ccRev}
         </if>

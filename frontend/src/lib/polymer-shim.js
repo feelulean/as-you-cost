@@ -404,9 +404,6 @@
       }
       el._polyBound = true;
     }
-    if (boundCount > 0) {
-      console.log('[polymer-shim] bindEvents: ' + boundCount + '개 이벤트 바인딩 완료');
-    }
   }
 
   /* ──────────────────────────────────────────────
@@ -502,6 +499,8 @@
       var show = !!resolveExpression(ctx, d.condExpr);
       var wasHidden = d.wrapper.style.display === 'none';
       d.wrapper.style.display = show ? '' : 'none';
+      if (show !== !wasHidden) {
+      }
 
       /* 숨김→표시 전환 시 내부 그리드 강제 리프레시 */
       if (show && wasHidden) {
@@ -557,24 +556,46 @@
       /* 각 항목에 대해 템플릿 stamp */
       for (var j = 0; j < items.length; j++) {
         var content = document.importNode(r.template.content, true);
+
+        /* ★ item 컨텍스트: 호스트 ctx 를 프로토타입으로 사용하여 item 접근 가능하게 */
+        var itemCtx = Object.create(ctx);
+        itemCtx.item = items[j];
+
         /* item 바인딩: 텍스트 노드와 속성에서 item.xxx 를 치환 */
         var allEls = content.querySelectorAll('*');
         for (var e = 0; e < allEls.length; e++) {
           var el = allEls[e];
+          /* ★ _repeatModel 저장: 이벤트 핸들러에서 e.model.item 접근용 */
+          el._repeatModel = { item: items[j], index: j };
+
+          /* ★ class$ → class 속성 매핑 처리 (Polymer attribute$ 바인딩) */
+          var dollarAttrs = [];
+          for (var a = 0; a < el.attributes.length; a++) {
+            var attr = el.attributes[a];
+            if (attr.name.charAt(attr.name.length - 1) === '$') {
+              dollarAttrs.push(attr.name);
+            }
+          }
+
           for (var a = 0; a < el.attributes.length; a++) {
             var attr = el.attributes[a];
             if (testBind(attr.value)) {
               BIND_RE.lastIndex = 0;
               attr.value = attr.value.replace(BIND_RE, function(_, g1, g2) {
                 var expr = (g1 || g2).trim();
-                if (expr === 'item' || expr.indexOf('item.') === 0) {
-                  var itemPath = expr === 'item' ? '' : expr.substring(5);
-                  var val = itemPath ? getByPath(items[j], itemPath) : items[j];
-                  return val == null ? '' : val;
-                }
-                return resolveExpression(ctx, expr);
+                return resolveExpression(itemCtx, expr);
               });
             }
+          }
+
+          /* class$ → class 등 dollar 속성 변환 */
+          for (var d = 0; d < dollarAttrs.length; d++) {
+            var dAttr = dollarAttrs[d];
+            var realName = dAttr.substring(0, dAttr.length - 1);
+            var dVal = el.getAttribute(dAttr);
+            el.setAttribute(realName, dVal);
+            el.removeAttribute(dAttr);
+            if (realName === 'class') el.className = dVal;
           }
         }
         var walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, null, false);
@@ -584,12 +605,7 @@
             BIND_RE.lastIndex = 0;
             node.textContent = node.textContent.replace(BIND_RE, function(_, g1, g2) {
               var expr = (g1 || g2).trim();
-              if (expr === 'item' || expr.indexOf('item.') === 0) {
-                var itemPath = expr === 'item' ? '' : expr.substring(5);
-                var val = itemPath ? getByPath(items[j], itemPath) : items[j];
-                return val == null ? '' : val;
-              }
-              return resolveExpression(ctx, expr);
+              return resolveExpression(itemCtx, expr);
             });
           }
         }
@@ -647,6 +663,11 @@
         var tpl = mod.querySelector('template');
         if (tpl) {
           var content = document.importNode(tpl.content, true);
+          /* ★ :host → 태그 이름으로 변환 (shadow DOM 없이 :host 동작) */
+          var styles = content.querySelectorAll('style');
+          for (var si = 0; si < styles.length; si++) {
+            styles[si].textContent = styles[si].textContent.replace(/:host/g, tagName);
+          }
           me.appendChild(content);
         }
       }
@@ -677,11 +698,19 @@
               if (!isScElement(target)) {
                 var handlerName = target.getAttribute(attrName);
                 if (handlerName && typeof me[handlerName] === 'function') {
+                  /* ★ dom-repeat model 지원: _repeatModel 탐색 */
+                  var model = null;
+                  var mp = target;
+                  while (mp && mp !== me) {
+                    if (mp._repeatModel) { model = mp._repeatModel; break; }
+                    mp = mp.parentElement;
+                  }
                   try {
                     me[handlerName]({
                       target: e.target,
                       currentTarget: target,
                       detail: e.detail || {},
+                      model: model,
                       preventDefault: function () { e.preventDefault(); },
                       stopPropagation: function () { e.stopPropagation(); }
                     });

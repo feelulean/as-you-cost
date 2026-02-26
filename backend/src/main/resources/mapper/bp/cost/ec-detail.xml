@@ -8,25 +8,28 @@
          견적정보 상세
          ═══════════════════════════════════════════ -->
     <select id="findEcDetail" parameterType="map" resultType="map">
-        SELECT EC_PJT_CD    AS "ecPjtCd",
-               EC_VER       AS "ecVer",
-               RECV_DT      AS "estmRcvDt",
-               SUBMIT_DT    AS "estmSubmitDt",
-               PRICE_COMP   AS "priceCompetition",
-               ORDER_TYPE   AS "orderType",
-               FACTORY_TYPE AS "factoryDiv",
-               FACTORY_CD   AS "factoryCd",
-               CORP_TYPE    AS "corpDiv",
-               CORP_CD      AS "corpCd",
-               ORDER_PROB   AS "orderPossibility",
-               ORDER_REASON AS "orderReason",
-               COMPETITOR   AS "competitor",
-               DEV_POSS     AS "devPossibility",
-               RMK          AS "rmk"
-          FROM PCM_EC_DETAIL
-         WHERE TEN_ID    = #{g.tenant}
-           AND EC_PJT_CD = #{p.ecPjtCd}
-         ORDER BY EC_VER DESC
+        SELECT D.EC_PJT_CD    AS "ecPjtCd",
+               D.EC_VER       AS "ecVer",
+               D.RECV_DT      AS "estmRcvDt",
+               D.SUBMIT_DT    AS "estmSubmitDt",
+               D.PRICE_COMP   AS "priceCompetition",
+               D.ORDER_TYPE   AS "orderType",
+               D.FACTORY_TYPE AS "factoryDiv",
+               D.FACTORY_CD   AS "factoryCd",
+               D.CORP_TYPE    AS "corpDiv",
+               D.CORP_CD      AS "corpCd",
+               D.ORDER_PROB   AS "orderPossibility",
+               D.ORDER_REASON AS "orderReason",
+               D.COMPETITOR   AS "competitor",
+               D.DEV_POSS     AS "devPossibility",
+               D.RMK          AS "rmk",
+               M.BASE_CURRENCY AS "baseCurrency"
+          FROM PCM_EC_DETAIL D
+          LEFT JOIN PCM_EC_PJT_MSTR M
+            ON M.TEN_ID = D.TEN_ID AND M.EC_PJT_CD = D.EC_PJT_CD
+         WHERE D.TEN_ID    = #{g.tenant}
+           AND D.EC_PJT_CD = #{p.ecPjtCd}
+         ORDER BY D.EC_VER DESC
          LIMIT 1
     </select>
 
@@ -90,7 +93,16 @@
     </update>
 
     <!-- ═══════════════════════════════════════════
-         원가코드/판가
+         원가코드/판가 (PCM_EC_COST_CODE)
+         ─────────────────────────────────────────────
+         estSellPrice 필드 흐름  (크로스 모듈 통일 필드명)
+           DB 컬럼  : PCM_EC_COST_CODE.EST_PRICE
+           SQL 별칭 : estSellPrice   (TC/CC의 EST_SELL_PRICE와 동일 개념)
+           화면 헤더: 견적판가
+           P&L 산식 : 매출액 = EST_PRICE × SALES_QTY × (1 − DISC_RATE/100)
+                      → insertCalcPlStmt 에서 PCM_EC_PL_STMT.SALES_AMT 로 집계
+           연결     : EC(견적) → TC(목표, PCM_TGT_PRICE.EST_SELL_PRICE)
+                              → CC(현상, PCM_CUR_COST_CODE.EST_SELL_PRICE)
          ═══════════════════════════════════════════ -->
     <select id="findListCostCode" parameterType="map" resultType="map">
         SELECT SORT_NO      AS "seqNo",
@@ -100,7 +112,7 @@
                COST_GRP     AS "costGrp",
                COST_GRP_DESC AS "costGrpDesc",
                EST_CURRENCY AS "estmCurrency",
-               EST_PRICE    AS "estmSellingPrice",
+               EST_PRICE    AS "estSellPrice",
                MKT_CURRENCY AS "mktCurrency",
                MKT_PRICE    AS "mktPrice",
                SOP_YM       AS "sopDt",
@@ -116,7 +128,7 @@
             COST_GRP_DESC, EST_CURRENCY, EST_PRICE, MKT_CURRENCY, MKT_PRICE,
             SOP_YM, EOP_YM, SORT_NO, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
         VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd}, #{p.prodGrp}, #{p.costGrp},
-            #{p.costGrpDesc}, #{p.estmCurrency}, #{p.estmSellingPrice}, #{p.mktCurrency}, #{p.mktPrice},
+            #{p.costGrpDesc}, #{p.estmCurrency}, #{p.estSellPrice}, #{p.mktCurrency}, #{p.mktPrice},
             #{p.sopDt}, #{p.eopDt}, #{p.seqNo}, #{g.username}, #{g.now}, #{g.username}, #{g.now})
     </insert>
 
@@ -124,7 +136,7 @@
         UPDATE PCM_EC_COST_CODE
            SET PROD_GRP = #{p.prodGrp}, COST_GRP = #{p.costGrp},
                COST_GRP_DESC = #{p.costGrpDesc}, EST_CURRENCY = #{p.estmCurrency},
-               EST_PRICE = #{p.estmSellingPrice}, MKT_CURRENCY = #{p.mktCurrency},
+               EST_PRICE = #{p.estSellPrice}, MKT_CURRENCY = #{p.mktCurrency},
                MKT_PRICE = #{p.mktPrice}, SOP_YM = #{p.sopDt}, EOP_YM = #{p.eopDt},
                SORT_NO = #{p.seqNo}, MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND COST_CD = #{p.costCd}

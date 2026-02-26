@@ -817,10 +817,10 @@
                     roleList:     'T047',
                     currencyList: 'T041'
                 }, function(codes) { me.set('codes', codes); });
-                // URL 파라미터에서 tgtPjtCd 추출
-                var params = new URLSearchParams(window.location.search);
-                var pjtCd = params.get('tgtPjtCd') || '';
-                var pjtNm = params.get('pjtNm') || '';
+                // 네비게이션 파라미터에서 tgtPjtCd 추출
+                var param = UT.getParameter();
+                var pjtCd = (param && (param.tgtPjtCd || param.pjtCd)) || '';
+                var pjtNm = (param && param.pjtNm) || '';
 
                 this.set('tgtPjtCd', pjtCd);
                 this.set('pjtNm', pjtNm);

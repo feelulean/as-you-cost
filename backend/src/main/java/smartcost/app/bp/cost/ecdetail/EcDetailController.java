@@ -214,4 +214,10 @@ public class EcDetailController {
     public Map<String, Object> calculateNpv(@RequestBody Map<String, Object> param) {
         return ecDetailService.calculateNpv(param);
     }
+
+    /* ═══ 계산 선행조건 검증 ═══ */
+    @RequestMapping("/validateCalcPrereq.do")
+    public Map<String, Object> validateCalcPrereq(@RequestBody Map<String, Object> param) {
+        return ecDetailService.validateCalcPrereq(param);
+    }
 }

@@ -211,6 +211,12 @@
                     bizUnitList: 'T004',
                     prodGrpList: 'T033'
                 }, function(codes) { me.set('codes', codes); });
+                // 네비게이션 파라미터로 전달된 프로젝트 코드 자동 세팅
+                var param = UT.getParameter();
+                if (param && param.pjtCd) {
+                    this.set('searchParam', Object.assign({}, this.searchParam, { tgtPjtCd: param.pjtCd }));
+                    this.onFindList();
+                }
             },
 
             /* =============================================================

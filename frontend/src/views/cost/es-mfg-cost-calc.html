@@ -44,6 +44,12 @@
                  on-response="onCalculateMfgCostResponse">
         </sc-ajax>
 
+        <sc-ajax id="validateCalcAjax"
+                 url="/bp/cost/ec/detail/validateCalcPrereq.do"
+                 body="{{validateParam}}"
+                 on-response="onValidateCalcResponse">
+        </sc-ajax>
+
         <!-- ============================================================
              조회 조건 영역
              ============================================================ -->
@@ -133,6 +139,7 @@
                 <!-- ── 제조경비 산출 정보 입력 ── -->
                 <sc-panel title-text="제조경비 산출 정보 입력" class="input-section">
                     <sc-toolbar>
+                        <sc-button text="데이터 점검" on-click="onValidateCalc" auth-code="V"></sc-button>
                         <sc-button text="계산"     on-click="onCalculate"     auth-code="S"></sc-button>
                         <sc-button text="계산완료"  on-click="onCalcComplete"  auth-code="S"></sc-button>
                     </sc-toolbar>
@@ -1132,6 +1139,65 @@
              * 입력 파라미터(비율, 금형비, 외주가공비 등)를 전송하여
              * 생산라인 마스터 + 투자등록 데이터 기반으로 제조경비를 계산한다.
              */
+            /* ── 데이터 점검 (Validation) ── */
+            onValidateCalc: function() {
+                if (!this.selectedPjt || !this.selectedPjt.pjtCd) {
+                    UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
+                    return;
+                }
+                this.set('validateParam', { ecPjtCd: this.selectedPjt.pjtCd });
+                this._validateMode = 'CHECK';
+                this.$.validateCalcAjax.generateRequest();
+            },
+
+            onValidateCalcResponse: function(e) {
+                var data = e.detail.response;
+                if (!data || data.status !== 'OK') return;
+
+                var msgs = data.messages || [];
+                // MFG 화면이므로 MFG 관련 메시지만 필터링
+                var mfgMsgs = [];
+                for (var i = 0; i < msgs.length; i++) {
+                    if (msgs[i].calcStep === 'MFG') mfgMsgs.push(msgs[i]);
+                }
+
+                if (mfgMsgs.length === 0) {
+                    if (this._validateMode === 'CALC') {
+                        this._doCalculate();
+                    } else {
+                        UT.alert('제조경비 계산에 필요한 데이터가 정상 등록되어 있습니다.');
+                    }
+                    return;
+                }
+
+                var lines = [];
+                var icons = { 'ERROR': '[오류]', 'WARNING': '[경고]', 'INFO': '[참고]' };
+                for (var i = 0; i < mfgMsgs.length; i++) {
+                    var m = mfgMsgs[i];
+                    lines.push(icons[m.level] + ' ' + m.category + ': ' + m.message);
+                }
+
+                var hasError = false;
+                for (var i = 0; i < mfgMsgs.length; i++) {
+                    if (mfgMsgs[i].level === 'ERROR') { hasError = true; break; }
+                }
+
+                var summary = lines.join('\n');
+
+                if (this._validateMode === 'CALC') {
+                    if (hasError) {
+                        UT.alert('계산을 수행할 수 없습니다.\n\n' + summary);
+                    } else {
+                        var me = this;
+                        UT.confirm(summary + '\n\n계속 계산하시겠습니까?', function() {
+                            me._doCalculate();
+                        });
+                    }
+                } else {
+                    UT.alert(summary);
+                }
+            },
+
             onCalculate: function() {
                 if (!this.selectedPjt || !this.selectedPjt.pjtCd) {
                     UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
@@ -1145,20 +1211,26 @@
                     return;
                 }
 
+                // 산출 전 자동 점검
+                this.set('validateParam', { ecPjtCd: this.selectedPjt.pjtCd });
+                this._validateMode = 'CALC';
+                this.$.validateCalcAjax.generateRequest();
+            },
+
+            _doCalculate: function() {
                 var me = this;
-                UT.confirm('제조경비를 계산하시겠습니까?', function() {
-                    me.set('calculateParam', {
-                        ecPjtCd:          me.selectedPjt.pjtCd,
-                        wageIncRate:      Number(d.wageIncRate)      || 0,
-                        inflationRate:    Number(d.inflationRate)    || 0,
-                        prodDirectRate:   Number(d.prodDirectRate)   || 0,
-                        laborRelatedRate: Number(d.laborRelatedRate) || 0,
-                        etcMfgRate:       Number(d.etcMfgRate)       || 0,
-                        moldCostUnit:     Number(d.moldCostUnit)     || 0,
-                        outsrcCostUnit:   Number(d.outsrcCostUnit)   || 0
-                    });
-                    me.$.calculateMfgCostAjax.generateRequest();
+                var d = me.mfgCostData;
+                me.set('calculateParam', {
+                    ecPjtCd:          me.selectedPjt.pjtCd,
+                    wageIncRate:      Number(d.wageIncRate)      || 0,
+                    inflationRate:    Number(d.inflationRate)    || 0,
+                    prodDirectRate:   Number(d.prodDirectRate)   || 0,
+                    laborRelatedRate: Number(d.laborRelatedRate) || 0,
+                    etcMfgRate:       Number(d.etcMfgRate)       || 0,
+                    moldCostUnit:     Number(d.moldCostUnit)     || 0,
+                    outsrcCostUnit:   Number(d.outsrcCostUnit)   || 0
                 });
+                me.$.calculateMfgCostAjax.generateRequest();
             },
 
             onCalculateMfgCostResponse: function(e) {

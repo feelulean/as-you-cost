@@ -103,6 +103,14 @@
     <!-- ═══════════════════════════════════════════
          2. 원가코드/판가 (PCM_CUR_COST_CODE)
          PK: TEN_ID, CC_PJT_CD, CC_REV, COST_SEQ
+         ─────────────────────────────────────────────
+         estSellPrice 필드 흐름  (크로스 모듈 통일 필드명)
+           DB 컬럼  : PCM_CUR_COST_CODE.EST_SELL_PRICE
+           SQL 별칭 : estSellPrice
+           화면 헤더: 현상예상판가
+           P&L 산식 : 매출액 = EST_SELL_PRICE × SELL_QTY × (1 − DISC_RATE/100)
+                      → insertCalcPlStmt 에서 PCM_CUR_PL_STMT 로 집계
+           연결     : EC(견적, PCM_EC_COST_CODE.EST_PRICE) → TC → CC(현상)
          ═══════════════════════════════════════════ -->
     <select id="findListCostCode" parameterType="map" resultType="map">
         SELECT CC_PJT_CD      AS "ccPjtCd",
@@ -1656,12 +1664,12 @@
          ORDER BY COST_ITEM_CD
     </select>
 
-    <!-- CC 손익계산서 합계 (연도별 합산, 항목별) -->
+    <!-- CC 손익계산서 합계 (항목별 평균 단가 + 총액 합산) -->
     <select id="findListCcPlSummary" parameterType="map" resultType="map">
         SELECT PL_SEQ       AS "plSeq",
                COST_ITEM    AS "costItem",
                COALESCE(SUM(TOT_AMT), 0)  AS "totAmt",
-               COALESCE(SUM(UNIT_AMT), 0) AS "unitAmt"
+               COALESCE(AVG(UNIT_AMT), 0) AS "unitAmt"
           FROM PCM_CUR_PL_STMT
          WHERE TEN_ID    = #{g.tenant}
            AND CC_PJT_CD = #{p.ccPjtCd}

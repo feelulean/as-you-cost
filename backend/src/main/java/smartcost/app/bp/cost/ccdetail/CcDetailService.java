@@ -615,4 +615,205 @@ public class CcDetailService {
         result.put("message", "실적자재비 계산 완료");
         return result;
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       계산 선행조건 종합 검증 (Validation)
+       제조경비 → 판관비 → 손익계산서 순서로 필수 데이터 점검.
+       - ERROR   : 계산 불가 (데이터 미등록)
+       - WARNING : 계산은 되지만 결과가 부정확할 수 있음
+       - INFO    : 권고 사항
+       ═══════════════════════════════════════════════════════════════ */
+    public Map<String, Object> validateCalcPrereq(Map<String, Object> param) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> messages = new ArrayList<>();
+        String ccPjtCd = (String) param.get("ccPjtCd");
+        Object ccRev = param.get("ccRev");
+        Map<String, Object> pjtParam = new HashMap<>();
+        pjtParam.put("ccPjtCd", ccPjtCd);
+        pjtParam.put("ccRev", ccRev);
+
+        boolean canCalcMfg = true;
+        boolean canCalcSga = true;
+        boolean canCalcPl  = true;
+
+        // ── 1. 원가코드 점검 ──
+        List<Map<String, Object>> costCodes = ccDetailRepository.findList("CostCode", pjtParam);
+        if (costCodes == null || costCodes.isEmpty()) {
+            messages.add(vmsg("ERROR", "MFG", "원가코드", "원가코드가 등록되지 않았습니다. 제조경비 계산이 불가합니다."));
+            canCalcMfg = false;
+        } else {
+            for (Map<String, Object> cc : costCodes) {
+                double estSellPrice = toD(cc.get("estSellPrice"));
+                if (estSellPrice <= 0) {
+                    messages.add(vmsg("WARNING", "PL", "원가코드",
+                            "원가코드 [" + str(cc.get("costCd")) + "] 예상판가가 0입니다. 매출액이 0으로 산출됩니다."));
+                }
+            }
+        }
+
+        // ── 2. 수량/할인율 점검 ──
+        int qtyDiscCnt = ccDetailRepository.count("QtyDiscAll", pjtParam);
+        if (qtyDiscCnt == 0) {
+            messages.add(vmsg("ERROR", "MFG", "수량/할인율", "수량/할인율이 등록되지 않았습니다. 제조경비 계산이 불가합니다."));
+            canCalcMfg = false;
+        } else {
+            List<Map<String, Object>> qtyList = ccDetailRepository.findList("QtyDisc", pjtParam);
+            boolean hasYear1Qty = false;
+            for (Map<String, Object> q : qtyList) {
+                if ("1".equals(str(q.get("yearVal"))) && toD(q.get("sellQty")) > 0) {
+                    hasYear1Qty = true;
+                }
+                if (toD(q.get("sellQty")) <= 0) {
+                    messages.add(vmsg("WARNING", "MFG", "수량/할인율",
+                            str(q.get("yearVal")) + "차년도 [" + str(q.get("costCd")) + "] 판매수량이 0입니다."));
+                }
+            }
+            if (!hasYear1Qty) {
+                messages.add(vmsg("ERROR", "MFG", "수량/할인율",
+                        "1차년도 판매수량이 0입니다. 모든 단위원가가 0으로 계산됩니다."));
+            }
+        }
+
+        // ── 3. 인원계획 점검 ──
+        List<Map<String, Object>> manpower = ccDetailRepository.findList("Manpower", pjtParam);
+        if (manpower == null || manpower.isEmpty()) {
+            messages.add(vmsg("WARNING", "MFG", "인원계획",
+                    "인원계획이 등록되지 않았습니다. 직접/간접노무비가 0으로 산출됩니다."));
+        } else {
+            boolean hasDirect = false;
+            for (Map<String, Object> mp : manpower) {
+                String mpDiv = str(mp.get("mpDiv"));
+                if ("DIRECT".equalsIgnoreCase(mpDiv)) hasDirect = true;
+                if (toD(mp.get("avgSalary")) <= 0) {
+                    messages.add(vmsg("WARNING", "MFG", "인원계획",
+                            "[" + str(mp.get("mpNm")) + "] 평균임금이 0입니다. 노무비가 0으로 산출됩니다."));
+                }
+                if (toD(mp.get("headCount")) <= 0) {
+                    messages.add(vmsg("WARNING", "MFG", "인원계획",
+                            "[" + str(mp.get("mpNm")) + "] 인원수가 0입니다."));
+                }
+            }
+            if (!hasDirect) {
+                messages.add(vmsg("WARNING", "MFG", "인원계획",
+                        "직접인원(DIRECT) 구분의 인원계획이 없습니다. 직접노무비가 0으로 산출됩니다."));
+            }
+        }
+
+        // ── 4. 투자비 점검 ──
+        List<Map<String, Object>> lineInvest = ccDetailRepository.findList("LineInvest", pjtParam);
+        List<Map<String, Object>> otherInvest = ccDetailRepository.findList("OtherInvest", pjtParam);
+
+        if ((lineInvest == null || lineInvest.isEmpty())
+                && (otherInvest == null || otherInvest.isEmpty())) {
+            messages.add(vmsg("INFO", "MFG", "투자비",
+                    "라인투자비와 기타투자비가 모두 미등록입니다. 감가상각비가 0으로 산출됩니다."));
+        }
+        if (lineInvest != null) {
+            for (Map<String, Object> inv : lineInvest) {
+                if (toD(inv.get("acqAmt")) > 0 && toInt(inv.get("usefulLife")) <= 0) {
+                    messages.add(vmsg("WARNING", "MFG", "라인투자비",
+                            "[" + str(inv.get("lineNm")) + "] 내용연수가 0입니다. 감가상각비 부정확."));
+                }
+            }
+        }
+        if (otherInvest != null) {
+            for (Map<String, Object> inv : otherInvest) {
+                if (toD(inv.get("acqAmt")) > 0 && toInt(inv.get("usefulLife")) <= 0) {
+                    messages.add(vmsg("WARNING", "MFG", "기타투자비",
+                            "[" + str(inv.get("investNm")) + "] 내용연수가 0입니다. 감가상각비 부정확."));
+                }
+                if (str(inv.get("investDiv")).isEmpty()) {
+                    messages.add(vmsg("WARNING", "MFG", "기타투자비",
+                            "[" + str(inv.get("investNm")) + "] 투자구분이 누락. 건구축/기타 분류 불가."));
+                }
+            }
+        }
+
+        // ── 5. BOM + 부품단가 점검 (CC 고유) ──
+        List<Map<String, Object>> bomList = ccDetailRepository.findList("Bom", pjtParam);
+        if (bomList == null || bomList.isEmpty()) {
+            messages.add(vmsg("WARNING", "PL", "BOM(재료비)",
+                    "BOM이 등록되지 않았습니다. 손익계산서의 재료비가 0으로 산출됩니다."));
+        } else {
+            List<Map<String, Object>> partPriceList = ccDetailRepository.findList("PartPrice", pjtParam);
+            int bomCount = bomList.size();
+            int priceCount = partPriceList != null ? partPriceList.size() : 0;
+
+            if (priceCount == 0) {
+                messages.add(vmsg("WARNING", "PL", "부품단가",
+                        "부품단가가 등록되지 않았습니다. 재료비가 0으로 산출됩니다."));
+            } else if (priceCount < bomCount) {
+                messages.add(vmsg("WARNING", "PL", "부품단가",
+                        "BOM " + bomCount + "건 중 부품단가 " + priceCount + "건만 등록. 일부 재료비가 누락됩니다."));
+            }
+
+            if (partPriceList != null) {
+                int zeroConfirm = 0;
+                for (Map<String, Object> pp : partPriceList) {
+                    if (toD(pp.get("confirmPrice")) <= 0) zeroConfirm++;
+                }
+                if (zeroConfirm > 0) {
+                    messages.add(vmsg("WARNING", "PL", "부품단가",
+                            "부품단가 " + zeroConfirm + "건의 확정단가가 0입니다. 재료비가 과소 산출됩니다."));
+                }
+            }
+        }
+
+        // ── 6. 제조경비 계산 결과 점검 ──
+        int mfgCnt = ccDetailRepository.count("MfgCost", pjtParam);
+        if (mfgCnt == 0) {
+            if (canCalcMfg) {
+                messages.add(vmsg("INFO", "SGA", "제조경비",
+                        "제조경비가 아직 계산되지 않았습니다. 판관비 계산 전에 제조경비를 먼저 계산해 주세요."));
+            }
+            canCalcSga = false;
+        }
+
+        // ── 7. 판관비 계산 결과 점검 ──
+        int sgaCnt = ccDetailRepository.count("SgaCost", pjtParam);
+        if (sgaCnt == 0) {
+            if (canCalcSga) {
+                messages.add(vmsg("INFO", "PL", "판매관리비",
+                        "판매관리비가 아직 계산되지 않았습니다. 손익계산서 산출 전에 판관비를 먼저 계산해 주세요."));
+            }
+            canCalcPl = false;
+        }
+
+        // 결과 집계
+        int errorCnt = 0, warnCnt = 0, infoCnt = 0;
+        for (Map<String, Object> m : messages) {
+            String level = str(m.get("level"));
+            if ("ERROR".equals(level)) errorCnt++;
+            else if ("WARNING".equals(level)) warnCnt++;
+            else infoCnt++;
+        }
+
+        result.put("status", "OK");
+        result.put("messages", messages);
+        result.put("errorCount", errorCnt);
+        result.put("warningCount", warnCnt);
+        result.put("infoCount", infoCnt);
+        result.put("canCalcMfg", canCalcMfg);
+        result.put("canCalcSga", canCalcSga);
+        result.put("canCalcPl", canCalcPl);
+
+        if (errorCnt == 0 && warnCnt == 0) {
+            result.put("summary", "모든 필수 데이터가 정상 등록되어 있습니다.");
+        } else if (errorCnt > 0) {
+            result.put("summary", "필수 데이터 " + errorCnt + "건 누락. 계산 전 데이터를 보완해 주세요.");
+        } else {
+            result.put("summary", "경고 " + warnCnt + "건. 계산은 가능하나 결과가 부정확할 수 있습니다.");
+        }
+
+        return result;
+    }
+
+    private Map<String, Object> vmsg(String level, String calcStep, String category, String message) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("level", level);
+        m.put("calcStep", calcStep);
+        m.put("category", category);
+        m.put("message", message);
+        return m;
+    }
 }

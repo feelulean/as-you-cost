@@ -557,9 +557,9 @@
                ============================================================== */
 
             attached: function() {
-                var params = new URLSearchParams(window.location.search);
-                var pjtCd = params.get('tgtPjtCd') || '';
-                var pjtNm = params.get('pjtNm') || '';
+                var param = UT.getParameter();
+                var pjtCd = (param && param.tgtPjtCd) || '';
+                var pjtNm = (param && param.pjtNm) || '';
 
                 this.set('tgtPjtCd', pjtCd);
                 this.set('pjtNm', pjtNm);

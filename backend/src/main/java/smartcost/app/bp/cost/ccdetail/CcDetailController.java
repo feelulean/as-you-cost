@@ -358,4 +358,10 @@ public class CcDetailController {
     public List<Map<String, Object>> findListCostGrp(@RequestBody Map<String, Object> param) {
         return ccDetailService.findList("CostCode", param);
     }
+
+    /* ═══ 계산 선행조건 검증 ═══ */
+    @RequestMapping("/validateCalcPrereq.do")
+    public Map<String, Object> validateCalcPrereq(@RequestBody Map<String, Object> param) {
+        return ccDetailService.validateCalcPrereq(param);
+    }
 }

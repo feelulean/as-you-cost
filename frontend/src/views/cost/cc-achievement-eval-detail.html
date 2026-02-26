@@ -83,6 +83,13 @@
              Ajax 선언부
              ============================================================ -->
 
+        <!-- CC 프로젝트 목록 Ajax -->
+        <sc-ajax id="findPjtListAjax"
+                 url="/bp/cost/cc/findListCurrentCostPjt.do"
+                 body="{{pjtSearchParam}}"
+                 on-response="onFindPjtListResponse">
+        </sc-ajax>
+
         <!-- 프로젝트 정보 조회 -->
         <sc-ajax id="findPjtInfoAjax"
                  url="/bp/cost/cc/findCurrentCostPjt.do"
@@ -132,6 +139,39 @@
                  on-response="onSaveItemAchvResponse">
         </sc-ajax>
 
+        <!-- 좌우 분할 레이아웃 -->
+        <div class="hbox flex">
+            <!-- 좌측: CC 프로젝트 목록 -->
+            <div class="vbox flex-3">
+                <sc-search-container on-search="onFindPjtList" auth-code="V">
+                    <table>
+                        <colgroup>
+                            <col style="width:80px"/><col/>
+                        </colgroup>
+                        <tr>
+                            <th><sc-label text="프로젝트"></sc-label></th>
+                            <td><sc-text-field value="{{pjtSearchParam.pjtCd}}" on-enter="onFindPjtList" placeholder="코드/명칭"></sc-text-field></td>
+                        </tr>
+                    </table>
+                </sc-search-container>
+
+                <sc-grid id="pjtGrid"
+                         data-provider="{{pjtList}}"
+                         selection-mode="radio"
+                         on-item-click="onProjectClick"
+                         class="flex">
+                    <sc-grid-columns>
+                        <sc-data-column data-field="pjtCd" header-text="프로젝트코드" width="120" text-align="center"></sc-data-column>
+                        <sc-data-column data-field="pjtNm" header-text="프로젝트명" width="160"></sc-data-column>
+                        <sc-data-column data-field="ccRev" header-text="차수" width="50" text-align="center"></sc-data-column>
+                        <sc-data-column data-field="progStsNm" header-text="상태" width="70" text-align="center"></sc-data-column>
+                    </sc-grid-columns>
+                </sc-grid>
+            </div>
+
+            <!-- 우측: 달성도 평가 상세 -->
+            <div class="vbox flex-7">
+
         <!-- ============================================================
              프로젝트 정보 표시 영역
              ============================================================ -->
@@ -144,7 +184,7 @@
             </colgroup>
             <tr>
                 <th><sc-label text="프로젝트코드"></sc-label></th>
-                <td>{{pjtInfo.ccPjtCd}}</td>
+                <td>{{pjtInfo.pjtCd}}</td>
                 <th><sc-label text="프로젝트명"></sc-label></th>
                 <td>{{pjtInfo.pjtNm}}</td>
                 <th><sc-label text="현상차수"></sc-label></th>
@@ -365,6 +405,9 @@
                 </sc-grid-fields>
             </sc-grid>
         </template>
+
+            </div><!-- /우측 -->
+        </div><!-- /hbox -->
     </template>
 
     <script>
@@ -406,6 +449,10 @@
                     value: function() { return []; }
                 },
 
+                /* ── CC 프로젝트 목록 ── */
+                pjtSearchParam: { type: Object, value: function() { return {}; } },
+                pjtList:        { type: Array,  value: function() { return []; } },
+
                 /* ── Ajax 파라미터 ── */
                 pjtInfoParam:    { type: Object, value: function() { return {}; } },
                 deptSearchParam: { type: Object, value: function() { return {}; } },
@@ -421,10 +468,48 @@
                ============================================================== */
 
             attached: function() {
-                if (this.ccPjtCd) {
-                    this._loadPjtInfo();
-                    this._loadDeptAchv();
+                var param = UT.getParameter();
+                if (param) {
+                    this.ccPjtCd = param.ccPjtCd || '';
+                    this.ccRev   = param.ccRev   || '';
                 }
+                this.$.findPjtListAjax.generateRequest();
+                if (this.ccPjtCd) {
+                    this._loadProjectData();
+                }
+            },
+
+            /* ==============================================================
+               CC 프로젝트 목록
+               ============================================================== */
+
+            onFindPjtList: function() {
+                this.$.findPjtListAjax.generateRequest();
+            },
+
+            onFindPjtListResponse: function(e) {
+                this.set('pjtList', e.detail.response || []);
+            },
+
+            onProjectClick: function(e) {
+                var row = e.detail.data;
+                if (!row) return;
+                this._clearDetail();
+                this.ccPjtCd = row.pjtCd;
+                this.ccRev   = row.ccRev || '';
+                this._loadProjectData();
+            },
+
+            _loadProjectData: function() {
+                this._loadPjtInfo();
+                this._loadDeptAchv();
+            },
+
+            _clearDetail: function() {
+                this.set('pjtInfo', {});
+                this.set('deptAchvList', []);
+                this.set('itemAchvList', []);
+                this.set('activeTab', 'DEPT');
             },
 
             /* ==============================================================

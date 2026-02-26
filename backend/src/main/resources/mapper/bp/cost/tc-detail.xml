@@ -193,6 +193,13 @@
 
     <!-- ═══════════════════════════════════════════
          판가 (PCM_TGT_PRICE)
+         ─────────────────────────────────────────────
+         estSellPrice 필드 흐름  (크로스 모듈 통일 필드명)
+           DB 컬럼  : PCM_TGT_PRICE.EST_SELL_PRICE
+           SQL 별칭 : estSellPrice
+           화면 헤더: 예상판가
+           용도     : 목표원가 대비 판가 설정 (P&L 직접 산출 없음)
+           연결     : EC(견적, PCM_EC_COST_CODE.EST_PRICE) → TC ← CC(현상)
          ═══════════════════════════════════════════ -->
     <select id="findListPrice" parameterType="map" resultType="map">
         SELECT A.TGT_PJT_CD    AS "tgtPjtCd",
