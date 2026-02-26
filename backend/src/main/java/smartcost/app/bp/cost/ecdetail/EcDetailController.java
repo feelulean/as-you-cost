@@ -151,6 +151,12 @@ public class EcDetailController {
         return ecDetailService.calculateSgaCost(param);
     }
 
+    /* ═══ 원가그룹 목록 (손익계산서용) ═══ */
+    @RequestMapping("/findListCostGrp.do")
+    public List<Map<String, Object>> findListCostGrp(@RequestBody Map<String, Object> param) {
+        return ecDetailService.findList("DistinctCostGrp", param);
+    }
+
     /* ═══ 손익계산서 ═══ */
     @RequestMapping("/findListPlStmt.do")
     public Map<String, Object> findListPlStmt(@RequestBody Map<String, Object> param) {

@@ -36,6 +36,18 @@ public class EcDetailService {
 
     /* ═══ 손익계산서 피벗 조회 ═══ */
     public List<Map<String, Object>> findListPlStmtPivot(Map<String, Object> param) {
+        // viewType에 따른 viewKey 매핑
+        String viewType = str(param.get("viewType"));
+        String ecPjtCd  = str(param.get("ecPjtCd"));
+        if ("PJT".equals(viewType) || viewType.isEmpty()) {
+            param.put("viewType", "PJT");
+            param.put("viewKey", ecPjtCd);
+        } else if ("GRP".equals(viewType)) {
+            param.put("viewKey", str(param.get("costGrpCd")));
+        } else if ("CODE".equals(viewType)) {
+            param.put("viewKey", str(param.get("costCd")));
+        }
+
         List<Map<String, Object>> result = ecDetailRepository.findListPlStmtPivot(param);
 
         // basisType='UNIT' → 총액을 연도별 판매수량으로 나눠 단위당 금액 산출
@@ -721,14 +733,19 @@ public class EcDetailService {
             return result;
         }
 
-        // 1) 기존 손익계산서 데이터 삭제
+        // 1) 기존 손익계산서 데이터 삭제 (VIEW_TYPE 무관하게 전체 삭제)
         ecDetailRepository.deleteByPjt("PlStmt", param);
 
-        // 2) CostCode + QtyDisc + MfgCost + SgaCost + BOM 조인 → 집계 INSERT
-        //    VIEW_TYPE은 SQL에서 'PJT'로 고정
+        // 2) PJT 레벨 산출 (기존)
         ecDetailRepository.insertCalcPlStmt(param);
 
-        // 3) 피벗 조회 + basisType 변환 적용
+        // 3) GRP 레벨 산출 (원가그룹별)
+        ecDetailRepository.insertCalcPlStmtGrp(param);
+
+        // 4) CODE 레벨 산출 (원가코드별)
+        ecDetailRepository.insertCalcPlStmtCode(param);
+
+        // 5) 피벗 조회 + basisType 변환 적용
         List<Map<String, Object>> plList = findListPlStmtPivot(param);
         result.put("status", "OK");
         result.put("message", "손익계산서 산출 완료");

@@ -428,11 +428,17 @@ public class CcDetailService {
             return result;
         }
 
-        // 기존 P&L 데이터 삭제
+        // 기존 P&L 데이터 삭제 (VIEW_TYPE 무관하게 전체 삭제)
         ccDetailRepository.delete("AllPlStmt", param);
 
-        // INSERT...SELECT로 P&L 산출
+        // PJT 레벨 산출 (기존)
         ccDetailRepository.insert("CalcPlStmt", param);
+
+        // GRP 레벨 산출 (원가그룹별)
+        ccDetailRepository.insert("CalcPlStmtGrp", param);
+
+        // CODE 레벨 산출 (원가코드별)
+        ccDetailRepository.insert("CalcPlStmtCode", param);
 
         // 피벗 결과 조회
         List<Map<String, Object>> plList = findListPlStmtPivot(param);

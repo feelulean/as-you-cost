@@ -61,6 +61,16 @@ public class EcDetailRepository {
         sqlSession.insert(NAMESPACE + "insertCalcPlStmt", param);
     }
 
+    /* ── 손익계산서 원가그룹(GRP) 레벨 INSERT ── */
+    public void insertCalcPlStmtGrp(Map<String, Object> param) {
+        sqlSession.insert(NAMESPACE + "insertCalcPlStmtGrp", param);
+    }
+
+    /* ── 손익계산서 원가코드(CODE) 레벨 INSERT ── */
+    public void insertCalcPlStmtCode(Map<String, Object> param) {
+        sqlSession.insert(NAMESPACE + "insertCalcPlStmtCode", param);
+    }
+
     /* ── 손익계산서 피벗 조회 ── */
     public List<Map<String, Object>> findListPlStmtPivot(Map<String, Object> param) {
         return sqlSession.selectList(NAMESPACE + "findListPlStmtPivot", param);

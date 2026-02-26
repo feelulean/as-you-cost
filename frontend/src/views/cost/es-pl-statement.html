@@ -27,6 +27,18 @@
                  on-response="onValidateCalcResponse">
         </sc-ajax>
 
+        <sc-ajax id="findCostGrpListAjax"
+                 url="/bp/cost/ec/detail/findListCostGrp.do"
+                 body="{{grpSearchParam}}"
+                 on-response="onFindCostGrpListResponse">
+        </sc-ajax>
+
+        <sc-ajax id="findCostCodeListAjax"
+                 url="/bp/cost/ec/detail/findListCostCode.do"
+                 body="{{codeSearchParam}}"
+                 on-response="onFindCostCodeListResponse">
+        </sc-ajax>
+
         <style>
             .tab-btn { padding:6px 14px; border:none; background:#f0f1f5; cursor:pointer; font-size:12px; border-radius:4px 4px 0 0; }
             .tab-btn.active { background:#6954FE; color:#fff; font-weight:600; }
@@ -124,8 +136,34 @@
                                           items="{{codes.viewTypeList}}"
                                           display-field="label"
                                           value-field="data"
-                                          width="140">
+                                          width="140"
+                                          on-value-changed="_onViewTypeChanged">
                         </sc-combobox-field>
+
+                        <!-- 원가그룹 선택 (유형=GRP일 때 표시) -->
+                        <template is="dom-if" if="{{_isViewType(plParam.viewType, 'GRP')}}">
+                            <span class="filter-label">원가그룹</span>
+                            <sc-combobox-field value="{{plParam.costGrpCd}}"
+                                              items="{{codes.costGrpList}}"
+                                              display-field="label"
+                                              value-field="data"
+                                              width="160"
+                                              placeholder="원가그룹 선택">
+                            </sc-combobox-field>
+                        </template>
+
+                        <!-- 원가코드 선택 (유형=CODE일 때 표시) -->
+                        <template is="dom-if" if="{{_isViewType(plParam.viewType, 'CODE')}}">
+                            <span class="filter-label">원가코드</span>
+                            <sc-combobox-field value="{{plParam.costCd}}"
+                                              items="{{codes.costCodeList}}"
+                                              display-field="label"
+                                              value-field="data"
+                                              width="160"
+                                              placeholder="원가코드 선택">
+                            </sc-combobox-field>
+                        </template>
+
                         <span class="filter-label">기준</span>
                         <sc-combobox-field value="{{plParam.basisType}}"
                                           items="{{codes.basisTypeList}}"
@@ -246,7 +284,9 @@
                     value: function() {
                         return {
                             viewType:  'PJT',
-                            basisType: 'UNIT'
+                            basisType: 'UNIT',
+                            costGrpCd: '',
+                            costCd:    ''
                         };
                     }
                 },
@@ -256,8 +296,10 @@
                     value: function() { return []; }
                 },
                 // Ajax 파라미터
-                plSearchParam: { type: Object, value: function() { return {}; } },
-                calcParam:     { type: Object, value: function() { return {}; } },
+                plSearchParam:  { type: Object, value: function() { return {}; } },
+                calcParam:      { type: Object, value: function() { return {}; } },
+                grpSearchParam: { type: Object, value: function() { return {}; } },
+                codeSearchParam:{ type: Object, value: function() { return {}; } },
                 // 공통코드
                 codes: {
                     type: Object,
@@ -271,7 +313,9 @@
                             basisTypeList: [
                                 { label: '단위당', data: 'UNIT' },
                                 { label: '총액',   data: 'TOTAL' }
-                            ]
+                            ],
+                            costGrpList:  [],
+                            costCodeList: []
                         };
                     }
                 }
@@ -309,6 +353,8 @@
 
                 this.set('selectedPjtCd', row.pjtCd);
                 this.set('baseCurrency', row.baseCurrency || 'KRW');
+                this._loadCostGrpList();
+                this._loadCostCodeList();
                 this._loadPlStmt();
             },
 
@@ -328,7 +374,9 @@
                 this.set('plSearchParam', {
                     ecPjtCd:   this.selectedPjtCd,
                     viewType:  this.plParam.viewType,
-                    basisType: this.plParam.basisType
+                    basisType: this.plParam.basisType,
+                    costGrpCd: this.plParam.costGrpCd || '',
+                    costCd:    this.plParam.costCd || ''
                 });
                 this.$.findPlStmtAjax.generateRequest();
             },
@@ -440,7 +488,9 @@
                 me.set('calcParam', {
                     ecPjtCd:   me.selectedPjtCd,
                     viewType:  me.plParam.viewType,
-                    basisType: me.plParam.basisType
+                    basisType: me.plParam.basisType,
+                    costGrpCd: me.plParam.costGrpCd || '',
+                    costCd:    me.plParam.costCd || ''
                 });
                 me.$.calculatePlStmtAjax.generateRequest();
             },
@@ -457,10 +507,68 @@
                 UT.alert('견적원가 산출이 완료되었습니다.');
             },
 
+            /* ==============================================================
+               원가그룹/원가코드 목록 로드
+               ============================================================== */
+
+            _loadCostGrpList: function() {
+                this.set('grpSearchParam', { ecPjtCd: this.selectedPjtCd });
+                this.$.findCostGrpListAjax.generateRequest();
+            },
+
+            onFindCostGrpListResponse: function(e) {
+                var list = e.detail.response || [];
+                var items = [];
+                for (var i = 0; i < list.length; i++) {
+                    items.push({
+                        label: list[i].costGrpDesc || list[i].costGrp,
+                        data:  list[i].costGrp
+                    });
+                }
+                this.set('codes.costGrpList', items);
+            },
+
+            _loadCostCodeList: function() {
+                this.set('codeSearchParam', { ecPjtCd: this.selectedPjtCd });
+                this.$.findCostCodeListAjax.generateRequest();
+            },
+
+            onFindCostCodeListResponse: function(e) {
+                var list = e.detail.response || [];
+                var items = [];
+                for (var i = 0; i < list.length; i++) {
+                    items.push({
+                        label: list[i].costCd,
+                        data:  list[i].costCd
+                    });
+                }
+                this.set('codes.costCodeList', items);
+            },
+
+            /* ==============================================================
+               유형 변경 핸들러
+               ============================================================== */
+
+            _onViewTypeChanged: function() {
+                this.set('plParam.costGrpCd', '');
+                this.set('plParam.costCd', '');
+                this.set('plParam.basisType', 'UNIT');
+            },
+
+            _isViewType: function(viewType, target) {
+                return viewType === target;
+            },
+
             _clearDetail: function() {
                 this.set('selectedPjtCd', '');
                 this.set('baseCurrency', 'KRW');
                 this.set('plResultList', []);
+                this.set('codes.costGrpList', []);
+                this.set('codes.costCodeList', []);
+                this.set('plParam', {
+                    viewType: 'PJT', basisType: 'UNIT',
+                    costGrpCd: '', costCd: ''
+                });
             }
         });
     </script>

@@ -356,7 +356,7 @@ public class CcDetailController {
     /* ═══ 원가그룹 목록 (손익계산서용) ═══ */
     @RequestMapping("/findListCostGrp.do")
     public List<Map<String, Object>> findListCostGrp(@RequestBody Map<String, Object> param) {
-        return ccDetailService.findList("CostCode", param);
+        return ccDetailService.findList("DistinctCostGrp", param);
     }
 
     /* ═══ 계산 선행조건 검증 ═══ */
