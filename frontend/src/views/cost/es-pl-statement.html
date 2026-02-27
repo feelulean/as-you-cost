@@ -52,7 +52,6 @@
             .result-item .value { font-size:18px; font-weight:700; color:#30374F; }
             .filter-bar { display:flex; gap:12px; align-items:center; padding:8px 0; margin-bottom:8px; }
             .filter-bar .filter-label { font-size:12px; font-weight:600; color:#30374F; }
-            [hidden] { display: none !important; }
         </style>
 
         <!-- ============================================================
@@ -142,25 +141,25 @@
                         </sc-combobox-field>
 
                         <!-- 원가그룹 선택 (유형=GRP일 때 표시) -->
-                        <span class="filter-label" hidden$="{{_hideForViewType(plParam.viewType, 'GRP')}}">원가그룹</span>
+                        <span class="filter-label" style$="{{_viewTypeDisplay(plParam.viewType, 'GRP')}}">원가그룹</span>
                         <sc-combobox-field value="{{plParam.costGrpCd}}"
                                           items="{{codes.costGrpList}}"
                                           display-field="label"
                                           value-field="data"
                                           width="160"
                                           placeholder="원가그룹 선택"
-                                          hidden$="{{_hideForViewType(plParam.viewType, 'GRP')}}">
+                                          style$="{{_viewTypeDisplay(plParam.viewType, 'GRP')}}">
                         </sc-combobox-field>
 
                         <!-- 원가코드 선택 (유형=CODE일 때 표시) -->
-                        <span class="filter-label" hidden$="{{_hideForViewType(plParam.viewType, 'CODE')}}">원가코드</span>
+                        <span class="filter-label" style$="{{_viewTypeDisplay(plParam.viewType, 'CODE')}}">원가코드</span>
                         <sc-combobox-field value="{{plParam.costCd}}"
                                           items="{{codes.costCodeList}}"
                                           display-field="label"
                                           value-field="data"
                                           width="160"
                                           placeholder="원가코드 선택"
-                                          hidden$="{{_hideForViewType(plParam.viewType, 'CODE')}}">
+                                          style$="{{_viewTypeDisplay(plParam.viewType, 'CODE')}}">
                         </sc-combobox-field>
 
                         <span class="filter-label">기준</span>
@@ -583,6 +582,10 @@
 
             _hideForViewType: function(viewType, target) {
                 return viewType !== target;
+            },
+
+            _viewTypeDisplay: function(viewType, target) {
+                return viewType === target ? '' : 'display:none';
             },
 
             _clearDetail: function() {
