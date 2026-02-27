@@ -1,0 +1,1 @@
+const fs=require("fs"); const b64=fs.readFileSync(require("path").resolve("C:/claude_projects/as-you-cost/script.b64"),"utf8").trim(); fs.writeFileSync(require("path").resolve("C:/claude_projects/as-you-cost/insert-detail-data.js"), Buffer.from(b64,"base64").toString("utf8")); console.log("decoded");
