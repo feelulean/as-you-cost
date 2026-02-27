@@ -132,7 +132,7 @@
                 <sc-toolbar>
                     <div class="filter-bar">
                         <span class="filter-label">유형</span>
-                        <sc-combobox-field value="{{plParam.viewType}}"
+                        <sc-combobox-field value="{{viewType}}"
                                           items="{{codes.viewTypeList}}"
                                           display-field="label"
                                           value-field="data"
@@ -275,12 +275,16 @@
                     type: String,
                     value: 'KRW'
                 },
+                // 유형 선택 (최상위 프로퍼티 — 변경 감지용)
+                viewType: {
+                    type: String,
+                    value: 'PJT'
+                },
                 // P&L 조회 파라미터
                 plParam: {
                     type: Object,
                     value: function() {
                         return {
-                            viewType:  'PJT',
                             basisType: 'UNIT',
                             costGrpCd: '',
                             costCd:    ''
@@ -319,7 +323,7 @@
             },
 
             observers: [
-                '_onViewTypeChanged(plParam.viewType)'
+                '_onViewTypeChanged(viewType)'
             ],
 
             attached: function() {
@@ -368,7 +372,7 @@
                     UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
                     return;
                 }
-                var vt = this.plParam.viewType;
+                var vt = this.viewType;
                 if (vt === 'GRP' && !this.plParam.costGrpCd) {
                     UT.alert('원가그룹을 선택해 주세요.');
                     return;
@@ -383,7 +387,7 @@
             _loadPlStmt: function() {
                 this.set('plSearchParam', {
                     ecPjtCd:   this.selectedPjtCd,
-                    viewType:  this.plParam.viewType,
+                    viewType:  this.viewType,
                     basisType: this.plParam.basisType,
                     costGrpCd: this.plParam.costGrpCd || '',
                     costCd:    this.plParam.costCd || ''
@@ -497,7 +501,7 @@
                 var me = this;
                 me.set('calcParam', {
                     ecPjtCd:   me.selectedPjtCd,
-                    viewType:  me.plParam.viewType,
+                    viewType:  me.viewType,
                     basisType: me.plParam.basisType,
                     costGrpCd: me.plParam.costGrpCd || '',
                     costCd:    me.plParam.costCd || ''
@@ -605,8 +609,9 @@
                 this.set('plResultList', []);
                 this.set('codes.costGrpList', []);
                 this.set('codes.costCodeList', []);
+                this.set('viewType', 'PJT');
                 this.set('plParam', {
-                    viewType: 'PJT', basisType: 'UNIT',
+                    basisType: 'UNIT',
                     costGrpCd: '', costCd: ''
                 });
             }
