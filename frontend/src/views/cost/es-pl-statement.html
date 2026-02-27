@@ -51,7 +51,7 @@
             .result-item label { font-size:11px; color:#667085; display:block; margin-bottom:4px; }
             .result-item .value { font-size:18px; font-weight:700; color:#30374F; }
             .filter-bar { display:flex; gap:12px; align-items:center; padding:8px 0; margin-bottom:8px; }
-            .filter-bar .filter-label { font-size:13px; font-weight:600; color:#30374F; min-width:40px; }
+            .filter-bar .filter-label { font-size:14px; font-weight:600; color:#30374F; min-width:50px; }
         </style>
 
         <!-- ============================================================
@@ -136,7 +136,7 @@
                                           items="{{codes.viewTypeList}}"
                                           display-field="label"
                                           value-field="data"
-                                          width="180"
+                                          width="240"
                                           on-value-changed="_onViewTypeSelect">
                         </sc-combobox-field>
 
@@ -146,7 +146,7 @@
                                           items="{{codes.costGrpList}}"
                                           display-field="label"
                                           value-field="data"
-                                          width="220"
+                                          width="280"
                                           placeholder="원가그룹 선택"
                                           style="display:none">
                         </sc-combobox-field>
@@ -157,7 +157,7 @@
                                           items="{{codes.costCodeList}}"
                                           display-field="label"
                                           value-field="data"
-                                          width="220"
+                                          width="280"
                                           placeholder="원가코드 선택"
                                           style="display:none">
                         </sc-combobox-field>
@@ -167,7 +167,7 @@
                                           items="{{codes.basisTypeList}}"
                                           display-field="label"
                                           value-field="data"
-                                          width="160">
+                                          width="200">
                         </sc-combobox-field>
                     </div>
                     <sc-button text="조회"         on-click="onFindPlStmt"      auth-code="V"></sc-button>
