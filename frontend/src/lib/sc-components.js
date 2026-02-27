@@ -862,14 +862,23 @@
     var me = this;
     sel.addEventListener('change', function () {
       if (me._valuePath && me._polymerHost) {
-        var parts = me._valuePath.split('.');
-        var obj = me._polymerHost;
-        for (var i = 0; i < parts.length - 1; i++) {
-          if (obj[parts[i]] == null) obj[parts[i]] = {};
-          obj = obj[parts[i]];
+        var host = me._polymerHost;
+        if (typeof host.set === 'function') {
+          host.set(me._valuePath, sel.value);
+        } else {
+          var parts = me._valuePath.split('.');
+          var obj = host;
+          for (var i = 0; i < parts.length - 1; i++) {
+            if (obj[parts[i]] == null) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+          }
+          obj[parts[parts.length - 1]] = sel.value;
         }
-        obj[parts[parts.length - 1]] = sel.value;
       }
+      me.dispatchEvent(new CustomEvent('value-changed', {
+        detail: { value: sel.value },
+        bubbles: true
+      }));
     });
 
     this.appendChild(sel);
