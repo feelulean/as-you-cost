@@ -875,10 +875,11 @@
           obj[parts[parts.length - 1]] = sel.value;
         }
       }
-      me.dispatchEvent(new CustomEvent('value-changed', {
-        detail: { value: sel.value },
-        bubbles: true
-      }));
+      /* on-value-changed 핸들러 직접 호출 (sc-button on-click 패턴과 동일) */
+      var handlerName = me.getAttribute('on-value-changed');
+      if (handlerName && me._polymerHost && typeof me._polymerHost[handlerName] === 'function') {
+        me._polymerHost[handlerName]({ detail: { value: sel.value } });
+      }
     });
 
     this.appendChild(sel);
