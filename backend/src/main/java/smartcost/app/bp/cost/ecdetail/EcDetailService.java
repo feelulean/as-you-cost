@@ -246,15 +246,32 @@ public class EcDetailService {
         double moldCostUnit     = toDouble(param.get("moldCostUnit"));
         double outsrcCostUnit   = toDouble(param.get("outsrcCostUnit"));
 
+        // SOP 조회
+        String sopYm = ecDetailRepository.findSopDt(param);
+        if (sopYm == null || sopYm.isEmpty()) sopYm = "2026-01";
+
         // 계산 수행
-        Map<String, Object> computed = computeMfgCostDetails(ecPjtCd,
+        Map<String, Object> computed = computeMfgCostDetails(ecPjtCd, sopYm,
                 wageIncRate, inflationRate, prodDirectRate,
                 laborRelatedRate, etcMfgRate, moldCostUnit, outsrcCostUnit);
 
         @SuppressWarnings("unchecked")
         Map<String, Object> summary = (Map<String, Object>) computed.get("resultSummary");
 
-        // DB 저장: 기존 데이터 삭제 후 코스트코드별 INSERT
+        // 원가코드별·연도별 제조경비 맵 (C/T 기반 배분 결과)
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, Map<String, Double>>> perCodeYearCosts =
+                (Map<String, Map<String, Map<String, Double>>>) computed.get("perCodeYearCosts");
+
+        int maxYear = toInt(computed.get("maxYear"));
+        if (maxYear < 1) maxYear = 1;
+
+        // 연도별 프로젝트 전체 단위원가 (C/T 없는 경우 fallback용)
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, Double>> yearSummary =
+                (Map<String, Map<String, Double>>) computed.get("yearSummary");
+
+        // DB 저장: 기존 데이터 삭제 후 코스트코드×연도별 INSERT
         Map<String, Object> delParam = new HashMap<>();
         delParam.put("ecPjtCd", ecPjtCd);
         ecDetailRepository.deleteByPjt("MfgCost", delParam);
@@ -262,44 +279,142 @@ public class EcDetailService {
         List<Map<String, Object>> costCodeList = ecDetailRepository.findList("CostCode",
                 new HashMap<>(delParam));
 
-        // 저장할 공통 데이터 구성
-        Map<String, Object> saveBase = new HashMap<>();
-        saveBase.put("ecPjtCd", ecPjtCd);
-        saveBase.put("wageIncRate", wageIncRate);
-        saveBase.put("inflationRate", inflationRate);
-        saveBase.put("prodDirectRate", prodDirectRate);
-        saveBase.put("laborRelatedRate", laborRelatedRate);
-        saveBase.put("etcMfgRate", etcMfgRate);
-        saveBase.put("moldCost", moldCostUnit);
-        saveBase.put("outsrcCost", outsrcCostUnit);
-        saveBase.put("outsrcRate", 0);
-        saveBase.put("directLabor", summary.get("directLaborCost"));
-        saveBase.put("indirectLabor", summary.get("indirectLaborCost"));
-        saveBase.put("prodDirectExp", summary.get("prodDirectCost"));
-        saveBase.put("laborRelatedExp", summary.get("laborRelatedCost"));
-        saveBase.put("otherMfgExp", summary.get("etcMfgCost"));
-        saveBase.put("deprBuilding", summary.get("deprBldgCost"));
-        saveBase.put("deprLine", summary.get("deprLineCost"));
-        saveBase.put("deprOther", summary.get("deprEtcCost"));
-        saveBase.put("rndCost", 0);
-        saveBase.put("otherExp", 0);
-        saveBase.put("totalMfgCost", summary.get("totalMfgCost"));
-
         if (costCodeList != null && !costCodeList.isEmpty()) {
             for (Map<String, Object> cc : costCodeList) {
-                Map<String, Object> saveParam = new HashMap<>(saveBase);
-                saveParam.put("costCd", cc.get("costCd"));
-                ecDetailRepository.insert("MfgCost", saveParam);
+                String costCd = str(cc.get("costCd"));
+
+                for (int yr = 1; yr <= maxYear; yr++) {
+                    String yearVal = String.valueOf(yr);
+                    Map<String, Object> saveParam = new HashMap<>();
+                    saveParam.put("ecPjtCd", ecPjtCd);
+                    saveParam.put("costCd", costCd);
+                    saveParam.put("yearVal", yearVal);
+                    saveParam.put("wageIncRate", wageIncRate);
+                    saveParam.put("inflationRate", inflationRate);
+                    saveParam.put("prodDirectRate", prodDirectRate);
+                    saveParam.put("laborRelatedRate", laborRelatedRate);
+                    saveParam.put("etcMfgRate", etcMfgRate);
+                    saveParam.put("outsrcRate", 0);
+
+                    // C/T 기반 원가코드별·연도별 제조경비 적용
+                    if (perCodeYearCosts != null && perCodeYearCosts.containsKey(costCd)) {
+                        Map<String, Map<String, Double>> yearCosts = perCodeYearCosts.get(costCd);
+                        Map<String, Double> costs = yearCosts != null ? yearCosts.get(yearVal) : null;
+                        if (costs != null) {
+                            saveParam.put("directLabor",     costs.get("directLabor"));
+                            saveParam.put("indirectLabor",   costs.get("indirectLabor"));
+                            saveParam.put("prodDirectExp",   costs.get("prodDirectExp"));
+                            saveParam.put("laborRelatedExp", costs.get("laborRelatedExp"));
+                            saveParam.put("otherMfgExp",     costs.get("otherMfgExp"));
+                            saveParam.put("deprBuilding",    costs.get("deprBuilding"));
+                            saveParam.put("deprLine",        costs.get("deprLine"));
+                            saveParam.put("deprOther",       costs.get("deprOther"));
+                            saveParam.put("moldCost",        costs.get("moldCost"));
+                            saveParam.put("outsrcCost",      costs.get("outsrcCost"));
+                            saveParam.put("rndCost", 0);
+                            saveParam.put("otherExp", 0);
+                            // totalMfgCost 계산
+                            double codeTotalMfgCost = costs.get("directLabor")
+                                    + costs.get("indirectLabor")
+                                    + costs.get("prodDirectExp")
+                                    + costs.get("laborRelatedExp")
+                                    + costs.get("otherMfgExp")
+                                    + costs.get("deprBuilding")
+                                    + costs.get("deprLine")
+                                    + costs.get("deprOther")
+                                    + costs.get("outsrcCost")
+                                    + costs.get("moldCost");
+                            saveParam.put("totalMfgCost", codeTotalMfgCost);
+                        } else {
+                            // 해당 연도 데이터 없으면 0으로 저장
+                            setZeroMfgCost(saveParam, moldCostUnit, outsrcCostUnit);
+                        }
+                    } else {
+                        // C/T 데이터 없는 경우 — 프로젝트 전체 연도별 단위원가 사용
+                        Map<String, Double> ys = yearSummary != null ? yearSummary.get(yearVal) : null;
+                        if (ys != null) {
+                            saveParam.put("directLabor",     ys.get("directLabor"));
+                            saveParam.put("indirectLabor",   ys.get("indirectLabor"));
+                            saveParam.put("prodDirectExp",   ys.get("prodDirectExp"));
+                            saveParam.put("laborRelatedExp", ys.get("laborRelatedExp"));
+                            saveParam.put("otherMfgExp",     ys.get("otherMfgExp"));
+                            saveParam.put("deprBuilding",    ys.get("deprBuilding"));
+                            saveParam.put("deprLine",        ys.get("deprLine"));
+                            saveParam.put("deprOther",       ys.get("deprOther"));
+                            saveParam.put("moldCost",        ys.get("moldCost"));
+                            saveParam.put("outsrcCost",      ys.get("outsrcCost"));
+                            saveParam.put("rndCost", 0);
+                            saveParam.put("otherExp", 0);
+                            double total = ys.get("directLabor") + ys.get("indirectLabor")
+                                    + ys.get("prodDirectExp") + ys.get("laborRelatedExp")
+                                    + ys.get("otherMfgExp") + ys.get("deprBuilding")
+                                    + ys.get("deprLine") + ys.get("deprOther")
+                                    + ys.get("outsrcCost") + ys.get("moldCost");
+                            saveParam.put("totalMfgCost", total);
+                        } else {
+                            setZeroMfgCost(saveParam, moldCostUnit, outsrcCostUnit);
+                        }
+                    }
+
+                    ecDetailRepository.insert("MfgCost", saveParam);
+                }
             }
         } else {
-            Map<String, Object> saveParam = new HashMap<>(saveBase);
-            saveParam.put("costCd", "ALL");
-            ecDetailRepository.insert("MfgCost", saveParam);
+            // 원가코드 없으면 ALL로 연도별 저장
+            for (int yr = 1; yr <= maxYear; yr++) {
+                String yearVal = String.valueOf(yr);
+                Map<String, Object> saveParam = new HashMap<>();
+                saveParam.put("ecPjtCd", ecPjtCd);
+                saveParam.put("costCd", "ALL");
+                saveParam.put("yearVal", yearVal);
+                saveParam.put("wageIncRate", wageIncRate);
+                saveParam.put("inflationRate", inflationRate);
+                saveParam.put("prodDirectRate", prodDirectRate);
+                saveParam.put("laborRelatedRate", laborRelatedRate);
+                saveParam.put("etcMfgRate", etcMfgRate);
+                saveParam.put("outsrcRate", 0);
+
+                Map<String, Double> ys = yearSummary != null ? yearSummary.get(yearVal) : null;
+                if (ys != null) {
+                    saveParam.put("directLabor",     ys.get("directLabor"));
+                    saveParam.put("indirectLabor",   ys.get("indirectLabor"));
+                    saveParam.put("prodDirectExp",   ys.get("prodDirectExp"));
+                    saveParam.put("laborRelatedExp", ys.get("laborRelatedExp"));
+                    saveParam.put("otherMfgExp",     ys.get("otherMfgExp"));
+                    saveParam.put("deprBuilding",    ys.get("deprBuilding"));
+                    saveParam.put("deprLine",        ys.get("deprLine"));
+                    saveParam.put("deprOther",       ys.get("deprOther"));
+                    saveParam.put("moldCost",        ys.get("moldCost"));
+                    saveParam.put("outsrcCost",      ys.get("outsrcCost"));
+                    saveParam.put("rndCost", 0);
+                    saveParam.put("otherExp", 0);
+                    double total = ys.get("directLabor") + ys.get("indirectLabor")
+                            + ys.get("prodDirectExp") + ys.get("laborRelatedExp")
+                            + ys.get("otherMfgExp") + ys.get("deprBuilding")
+                            + ys.get("deprLine") + ys.get("deprOther")
+                            + ys.get("outsrcCost") + ys.get("moldCost");
+                    saveParam.put("totalMfgCost", total);
+                } else {
+                    setZeroMfgCost(saveParam, moldCostUnit, outsrcCostUnit);
+                }
+
+                ecDetailRepository.insert("MfgCost", saveParam);
+            }
         }
 
         computed.put("status", "OK");
         computed.put("message", "제조경비 계산 완료");
         return computed;
+    }
+
+    private void setZeroMfgCost(Map<String, Object> p, double moldCost, double outsrcCost) {
+        p.put("directLabor", 0); p.put("indirectLabor", 0);
+        p.put("prodDirectExp", 0); p.put("laborRelatedExp", 0);
+        p.put("otherMfgExp", 0); p.put("deprBuilding", 0);
+        p.put("deprLine", 0); p.put("deprOther", 0);
+        p.put("moldCost", moldCost); p.put("outsrcCost", outsrcCost);
+        p.put("rndCost", 0); p.put("otherExp", 0);
+        p.put("totalMfgCost", moldCost + outsrcCost);
     }
 
     /* ═══ 제조경비 구조화 조회 (프로젝트 클릭 시) ═══ */
@@ -324,9 +439,13 @@ public class EcDetailService {
         inputData.put("moldCostUnit", saved.get("moldCost"));
         inputData.put("outsrcCostUnit", saved.get("outsrcCost"));
 
-        // 3) 소스 데이터로부터 상세 탭 재계산
+        // 3) SOP 조회
+        String sopYm = ecDetailRepository.findSopDt(param);
+        if (sopYm == null || sopYm.isEmpty()) sopYm = "2026-01";
+
+        // 4) 소스 데이터로부터 상세 탭 재계산
         String ecPjtCd = (String) saved.get("ecPjtCd");
-        Map<String, Object> computed = computeMfgCostDetails(ecPjtCd,
+        Map<String, Object> computed = computeMfgCostDetails(ecPjtCd, sopYm,
                 toDouble(saved.get("wageIncRate")),
                 toDouble(saved.get("inflationRate")),
                 toDouble(saved.get("prodDirectRate")),
@@ -342,8 +461,9 @@ public class EcDetailService {
     /* ═══════════════════════════════════════════════════════════════
        제조경비 상세 계산 공통 로직
        인원계획·투자비·수량 데이터를 조합하여 12개 원가항목을 산출한다.
+       sopYm: 프로젝트 SOP 월 (감가상각 프로레이션 계산용)
        ═══════════════════════════════════════════════════════════════ */
-    private Map<String, Object> computeMfgCostDetails(String ecPjtCd,
+    private Map<String, Object> computeMfgCostDetails(String ecPjtCd, String sopYm,
             double wageIncRate, double inflationRate, double prodDirectRate,
             double laborRelatedRate, double etcMfgRate, double moldCostUnit, double outsrcCostUnit) {
 
@@ -355,9 +475,13 @@ public class EcDetailService {
         List<Map<String, Object>> qtyRows = ecDetailRepository.findList("QtyDiscYearSum",
                 new HashMap<>(pjtParam));
         Map<Integer, Double> yearQty = new HashMap<>();
+        int maxYear = 0;
         for (Map<String, Object> row : qtyRows) {
-            yearQty.put(toInt(row.get("yearVal")), toDouble(row.get("totalQty")));
+            int yr = toInt(row.get("yearVal"));
+            yearQty.put(yr, toDouble(row.get("totalQty")));
+            if (yr > maxYear) maxYear = yr;
         }
+        if (maxYear < 1) maxYear = 1;
 
         // ── 2) 인원계획 ──
         List<Map<String, Object>> manpowerList = ecDetailRepository.findList("Manpower",
@@ -367,58 +491,94 @@ public class EcDetailService {
         List<Map<String, Object>> lineInvestList = ecDetailRepository.findList("LineInvest",
                 new HashMap<>(pjtParam));
 
+        // ── 3-1) 라인 C/T 배정 데이터 ──
+        List<Map<String, Object>> lineCtList = ecDetailRepository.findList("LineCt",
+                new HashMap<>(pjtParam));
+
+        // ── 3-2) 원가코드별 연도별 판매수량 ──
+        List<Map<String, Object>> qtyPerCode = ecDetailRepository.findList("QtyDiscPerCode",
+                new HashMap<>(pjtParam));
+        // costCd → { yearVal → salesQty }
+        Map<String, Map<Integer, Double>> codeYearQty = new HashMap<>();
+        for (Map<String, Object> row : qtyPerCode) {
+            String cd = str(row.get("costCd"));
+            int yr = toInt(row.get("yearVal"));
+            double qty = toDouble(row.get("salesQty"));
+            codeYearQty.computeIfAbsent(cd, k -> new HashMap<>()).put(yr, qty);
+        }
+
         // ── 4) 기타투자비 ──
         List<Map<String, Object>> otherInvestList = ecDetailRepository.findList("OtherInvest",
                 new HashMap<>(pjtParam));
 
-        /* ═══ 직접노무비 / 간접노무비 ═══ */
+        /* ═══ 직접노무비 / 간접노무비 — 연도별 ═══ */
         List<Map<String, Object>> detailDirectLabor = new ArrayList<>();
         List<Map<String, Object>> detailIndirectLabor = new ArrayList<>();
         double sumDirectY1 = 0, sumIndirectY1 = 0;
+        // 연도별 연간 총 노무비 (C/T 배분용, 단위원가가 아닌 연간 총액)
+        Map<Integer, Double> totalAnnualDirect = new HashMap<>();
+        Map<Integer, Double> totalAnnualIndirect = new HashMap<>();
+        // 연도별 단위원가 합계 (비율기반 경비 산출용)
+        Map<Integer, Double> yearSumDirect = new HashMap<>();
+        Map<Integer, Double> yearSumIndirect = new HashMap<>();
+
+        String[] yrCntKeys = {"y1Cnt", "y2Cnt", "y3Cnt", "y4Cnt", "y5Cnt", "y6Cnt", "y7Cnt"};
 
         for (Map<String, Object> mp : manpowerList) {
             String mpType = str(mp.get("mpType"));
             double avgWage = toDouble(mp.get("avgWage"));
-            double y1Cnt = toDouble(mp.get("y1Cnt"));
-            double y2Cnt = toDouble(mp.get("y2Cnt"));
-            double y3Cnt = toDouble(mp.get("y3Cnt"));
+            boolean isDirect = "DIRECT".equalsIgnoreCase(mpType);
 
             Map<String, Object> detail = new HashMap<>();
             detail.put("lineNm", mp.get("mpNm"));
             detail.put("lineType", mpType);
+            double y1Cnt = toDouble(mp.get("y1Cnt"));
             detail.put("workerCnt", y1Cnt);
             detail.put("wagePerPerson", Math.round(avgWage));
             detail.put("annualCost", Math.round(avgWage * y1Cnt));
 
-            // 단위원가 = 연간인건비(임금×인원×임금인상률^(yr-1)) / 연간판매수량
-            double ucY1 = Math.round(divSafe(
-                    avgWage * y1Cnt * Math.pow(1 + wageIncRate / 100, 0),
-                    yearQty.getOrDefault(1, 0.0)));
-            double ucY2 = Math.round(divSafe(
-                    avgWage * y2Cnt * Math.pow(1 + wageIncRate / 100, 1),
-                    yearQty.getOrDefault(2, 0.0)));
-            double ucY3 = Math.round(divSafe(
-                    avgWage * y3Cnt * Math.pow(1 + wageIncRate / 100, 2),
-                    yearQty.getOrDefault(3, 0.0)));
+            for (int yr = 1; yr <= maxYear; yr++) {
+                double yrCnt = (yr <= yrCntKeys.length) ? toDouble(mp.get(yrCntKeys[yr - 1])) : 0;
+                double annualCostYr = avgWage * yrCnt * Math.pow(1 + wageIncRate / 100, yr - 1);
+                double ucYr = Math.round(divSafe(annualCostYr, yearQty.getOrDefault(yr, 0.0)));
 
-            detail.put("unitCostY1", ucY1);
-            detail.put("unitCostY2", ucY2);
-            detail.put("unitCostY3", ucY3);
+                if (yr <= 3) detail.put("unitCostY" + yr, ucYr);
 
-            boolean isDirect = "DIRECT".equalsIgnoreCase(mpType);
+                if (isDirect) {
+                    yearSumDirect.merge(yr, ucYr, Double::sum);
+                    totalAnnualDirect.merge(yr, annualCostYr, Double::sum);
+                } else {
+                    yearSumIndirect.merge(yr, ucYr, Double::sum);
+                    totalAnnualIndirect.merge(yr, annualCostYr, Double::sum);
+                }
+            }
+
             if (isDirect) {
                 detailDirectLabor.add(detail);
-                sumDirectY1 += ucY1;
             } else {
                 detailIndirectLabor.add(detail);
-                sumIndirectY1 += ucY1;
             }
         }
 
-        /* ═══ 비율 기반 원가 (생산직접경비 / 인건비성경비 / 기타제조경비) ═══ */
-        double prodDirectCost   = Math.round(sumDirectY1 * prodDirectRate / 100);
-        double laborRelatedCost = Math.round((sumDirectY1 + sumIndirectY1) * laborRelatedRate / 100);
-        double etcMfgCost       = Math.round((sumDirectY1 + sumIndirectY1) * etcMfgRate / 100);
+        sumDirectY1 = yearSumDirect.getOrDefault(1, 0.0);
+        sumIndirectY1 = yearSumIndirect.getOrDefault(1, 0.0);
+
+        /* ═══ 비율 기반 원가 — 연도별 (생산직접경비 / 인건비성경비 / 기타제조경비) ═══ */
+        Map<Integer, Double> yearProdDirect = new HashMap<>();
+        Map<Integer, Double> yearLaborRelated = new HashMap<>();
+        Map<Integer, Double> yearEtcMfg = new HashMap<>();
+
+        for (int yr = 1; yr <= maxYear; yr++) {
+            double yrDirect = yearSumDirect.getOrDefault(yr, 0.0);
+            double yrIndirect = yearSumIndirect.getOrDefault(yr, 0.0);
+            yearProdDirect.put(yr, (double) Math.round(yrDirect * prodDirectRate / 100));
+            yearLaborRelated.put(yr, (double) Math.round((yrDirect + yrIndirect) * laborRelatedRate / 100));
+            yearEtcMfg.put(yr, (double) Math.round((yrDirect + yrIndirect) * etcMfgRate / 100));
+        }
+
+        double prodDirectCost   = yearProdDirect.getOrDefault(1, 0.0);
+        double laborRelatedCost = yearLaborRelated.getOrDefault(1, 0.0);
+        double etcMfgCost       = yearEtcMfg.getOrDefault(1, 0.0);
 
         List<Map<String, Object>> detailProdDirect = new ArrayList<>();
         {
@@ -428,8 +588,8 @@ public class EcDetailService {
             d.put("baseAmt", sumDirectY1);
             d.put("rateApplied", prodDirectRate);
             d.put("unitCostY1", prodDirectCost);
-            d.put("unitCostY2", Math.round(prodDirectCost * Math.pow(1 + inflationRate / 100, 1)));
-            d.put("unitCostY3", Math.round(prodDirectCost * Math.pow(1 + inflationRate / 100, 2)));
+            d.put("unitCostY2", yearProdDirect.getOrDefault(2, 0.0));
+            d.put("unitCostY3", yearProdDirect.getOrDefault(3, 0.0));
             detailProdDirect.add(d);
         }
 
@@ -442,8 +602,8 @@ public class EcDetailService {
             d.put("baseAmt", totalLabor);
             d.put("rateApplied", laborRelatedRate);
             d.put("unitCostY1", laborRelatedCost);
-            d.put("unitCostY2", Math.round(laborRelatedCost * Math.pow(1 + inflationRate / 100, 1)));
-            d.put("unitCostY3", Math.round(laborRelatedCost * Math.pow(1 + inflationRate / 100, 2)));
+            d.put("unitCostY2", yearLaborRelated.getOrDefault(2, 0.0));
+            d.put("unitCostY3", yearLaborRelated.getOrDefault(3, 0.0));
             detailLaborRelated.add(d);
         }
 
@@ -455,77 +615,189 @@ public class EcDetailService {
             d.put("baseAmt", totalLabor);
             d.put("rateApplied", etcMfgRate);
             d.put("unitCostY1", etcMfgCost);
-            d.put("unitCostY2", Math.round(etcMfgCost * Math.pow(1 + inflationRate / 100, 1)));
-            d.put("unitCostY3", Math.round(etcMfgCost * Math.pow(1 + inflationRate / 100, 2)));
+            d.put("unitCostY2", yearEtcMfg.getOrDefault(2, 0.0));
+            d.put("unitCostY3", yearEtcMfg.getOrDefault(3, 0.0));
             detailEtcMfg.add(d);
         }
 
-        /* ═══ 감가상각비 — 기타투자비 → 건구축물 / 기타 분류 ═══ */
+        /* ═══ 감가상각비 — 기타투자비 → 건구축물 / 기타 분류 (연도별 프로레이션) ═══ */
         List<Map<String, Object>> detailDeprBldg = new ArrayList<>();
         List<Map<String, Object>> detailDeprEtc  = new ArrayList<>();
         double sumDeprBldgY1 = 0, sumDeprEtcY1 = 0;
+        // 연도별 합계 (DB 저장용)
+        Map<Integer, Double> yearDeprBldg = new HashMap<>();
+        Map<Integer, Double> yearDeprEtc = new HashMap<>();
 
         for (Map<String, Object> inv : otherInvestList) {
             String investType = str(inv.get("investType"));
             double acqAmt = toDouble(inv.get("acqAmt"));
             int usefulLife = toInt(inv.get("usefulLife"));
             if (usefulLife <= 0) usefulLife = 1;
-            double annualDepr = Math.round(acqAmt / usefulLife);
+            String deprStartYm = str(inv.get("deprStartYm"));
+            double invAvailRate = toDouble(inv.get("availRate"));
+            double invUseRate = toDouble(inv.get("useRate"));
 
             Map<String, Object> detail = new HashMap<>();
             detail.put("assetNm", inv.get("investNm"));
             detail.put("lineType", investType);
             detail.put("acqAmt", Math.round(acqAmt));
             detail.put("usefulLife", usefulLife);
-            detail.put("annualDepr", annualDepr);
-
-            double ucY1 = Math.round(divSafe(annualDepr, yearQty.getOrDefault(1, 0.0)));
-            double ucY2 = Math.round(divSafe(annualDepr, yearQty.getOrDefault(2, 0.0)));
-            double ucY3 = Math.round(divSafe(annualDepr, yearQty.getOrDefault(3, 0.0)));
-            detail.put("unitCostY1", ucY1);
-            detail.put("unitCostY2", ucY2);
-            detail.put("unitCostY3", ucY3);
+            detail.put("annualDepr", Math.round(acqAmt / usefulLife));
 
             boolean isBldg = "BUILDING".equalsIgnoreCase(investType)
                     || "LAND".equalsIgnoreCase(investType);
+
+            for (int yr = 1; yr <= maxYear; yr++) {
+                double yrDepr = calcYearlyDepreciation(sopYm, yr,
+                        deprStartYm.isEmpty() ? null : deprStartYm,
+                        acqAmt, usefulLife, invAvailRate, invUseRate);
+                double ucYr = Math.round(divSafe(yrDepr, yearQty.getOrDefault(yr, 0.0)));
+                if (yr <= 3) detail.put("unitCostY" + yr, ucYr);
+
+                if (isBldg) {
+                    yearDeprBldg.merge(yr, ucYr, Double::sum);
+                } else {
+                    yearDeprEtc.merge(yr, ucYr, Double::sum);
+                }
+            }
+
             if (isBldg) {
                 detailDeprBldg.add(detail);
-                sumDeprBldgY1 += ucY1;
             } else {
                 detailDeprEtc.add(detail);
-                sumDeprEtcY1 += ucY1;
             }
         }
+        sumDeprBldgY1 = yearDeprBldg.getOrDefault(1, 0.0);
+        sumDeprEtcY1 = yearDeprEtc.getOrDefault(1, 0.0);
 
-        /* ═══ 감가상각비 — 라인투자비 → 생산라인 ═══ */
+        /* ═══ 감가상각비 — 라인투자비 → 생산라인 (연도별 프로레이션) ═══ */
         List<Map<String, Object>> detailDeprLine = new ArrayList<>();
         double sumDeprLineY1 = 0;
+        // 연도별 합계
+        Map<Integer, Double> yearDeprLine = new HashMap<>();
+
+        // LINE_CT 데이터를 lineSeq → { costCd → estCt } 형태로 인덱싱
+        Map<Integer, Map<String, Double>> lineCtMap = new HashMap<>();
+        Map<Integer, Double> lineCtSumMap = new HashMap<>();  // lineSeq → sum(estCt)
+        // 글로벌 C/T 비율 (노무비 배분용): costCd → sum(estCt across all lines)
+        Map<String, Double> globalCtPerCode = new HashMap<>();
+        double globalCtTotal = 0;
+        for (Map<String, Object> lc : lineCtList) {
+            String useYn = str(lc.get("useYn"));
+            if (!"Y".equalsIgnoreCase(useYn)) continue;
+            int lineSeq = toInt(lc.get("lineSeq"));
+            String costCd = str(lc.get("costCd"));
+            double estCt = toDouble(lc.get("estCt"));
+            lineCtMap.computeIfAbsent(lineSeq, k -> new HashMap<>()).put(costCd, estCt);
+            lineCtSumMap.merge(lineSeq, estCt, Double::sum);
+            globalCtPerCode.merge(costCd, estCt, Double::sum);
+            globalCtTotal += estCt;
+        }
+
+        // 원가코드별·연도별 제조경비 배분 결과: costCd → { yearVal(String) → { field → value } }
+        Map<String, Map<String, Map<String, Double>>> perCodeYearCosts = new HashMap<>();
+        // 라인감가상각 임시 누적용: costCd → { yr → depr }
+        Map<String, Map<Integer, Double>> perCodeDeprLineAccum = new HashMap<>();
 
         for (Map<String, Object> inv : lineInvestList) {
             double acqAmt = toDouble(inv.get("acqAmt"));
             int usefulLife = toInt(inv.get("usefulLife"));
             if (usefulLife <= 0) usefulLife = 1;
-            double annualDepr = Math.round(acqAmt / usefulLife);
+            int lineSeq = toInt(inv.get("lineInvestSeq"));
+            String deprStartYm = str(inv.get("deprStartYm"));
+            double invAvailRate = toDouble(inv.get("availRate"));
+            double invUseRate = toDouble(inv.get("useRate"));
 
             Map<String, Object> detail = new HashMap<>();
             detail.put("assetNm", inv.get("lineNm"));
             detail.put("lineType", str(inv.get("lineType")));
             detail.put("acqAmt", Math.round(acqAmt));
             detail.put("usefulLife", usefulLife);
-            detail.put("annualDepr", annualDepr);
+            detail.put("annualDepr", Math.round(acqAmt / usefulLife));
 
-            double ucY1 = Math.round(divSafe(annualDepr, yearQty.getOrDefault(1, 0.0)));
-            double ucY2 = Math.round(divSafe(annualDepr, yearQty.getOrDefault(2, 0.0)));
-            double ucY3 = Math.round(divSafe(annualDepr, yearQty.getOrDefault(3, 0.0)));
-            detail.put("unitCostY1", ucY1);
-            detail.put("unitCostY2", ucY2);
-            detail.put("unitCostY3", ucY3);
+            for (int yr = 1; yr <= maxYear; yr++) {
+                double yrDepr = calcYearlyDepreciation(sopYm, yr,
+                        deprStartYm.isEmpty() ? null : deprStartYm,
+                        acqAmt, usefulLife, invAvailRate, invUseRate);
+                // 프로젝트 전체 기준 단위원가 (화면 표시용)
+                double ucYr = Math.round(divSafe(yrDepr, yearQty.getOrDefault(yr, 0.0)));
+                if (yr <= 3) detail.put("unitCostY" + yr, ucYr);
+                yearDeprLine.merge(yr, ucYr, Double::sum);
+
+                // C/T 기반 원가코드별 배분
+                Map<String, Double> ctForLine = lineCtMap.get(lineSeq);
+                double ctSum = lineCtSumMap.getOrDefault(lineSeq, 0.0);
+                if (ctForLine != null && ctSum > 0) {
+                    for (Map.Entry<String, Double> entry : ctForLine.entrySet()) {
+                        String costCd = entry.getKey();
+                        double estCt = entry.getValue();
+                        double ctRatio = estCt / ctSum;
+                        Map<Integer, Double> codeQty = codeYearQty.getOrDefault(costCd, new HashMap<>());
+                        double codeQtyYr = codeQty.getOrDefault(yr, 0.0);
+                        double codeDepr = Math.round(divSafe(yrDepr * ctRatio, codeQtyYr));
+                        perCodeDeprLineAccum
+                                .computeIfAbsent(costCd, k -> new HashMap<>())
+                                .merge(yr, codeDepr, Double::sum);
+                    }
+                }
+            }
 
             detailDeprLine.add(detail);
-            sumDeprLineY1 += ucY1;
+        }
+        sumDeprLineY1 = yearDeprLine.getOrDefault(1, 0.0);
+
+        /* ═══ C/T 기반 원가코드별·연도별 노무비·비율기반 경비 배분 ═══ */
+        if (globalCtTotal > 0) {
+            for (Map.Entry<String, Double> entry : globalCtPerCode.entrySet()) {
+                String costCd = entry.getKey();
+                double ctRatio = entry.getValue() / globalCtTotal;
+                Map<Integer, Double> codeQty = codeYearQty.getOrDefault(costCd, new HashMap<>());
+
+                Map<String, Map<String, Double>> yearCostsMap = new HashMap<>();
+
+                for (int yr = 1; yr <= maxYear; yr++) {
+                    double codeQtyYr = codeQty.getOrDefault(yr, 0.0);
+                    if (codeQtyYr <= 0 && yearQty.getOrDefault(yr, 0.0) <= 0) continue;
+
+                    // 노무비: 연간총액 × C/T비율 / 원가코드별 판매수량
+                    double codeDirectLabor = Math.round(divSafe(
+                            totalAnnualDirect.getOrDefault(yr, 0.0) * ctRatio, codeQtyYr));
+                    double codeIndirectLabor = Math.round(divSafe(
+                            totalAnnualIndirect.getOrDefault(yr, 0.0) * ctRatio, codeQtyYr));
+
+                    // 비율기반 경비: 코드별 노무비 기준으로 재계산
+                    double codeProdDirect = Math.round(codeDirectLabor * prodDirectRate / 100);
+                    double codeLaborRelated = Math.round(
+                            (codeDirectLabor + codeIndirectLabor) * laborRelatedRate / 100);
+                    double codeEtcMfg = Math.round(
+                            (codeDirectLabor + codeIndirectLabor) * etcMfgRate / 100);
+
+                    Map<String, Double> costs = new HashMap<>();
+                    costs.put("directLabor", codeDirectLabor);
+                    costs.put("indirectLabor", codeIndirectLabor);
+                    costs.put("prodDirectExp", codeProdDirect);
+                    costs.put("laborRelatedExp", codeLaborRelated);
+                    costs.put("otherMfgExp", codeEtcMfg);
+                    // 라인감가상각
+                    costs.put("deprLine", perCodeDeprLineAccum
+                            .getOrDefault(costCd, new HashMap<>())
+                            .getOrDefault(yr, 0.0));
+                    // 기타투자비 감가상각 (프로젝트 전체 배분 — 코드별 배분 없으므로 공통값 사용)
+                    costs.put("deprBuilding", yearDeprBldg.getOrDefault(yr, 0.0));
+                    costs.put("deprOther", yearDeprEtc.getOrDefault(yr, 0.0));
+                    // 외주가공비 (연도별 물가상승)
+                    costs.put("outsrcCost", Math.round(outsrcCostUnit * Math.pow(1 + inflationRate / 100, yr - 1) * 100.0) / 100.0);
+                    // 금형비 (연도 불변)
+                    costs.put("moldCost", moldCostUnit);
+
+                    yearCostsMap.put(String.valueOf(yr), costs);
+                }
+
+                perCodeYearCosts.put(costCd, yearCostsMap);
+            }
         }
 
-        /* ═══ 외주가공비 ═══ */
+        /* ═══ 외주가공비 (화면 표시용) ═══ */
         List<Map<String, Object>> detailOutsrc = new ArrayList<>();
         if (outsrcCostUnit > 0) {
             Map<String, Object> row = new HashMap<>();
@@ -539,11 +811,11 @@ public class EcDetailService {
             detailOutsrc.add(row);
         }
 
-        /* ═══ 금형비 ═══ */
+        /* ═══ 금형비 (화면 표시용) ═══ */
         List<Map<String, Object>> detailMold = new ArrayList<>();
         if (moldCostUnit > 0) {
             double totalProdQty = 0;
-            for (int yr = 1; yr <= 5; yr++) totalProdQty += yearQty.getOrDefault(yr, 0.0);
+            for (int yr = 1; yr <= maxYear; yr++) totalProdQty += yearQty.getOrDefault(yr, 0.0);
             Map<String, Object> row = new HashMap<>();
             row.put("moldNm", "금형비");
             row.put("lineType", "단가");
@@ -555,7 +827,7 @@ public class EcDetailService {
             detailMold.add(row);
         }
 
-        /* ═══ 결과 요약 ═══ */
+        /* ═══ 결과 요약 (Y1 기준 — 화면 표시용) ═══ */
         double totalMfgCost = sumDirectY1 + sumIndirectY1
                 + prodDirectCost + laborRelatedCost + etcMfgCost
                 + sumDeprBldgY1 + sumDeprLineY1 + sumDeprEtcY1
@@ -576,17 +848,36 @@ public class EcDetailService {
         resultSummary.put("etcCost",           0.0);
         resultSummary.put("totalMfgCost",      totalMfgCost);
 
-        result.put("resultSummary",      resultSummary);
-        result.put("detailDirectLabor",  detailDirectLabor);
+        result.put("resultSummary",       resultSummary);
+        result.put("detailDirectLabor",   detailDirectLabor);
         result.put("detailIndirectLabor", detailIndirectLabor);
-        result.put("detailProdDirect",   detailProdDirect);
-        result.put("detailLaborRelated", detailLaborRelated);
-        result.put("detailEtcMfg",       detailEtcMfg);
-        result.put("detailDeprBldg",     detailDeprBldg);
-        result.put("detailDeprLine",     detailDeprLine);
-        result.put("detailDeprEtc",      detailDeprEtc);
-        result.put("detailOutsrc",       detailOutsrc);
-        result.put("detailMold",         detailMold);
+        result.put("detailProdDirect",    detailProdDirect);
+        result.put("detailLaborRelated",  detailLaborRelated);
+        result.put("detailEtcMfg",        detailEtcMfg);
+        result.put("detailDeprBldg",      detailDeprBldg);
+        result.put("detailDeprLine",      detailDeprLine);
+        result.put("detailDeprEtc",       detailDeprEtc);
+        result.put("detailOutsrc",        detailOutsrc);
+        result.put("detailMold",          detailMold);
+        result.put("perCodeYearCosts",    perCodeYearCosts);
+        result.put("maxYear",             maxYear);
+        // 연도별 프로젝트 전체 단위원가 (C/T 없는 경우 fallback용)
+        Map<String, Map<String, Double>> yearSummary = new HashMap<>();
+        for (int yr = 1; yr <= maxYear; yr++) {
+            Map<String, Double> ys = new HashMap<>();
+            ys.put("directLabor",     yearSumDirect.getOrDefault(yr, 0.0));
+            ys.put("indirectLabor",   yearSumIndirect.getOrDefault(yr, 0.0));
+            ys.put("prodDirectExp",   yearProdDirect.getOrDefault(yr, 0.0));
+            ys.put("laborRelatedExp", yearLaborRelated.getOrDefault(yr, 0.0));
+            ys.put("otherMfgExp",     yearEtcMfg.getOrDefault(yr, 0.0));
+            ys.put("deprBuilding",    yearDeprBldg.getOrDefault(yr, 0.0));
+            ys.put("deprLine",        yearDeprLine.getOrDefault(yr, 0.0));
+            ys.put("deprOther",       yearDeprEtc.getOrDefault(yr, 0.0));
+            ys.put("outsrcCost",      Math.round(outsrcCostUnit * Math.pow(1 + inflationRate / 100, yr - 1) * 100.0) / 100.0);
+            ys.put("moldCost",        moldCostUnit);
+            yearSummary.put(String.valueOf(yr), ys);
+        }
+        result.put("yearSummary", yearSummary);
 
         return result;
     }
@@ -630,35 +921,27 @@ public class EcDetailService {
         double totalRate = salesLaborRate + transportRate + exportRate + warrantyRate
                          + advertisingRate + researchRate + assetCostRate + hrCostRate + etcRate;
 
-        // 2) 원가코드별 제조원가 조회
-        List<Map<String, Object>> costCodes = ecDetailRepository.findList("CostCode", param);
-        List<Map<String, Object>> mfgCosts  = ecDetailRepository.findList("MfgCost", param);
+        // 2) 기존 SGA 전체 삭제
+        ecDetailRepository.deleteByPjt("SgaCost", param);
 
-        // costCd → totalMfgCost 매핑
-        Map<String, Double> mfgCostMap = new HashMap<>();
+        // 3) 제조경비 조회 (연도별 YEAR_VAL 포함)
+        List<Map<String, Object>> mfgCosts = ecDetailRepository.findList("MfgCost", param);
+
+        // 4) (costCd, yearVal) 별로 SGA INSERT
         for (Map<String, Object> mc : mfgCosts) {
-            mfgCostMap.put(str(mc.get("costCd")), toDouble(mc.get("totalMfgCost")));
-        }
-
-        // 3) 원가코드별 SGA 레코드 upsert
-        for (Map<String, Object> cc : costCodes) {
-            String costCd = str(cc.get("costCd"));
-            double mfgTotal = mfgCostMap.getOrDefault(costCd, 0.0);
+            String costCd = str(mc.get("costCd"));
+            String yearVal = str(mc.get("yearVal"));
+            double mfgTotal = toDouble(mc.get("totalMfgCost"));
             double sgaCost = Math.round(mfgTotal * totalRate / 100.0);
 
             Map<String, Object> sgaParam = new HashMap<>(param);
             sgaParam.put("costCd", costCd);
+            sgaParam.put("yearVal", yearVal);
             sgaParam.put("totalSgaCost", sgaCost);
-
-            int cnt = ecDetailRepository.count("SgaCost", sgaParam);
-            if (cnt > 0) {
-                ecDetailRepository.update("SgaCost", sgaParam);
-            } else {
-                ecDetailRepository.insert("SgaCost", sgaParam);
-            }
+            ecDetailRepository.insert("SgaCost", sgaParam);
         }
 
-        // 4) 결과 목록 생성
+        // 5) 결과 목록 생성
         List<Map<String, Object>> sgaList = ecDetailRepository.findList("SgaCost", param);
         result.put("status", "OK");
         result.put("message", "판매관리비 계산 완료");
@@ -1077,6 +1360,68 @@ public class EcDetailService {
             }
         }
         return fcf.length;
+    }
+
+    /**
+     * 특정 연도의 감가상각비 계산 (시작시점 프로레이션 + 가동률)
+     * @param sopYm      프로젝트 SOP 월 (e.g. "2026-09")
+     * @param yearNum    연도 번호 (1~7)
+     * @param deprStartYm 감가상각 시작월 (e.g. "2027-01"), null이면 SOP월 사용
+     * @param acqAmt     취득금액
+     * @param usefulLife 내용연수 (년)
+     * @param availRate  가용률 (0~100, 0이면 100 취급)
+     * @param useRate    사용률 (0~100, 0이면 100 취급)
+     * @return 해당 연도의 감가상각비 (연간총액, 단위원가 아님)
+     */
+    private double calcYearlyDepreciation(String sopYm, int yearNum,
+            String deprStartYm, double acqAmt, int usefulLife,
+            double availRate, double useRate) {
+        if (usefulLife <= 0 || acqAmt == 0) return 0;
+
+        // SOP 월을 절대 월수로 변환
+        int sopYear = 0, sopMonth = 1;
+        if (sopYm != null && sopYm.length() >= 7) {
+            try {
+                sopYear = Integer.parseInt(sopYm.substring(0, 4));
+                sopMonth = Integer.parseInt(sopYm.substring(5, 7));
+            } catch (Exception e) { /* fallback to 0,1 */ }
+        }
+        int sopAbsMonth = sopYear * 12 + sopMonth;
+
+        // 해당 연도 시작/끝 (절대 월수)
+        int yearStart = sopAbsMonth + (yearNum - 1) * 12;
+        int yearEnd = yearStart + 11;
+
+        // 감가상각 시작/끝 (절대 월수)
+        int deprStartAbs;
+        if (deprStartYm != null && deprStartYm.length() >= 7) {
+            try {
+                int dy = Integer.parseInt(deprStartYm.substring(0, 4));
+                int dm = Integer.parseInt(deprStartYm.substring(5, 7));
+                deprStartAbs = dy * 12 + dm;
+            } catch (Exception e) {
+                deprStartAbs = sopAbsMonth;
+            }
+        } else {
+            deprStartAbs = sopAbsMonth;
+        }
+        int deprEndAbs = deprStartAbs + usefulLife * 12 - 1;
+
+        // 겹치는 월수
+        int overlap = Math.max(0, Math.min(deprEndAbs, yearEnd) - Math.max(deprStartAbs, yearStart) + 1);
+        if (overlap <= 0) return 0;
+
+        // 연간감가상각
+        double annualDepr = acqAmt / usefulLife;
+        // 해당연도 감가상각 = 연간감가상각 × overlap / 12
+        double yearDepr = annualDepr * overlap / 12.0;
+
+        // 가동률 적용
+        double effAvail = (availRate > 0) ? availRate / 100.0 : 1.0;
+        double effUse   = (useRate > 0)   ? useRate / 100.0   : 1.0;
+        yearDepr = yearDepr * effAvail * effUse;
+
+        return Math.round(yearDepr);
     }
 
     /* ── 유틸리티 ── */

@@ -417,6 +417,17 @@
          ORDER BY CAST(QD.YEAR_VAL AS INTEGER)
     </select>
 
+    <!-- 원가코드별 연도별 판매수량 (제조경비 C/T 배분용) -->
+    <select id="findListQtyDiscPerCode" parameterType="map" resultType="map">
+        SELECT QD.COST_CD AS "costCd",
+               CAST(QD.YEAR_VAL AS INTEGER) AS "yearVal",
+               COALESCE(QD.SALES_QTY, 0)   AS "salesQty"
+          FROM PCM_EC_QTY_DISC QD
+         WHERE QD.TEN_ID    = #{g.tenant}
+           AND QD.EC_PJT_CD = #{p.ecPjtCd}
+         ORDER BY QD.COST_CD, CAST(QD.YEAR_VAL AS INTEGER)
+    </select>
+
     <!-- ═══════════════════════════════════════════
          원가그룹 목록 조회 (손익계산서용)
          ═══════════════════════════════════════════ -->
@@ -430,11 +441,20 @@
     </select>
 
     <!-- ═══════════════════════════════════════════
+         SOP 조회
+         ═══════════════════════════════════════════ -->
+    <select id="findSopDt" parameterType="map" resultType="string">
+        SELECT SOP_DT FROM PCM_EC_PJT_MSTR
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </select>
+
+    <!-- ═══════════════════════════════════════════
          제조경비
          ═══════════════════════════════════════════ -->
     <select id="findListMfgCost" parameterType="map" resultType="map">
         SELECT EC_PJT_CD       AS "ecPjtCd",
                COST_CD         AS "costCd",
+               YEAR_VAL        AS "yearVal",
                WAGE_RAISE_RATE AS "wageIncRate",
                PRICE_RAISE_RATE AS "inflationRate",
                PROD_DIRECT_RATE AS "prodDirectRate",
@@ -458,24 +478,25 @@
           FROM PCM_EC_MFG_COST
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
-         ORDER BY COST_CD
+         ORDER BY COST_CD, YEAR_VAL
     </select>
 
     <select id="countMfgCost" parameterType="map" resultType="int">
         SELECT COUNT(*) FROM PCM_EC_MFG_COST
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
            AND COST_CD = COALESCE(#{p.costCd}, COST_CD)
+           AND YEAR_VAL = COALESCE(#{p.yearVal}, YEAR_VAL)
     </select>
 
     <insert id="insertMfgCost" parameterType="map">
-        INSERT INTO PCM_EC_MFG_COST (TEN_ID, EC_PJT_CD, COST_CD,
+        INSERT INTO PCM_EC_MFG_COST (TEN_ID, EC_PJT_CD, COST_CD, YEAR_VAL,
             WAGE_RAISE_RATE, PRICE_RAISE_RATE, PROD_DIRECT_RATE,
             LABOR_COST_RATE, OTHER_MFG_RATE, MOLD_COST, OUTSRC_COST, OUTSRC_RATE,
             DIRECT_LABOR, INDIRECT_LABOR, PROD_DIRECT_EXP, LABOR_RELATED_EXP,
             OTHER_MFG_EXP, DEPR_BUILDING, DEPR_LINE, DEPR_OTHER,
             RND_COST, OTHER_EXP, TOTAL_MFG_COST, CALC_STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd},
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd}, #{p.yearVal},
             #{p.wageIncRate}, #{p.inflationRate}, #{p.prodDirectRate},
             #{p.laborRelatedRate}, #{p.etcMfgRate}, #{p.moldCost}, #{p.outsrcCost}, #{p.outsrcRate},
             #{p.directLabor}, #{p.indirectLabor}, #{p.prodDirectExp}, #{p.laborRelatedExp},
@@ -498,6 +519,7 @@
                TOTAL_MFG_COST = #{p.totalMfgCost}, CALC_STS = 'Y',
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND COST_CD = #{p.costCd}
+           AND YEAR_VAL = #{p.yearVal}
     </update>
 
     <!-- 제조경비: 프로젝트 단위 일괄 삭제 -->
@@ -512,6 +534,7 @@
     <select id="findListSgaCost" parameterType="map" resultType="map">
         SELECT EC_PJT_CD        AS "ecPjtCd",
                COST_CD          AS "costCd",
+               YEAR_VAL         AS "yearVal",
                SALES_LABOR_RATE AS "salesLaborRate",
                TRANSPORT_RATE   AS "transportRate",
                EXPORT_RATE      AS "exportRate",
@@ -526,22 +549,23 @@
           FROM PCM_EC_SGA_COST
          WHERE TEN_ID    = #{g.tenant}
            AND EC_PJT_CD = #{p.ecPjtCd}
-         ORDER BY COST_CD
+         ORDER BY COST_CD, YEAR_VAL
     </select>
 
     <select id="countSgaCost" parameterType="map" resultType="int">
         SELECT COUNT(*) FROM PCM_EC_SGA_COST
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
            AND COST_CD = COALESCE(#{p.costCd}, COST_CD)
+           AND YEAR_VAL = COALESCE(#{p.yearVal}, YEAR_VAL)
     </select>
 
     <insert id="insertSgaCost" parameterType="map">
-        INSERT INTO PCM_EC_SGA_COST (TEN_ID, EC_PJT_CD, COST_CD,
+        INSERT INTO PCM_EC_SGA_COST (TEN_ID, EC_PJT_CD, COST_CD, YEAR_VAL,
             SALES_LABOR_RATE, TRANSPORT_RATE, EXPORT_RATE, WARRANTY_RATE,
             ADVERTISING_RATE, RESEARCH_RATE, ASSET_RATE, PERSONNEL_RATE,
             OTHER_RATE, TOTAL_SGA_COST, CALC_STS,
             REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd},
+        VALUES (#{g.tenant}, #{p.ecPjtCd}, #{p.costCd}, #{p.yearVal},
             #{p.salesLaborRate}, #{p.transportRate}, #{p.exportRate}, #{p.warrantyRate},
             #{p.advertisingRate}, #{p.researchRate}, #{p.assetCostRate}, #{p.hrCostRate},
             #{p.etcRate}, #{p.totalSgaCost}, 'Y',
@@ -557,7 +581,14 @@
                OTHER_RATE = #{p.etcRate}, TOTAL_SGA_COST = #{p.totalSgaCost},
                CALC_STS = 'Y', MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND COST_CD = #{p.costCd}
+           AND YEAR_VAL = #{p.yearVal}
     </update>
+
+    <!-- 판매관리비: 프로젝트 단위 일괄 삭제 -->
+    <delete id="deleteSgaCostByPjt" parameterType="map">
+        DELETE FROM PCM_EC_SGA_COST
+         WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd}
+    </delete>
 
     <!-- ═══════════════════════════════════════════
          손익계산서
@@ -659,16 +690,16 @@
                 JOIN PCM_EC_COST_CODE CC
                   ON CC.TEN_ID = QD.TEN_ID AND CC.EC_PJT_CD = QD.EC_PJT_CD AND CC.COST_CD = QD.COST_CD
                 LEFT JOIN PCM_EC_MFG_COST MC
-                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD
+                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD AND MC.YEAR_VAL = QD.YEAR_VAL
                 LEFT JOIN PCM_EC_SGA_COST SC
-                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD
+                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD AND SC.YEAR_VAL = QD.YEAR_VAL
                 LEFT JOIN (
-                    SELECT TEN_ID, EC_PJT_CD,
+                    SELECT TEN_ID, EC_PJT_CD, COST_CD,
                            COALESCE(SUM(MAT_COST),0) AS unit_mat
                       FROM PCM_EC_BOM
                      WHERE (UP_ITEM_CD IS NULL OR UP_ITEM_CD = '')
-                     GROUP BY TEN_ID, EC_PJT_CD
-                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD
+                     GROUP BY TEN_ID, EC_PJT_CD, COST_CD
+                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD AND BT.COST_CD = QD.COST_CD
                WHERE QD.TEN_ID = #{g.tenant} AND QD.EC_PJT_CD = #{p.ecPjtCd}
                GROUP BY QD.YEAR_VAL
           ) agg
@@ -710,16 +741,16 @@
                 JOIN PCM_EC_COST_CODE CC
                   ON CC.TEN_ID = QD.TEN_ID AND CC.EC_PJT_CD = QD.EC_PJT_CD AND CC.COST_CD = QD.COST_CD
                 LEFT JOIN PCM_EC_MFG_COST MC
-                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD
+                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD AND MC.YEAR_VAL = QD.YEAR_VAL
                 LEFT JOIN PCM_EC_SGA_COST SC
-                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD
+                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD AND SC.YEAR_VAL = QD.YEAR_VAL
                 LEFT JOIN (
-                    SELECT TEN_ID, EC_PJT_CD,
+                    SELECT TEN_ID, EC_PJT_CD, COST_CD,
                            COALESCE(SUM(MAT_COST),0) AS unit_mat
                       FROM PCM_EC_BOM
                      WHERE (UP_ITEM_CD IS NULL OR UP_ITEM_CD = '')
-                     GROUP BY TEN_ID, EC_PJT_CD
-                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD
+                     GROUP BY TEN_ID, EC_PJT_CD, COST_CD
+                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD AND BT.COST_CD = QD.COST_CD
                WHERE QD.TEN_ID = #{g.tenant} AND QD.EC_PJT_CD = #{p.ecPjtCd}
                  AND CC.COST_GRP IS NOT NULL AND CC.COST_GRP != ''
                GROUP BY CC.COST_GRP, QD.YEAR_VAL
@@ -762,16 +793,16 @@
                 JOIN PCM_EC_COST_CODE CC
                   ON CC.TEN_ID = QD.TEN_ID AND CC.EC_PJT_CD = QD.EC_PJT_CD AND CC.COST_CD = QD.COST_CD
                 LEFT JOIN PCM_EC_MFG_COST MC
-                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD
+                  ON MC.TEN_ID = QD.TEN_ID AND MC.EC_PJT_CD = QD.EC_PJT_CD AND MC.COST_CD = QD.COST_CD AND MC.YEAR_VAL = QD.YEAR_VAL
                 LEFT JOIN PCM_EC_SGA_COST SC
-                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD
+                  ON SC.TEN_ID = QD.TEN_ID AND SC.EC_PJT_CD = QD.EC_PJT_CD AND SC.COST_CD = QD.COST_CD AND SC.YEAR_VAL = QD.YEAR_VAL
                 LEFT JOIN (
-                    SELECT TEN_ID, EC_PJT_CD,
+                    SELECT TEN_ID, EC_PJT_CD, COST_CD,
                            COALESCE(SUM(MAT_COST),0) AS unit_mat
                       FROM PCM_EC_BOM
                      WHERE (UP_ITEM_CD IS NULL OR UP_ITEM_CD = '')
-                     GROUP BY TEN_ID, EC_PJT_CD
-                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD
+                     GROUP BY TEN_ID, EC_PJT_CD, COST_CD
+                ) BT ON BT.TEN_ID = QD.TEN_ID AND BT.EC_PJT_CD = QD.EC_PJT_CD AND BT.COST_CD = QD.COST_CD
                WHERE QD.TEN_ID = #{g.tenant} AND QD.EC_PJT_CD = #{p.ecPjtCd}
                GROUP BY QD.COST_CD, QD.YEAR_VAL
           ) agg
@@ -953,5 +984,67 @@
                MODR_ID = #{g.username}, MOD_DTTM = #{g.now}
          WHERE TEN_ID = #{g.tenant} AND EC_PJT_CD = #{p.ecPjtCd} AND ANALYSIS_VER = #{p.analysisVer}
     </update>
+
+    <!-- ═══════════════════════════════════════════
+         라인 C/T 배정 (PCM_EC_LINE_CT)
+         PK: TEN_ID, EC_PJT_CD, LINE_SEQ, COST_CD
+         ═══════════════════════════════════════════ -->
+    <select id="findListLineCt" parameterType="map" resultType="map">
+        SELECT EC_PJT_CD AS "ecPjtCd",
+               LINE_SEQ  AS "lineSeq",
+               COST_CD   AS "costCd",
+               USE_YN    AS "useYn",
+               EST_CT    AS "estCt",
+               RMK       AS "rmk"
+          FROM PCM_EC_LINE_CT
+         WHERE TEN_ID    = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
+        <if test="p.lineSeq != null and p.lineSeq != ''">
+           AND LINE_SEQ  = #{p.lineSeq}
+        </if>
+         ORDER BY LINE_SEQ, COST_CD
+    </select>
+
+    <select id="countLineCt" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+          FROM PCM_EC_LINE_CT
+         WHERE TEN_ID    = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND COST_CD   = #{p.costCd}
+    </select>
+
+    <insert id="insertLineCt" parameterType="map">
+        INSERT INTO PCM_EC_LINE_CT (
+            TEN_ID, EC_PJT_CD, LINE_SEQ, COST_CD,
+            USE_YN, EST_CT, RMK,
+            REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM
+        ) VALUES (
+            #{g.tenant}, #{p.ecPjtCd}, #{p.lineSeq}, #{p.costCd},
+            #{p.useYn}, #{p.estCt}, #{p.rmk},
+            #{g.username}, #{g.now}, #{g.username}, #{g.now}
+        )
+    </insert>
+
+    <update id="updateLineCt" parameterType="map">
+        UPDATE PCM_EC_LINE_CT
+           SET USE_YN  = #{p.useYn},
+               EST_CT  = #{p.estCt},
+               RMK     = #{p.rmk},
+               MODR_ID = #{g.username},
+               MOD_DTTM = #{g.now}
+         WHERE TEN_ID    = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND COST_CD   = #{p.costCd}
+    </update>
+
+    <delete id="deleteLineCt" parameterType="map">
+        DELETE FROM PCM_EC_LINE_CT
+         WHERE TEN_ID    = #{g.tenant}
+           AND EC_PJT_CD = #{p.ecPjtCd}
+           AND LINE_SEQ  = #{p.lineSeq}
+           AND COST_CD   = #{p.costCd}
+    </delete>
 
 </mapper>

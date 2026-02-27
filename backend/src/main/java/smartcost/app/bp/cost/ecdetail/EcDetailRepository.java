@@ -56,6 +56,11 @@ public class EcDetailRepository {
         sqlSession.delete(NAMESPACE + "delete" + entity + "ByPjt", param);
     }
 
+    /* ── SOP 일자 조회 ── */
+    public String findSopDt(Map<String, Object> param) {
+        return sqlSession.selectOne(NAMESPACE + "findSopDt", param);
+    }
+
     /* ── 손익계산서 산출 INSERT (집계 쿼리) ── */
     public void insertCalcPlStmt(Map<String, Object> param) {
         sqlSession.insert(NAMESPACE + "insertCalcPlStmt", param);
