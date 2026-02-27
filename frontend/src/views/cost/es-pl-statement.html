@@ -141,25 +141,25 @@
                         </sc-combobox-field>
 
                         <!-- 원가그룹 선택 (유형=GRP일 때 표시) -->
-                        <span class="filter-label" style$="{{_viewTypeDisplay(plParam.viewType, 'GRP')}}">원가그룹</span>
-                        <sc-combobox-field value="{{plParam.costGrpCd}}"
+                        <span id="grpLabel" class="filter-label" style="display:none">원가그룹</span>
+                        <sc-combobox-field id="grpCombo" value="{{plParam.costGrpCd}}"
                                           items="{{codes.costGrpList}}"
                                           display-field="label"
                                           value-field="data"
                                           width="160"
                                           placeholder="원가그룹 선택"
-                                          style$="{{_viewTypeDisplay(plParam.viewType, 'GRP')}}">
+                                          style="display:none">
                         </sc-combobox-field>
 
                         <!-- 원가코드 선택 (유형=CODE일 때 표시) -->
-                        <span class="filter-label" style$="{{_viewTypeDisplay(plParam.viewType, 'CODE')}}">원가코드</span>
-                        <sc-combobox-field value="{{plParam.costCd}}"
+                        <span id="codeLabel" class="filter-label" style="display:none">원가코드</span>
+                        <sc-combobox-field id="codeCombo" value="{{plParam.costCd}}"
                                           items="{{codes.costCodeList}}"
                                           display-field="label"
                                           value-field="data"
                                           width="160"
                                           placeholder="원가코드 선택"
-                                          style$="{{_viewTypeDisplay(plParam.viewType, 'CODE')}}">
+                                          style="display:none">
                         </sc-combobox-field>
 
                         <span class="filter-label">기준</span>
@@ -565,12 +565,19 @@
                 this.set('plParam.costCd', '');
                 this.set('plParam.basisType', 'UNIT');
 
+                // 콤보박스 표시/숨김 (DOM 직접 제어)
+                var vt = this.plParam.viewType;
+                this.$.grpLabel.style.display  = (vt === 'GRP')  ? '' : 'none';
+                this.$.grpCombo.style.display  = (vt === 'GRP')  ? '' : 'none';
+                this.$.codeLabel.style.display = (vt === 'CODE') ? '' : 'none';
+                this.$.codeCombo.style.display = (vt === 'CODE') ? '' : 'none';
+
                 // 유형 변경 시 원가그룹/원가코드 목록 재로딩 (데이터 확보)
                 if (this.selectedPjtCd) {
-                    if (this.plParam.viewType === 'GRP' && (!this.codes.costGrpList || this.codes.costGrpList.length === 0)) {
+                    if (vt === 'GRP' && (!this.codes.costGrpList || this.codes.costGrpList.length === 0)) {
                         this._loadCostGrpList();
                     }
-                    if (this.plParam.viewType === 'CODE' && (!this.codes.costCodeList || this.codes.costCodeList.length === 0)) {
+                    if (vt === 'CODE' && (!this.codes.costCodeList || this.codes.costCodeList.length === 0)) {
                         this._loadCostCodeList();
                     }
                 }
