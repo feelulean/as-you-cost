@@ -44,6 +44,30 @@
                  on-response="onDeleteOtherInvestResponse">
         </sc-ajax>
 
+        <!-- 라인 C/T 배정 -->
+        <sc-ajax id="findLineCtAjax"
+                 url="/bp/cost/ec/detail/findListLineCt.do"
+                 body="{{lineCtSearchParam}}"
+                 on-response="onFindLineCtResponse">
+        </sc-ajax>
+        <sc-ajax id="saveLineCtAjax"
+                 url="/bp/cost/ec/detail/saveListLineCt.do"
+                 body="{{lineCtSaveParam}}"
+                 on-response="onSaveLineCtResponse">
+        </sc-ajax>
+        <sc-ajax id="deleteLineCtAjax"
+                 url="/bp/cost/ec/detail/deleteListLineCt.do"
+                 body="{{lineCtDeleteParam}}"
+                 on-response="onDeleteLineCtResponse">
+        </sc-ajax>
+
+        <!-- 원가코드 목록 (C/T 배정용) -->
+        <sc-ajax id="findCostCodeListAjax"
+                 url="/bp/cost/ec/detail/findListCostCode.do"
+                 body="{{costCodeSearchParam}}"
+                 on-response="onFindCostCodeListResponse">
+        </sc-ajax>
+
         <!-- 탭3: 인원계획 -->
         <sc-ajax id="findManpowerAjax"
                  url="/bp/cost/ec/detail/findListManpower.do"
@@ -149,11 +173,14 @@
                      탭1: 라인투자비
                      ============================================================ -->
                 <template is="dom-if" if="[[_isTab('line', activeTab)]]">
+                    <div class="vbox flex">
+                    <!-- 상단: 라인투자비 그리드 -->
                     <sc-grid id="lineGrid"
                              data-provider="{{lineInvestList}}"
                              editable="true"
-                             selection-mode="checkbox"
-                             class="flex">
+                             selection-mode="radio"
+                             class="flex"
+                             on-item-click="onLineInvestRowClick">
 
                         <sc-toolbar>
                             <sc-button text="신규추가" on-click="onAddLineInvest"    auth-code="S"></sc-button>
@@ -261,6 +288,60 @@
                             <sc-grid-field data-field="lineInvestSeq"></sc-grid-field>
                         </sc-grid-fields>
                     </sc-grid>
+
+                    <!-- 하단: 원가코드별 C/T 배정 그리드 -->
+                    <div class="vspace-5"></div>
+                    <sc-grid id="lineCtGrid"
+                             data-provider="{{lineCtList}}"
+                             editable="true"
+                             selection-mode="checkbox"
+                             style="max-height:250px;">
+
+                        <sc-toolbar>
+                            <sc-label text="원가코드별 C/T 배정" style="font-weight:bold; font-size:13px;"></sc-label>
+                            <span style="flex:1;"></span>
+                            <sc-button text="초기화" on-click="onInitLineCt"   auth-code="S"></sc-button>
+                            <sc-button text="삭제"   on-click="onDeleteLineCt" auth-code="S"></sc-button>
+                            <sc-button text="저장"   on-click="onSaveLineCt"   auth-code="S"></sc-button>
+                        </sc-toolbar>
+
+                        <sc-grid-columns>
+                            <sc-data-column data-field="costCd"
+                                            header-text="원가코드"
+                                            width="120"
+                                            editable="false"
+                                            text-align="center">
+                            </sc-data-column>
+
+                            <sc-checkbox-column data-field="useYn"
+                                               header-text="사용여부"
+                                               width="80"
+                                               checked-value="Y"
+                                               un-checked-value="N"
+                                               editable="true">
+                            </sc-checkbox-column>
+
+                            <sc-data-column data-field="estCt"
+                                            header-text="추정C/T(초)"
+                                            width="120"
+                                            editable="true"
+                                            text-align="right"
+                                            data-type="number">
+                            </sc-data-column>
+
+                            <sc-data-column data-field="rmk"
+                                            header-text="비고"
+                                            width="200"
+                                            editable="true">
+                            </sc-data-column>
+                        </sc-grid-columns>
+
+                        <sc-grid-fields>
+                            <sc-grid-field data-field="ecPjtCd"></sc-grid-field>
+                            <sc-grid-field data-field="lineSeq"></sc-grid-field>
+                        </sc-grid-fields>
+                    </sc-grid>
+                    </div>
                 </template>
 
                 <!-- ============================================================
@@ -580,6 +661,36 @@
                     value: function() { return {}; }
                 },
 
+                /* ── 라인 C/T 배정 ── */
+                lineCtList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                lineCtSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                lineCtSaveParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                lineCtDeleteParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                costCodeSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                costCodeList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                selectedLineSeq: {
+                    type: Number,
+                    value: 0
+                },
+
                 /* ── 공통코드 (DB 조회) ── */
                 codes: {
                     type: Object,
@@ -633,6 +744,12 @@
                 if (this.activeTab === 'line') {
                     this.set('lineSearchParam', { ecPjtCd: this.selectedPjtCd });
                     this.$.findLineInvestAjax.generateRequest();
+                    // 원가코드 목록도 로드 (C/T 배정용)
+                    this.set('costCodeSearchParam', { ecPjtCd: this.selectedPjtCd });
+                    this.$.findCostCodeListAjax.generateRequest();
+                    // 라인 선택 초기화
+                    this.set('selectedLineSeq', 0);
+                    this.set('lineCtList', []);
                 } else if (this.activeTab === 'other') {
                     this.set('otherSearchParam', { ecPjtCd: this.selectedPjtCd });
                     this.$.findOtherInvestAjax.generateRequest();
@@ -988,6 +1105,154 @@
                 this.set('lineInvestList', []);
                 this.set('otherInvestList', []);
                 this.set('manpowerList', []);
+                this.set('lineCtList', []);
+                this.set('costCodeList', []);
+                this.set('selectedLineSeq', 0);
+            },
+
+            /* ==============================================================
+               라인 C/T 배정 — 조회/초기화/삭제/저장
+               ============================================================== */
+
+            /**
+             * 라인투자비 행 클릭 → 해당 라인의 C/T 배정 목록 로드
+             */
+            onLineInvestRowClick: function(e) {
+                var row = e.detail.data;
+                if (!row || !row.lineInvestSeq) return;
+
+                this.set('selectedLineSeq', row.lineInvestSeq);
+                this.set('lineCtSearchParam', {
+                    ecPjtCd: this.selectedPjtCd,
+                    lineSeq: row.lineInvestSeq
+                });
+                this.$.findLineCtAjax.generateRequest();
+            },
+
+            onFindLineCtResponse: function(e) {
+                this.set('lineCtList', e.detail.response || []);
+            },
+
+            onFindCostCodeListResponse: function(e) {
+                this.set('costCodeList', e.detail.response || []);
+            },
+
+            /**
+             * 초기화: 원가코드 목록으로부터 C/T 배정 행 자동 생성
+             */
+            onInitLineCt: function() {
+                if (!this.selectedPjtCd || !this.selectedLineSeq) {
+                    UT.alert('라인투자비를 먼저 선택해 주세요.');
+                    return;
+                }
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+
+                var grid = this.$$('#lineCtGrid');
+                if (!grid) return;
+
+                var costCodes = this.costCodeList || [];
+                if (costCodes.length === 0) {
+                    UT.alert('등록된 원가코드가 없습니다.');
+                    return;
+                }
+
+                // 기존 목록의 원가코드 Set
+                var existing = {};
+                var current = this.lineCtList || [];
+                for (var i = 0; i < current.length; i++) {
+                    existing[current[i].costCd] = true;
+                }
+
+                // 없는 원가코드만 추가
+                for (var j = 0; j < costCodes.length; j++) {
+                    var cd = costCodes[j].costCd;
+                    if (!existing[cd]) {
+                        grid.insertRow(grid.getRowCount(), {
+                            ecPjtCd: this.selectedPjtCd,
+                            lineSeq: this.selectedLineSeq,
+                            costCd:  cd,
+                            useYn:   'Y',
+                            estCt:   0,
+                            rmk:     ''
+                        });
+                    }
+                }
+            },
+
+            onSaveLineCt: function() {
+                if (!this.selectedPjtCd || !this.selectedLineSeq) {
+                    UT.alert('라인투자비를 먼저 선택해 주세요.');
+                    return;
+                }
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#lineCtGrid');
+                if (!grid) return;
+
+                var modifiedRows = grid.getModifiedRows();
+                if (!modifiedRows || modifiedRows.length === 0) {
+                    UT.alert('MSG_COM_00006');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00002', function() {
+                    me.set('lineCtSaveParam', {
+                        ecPjtCd:  me.selectedPjtCd,
+                        lineSeq:  me.selectedLineSeq,
+                        saveList: modifiedRows
+                    });
+                    me.$.saveLineCtAjax.generateRequest();
+                });
+            },
+
+            onSaveLineCtResponse: function() {
+                UT.alert('MSG_COM_00003');
+                // 저장 후 재조회
+                this.set('lineCtSearchParam', {
+                    ecPjtCd: this.selectedPjtCd,
+                    lineSeq: this.selectedLineSeq
+                });
+                this.$.findLineCtAjax.generateRequest();
+            },
+
+            onDeleteLineCt: function() {
+                if (this._readOnly) {
+                    UT.alert('진행 중인 프로젝트의 투자비 데이터는 수정할 수 없습니다.');
+                    return;
+                }
+                var grid = this.$$('#lineCtGrid');
+                if (!grid) return;
+
+                var selectedRows = grid.getSelectedRows();
+                if (!selectedRows || selectedRows.length === 0) {
+                    UT.alert('MSG_COM_00007');
+                    return;
+                }
+
+                var me = this;
+                UT.confirm('MSG_COM_00004', function() {
+                    me.set('lineCtDeleteParam', {
+                        ecPjtCd:    me.selectedPjtCd,
+                        deleteList: selectedRows
+                    });
+                    me.$.deleteLineCtAjax.generateRequest();
+                });
+            },
+
+            onDeleteLineCtResponse: function() {
+                UT.alert('MSG_COM_00005');
+                // 삭제 후 재조회
+                this.set('lineCtSearchParam', {
+                    ecPjtCd: this.selectedPjtCd,
+                    lineSeq: this.selectedLineSeq
+                });
+                this.$.findLineCtAjax.generateRequest();
             }
         });
     </script>

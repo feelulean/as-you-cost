@@ -99,6 +99,20 @@ public class EcDetailController {
         return ecDetailService.deleteList("LineInvest", param);
     }
 
+    /* ═══ 투자비 - 라인 C/T 배정 ═══ */
+    @RequestMapping("/findListLineCt.do")
+    public List<Map<String, Object>> findListLineCt(@RequestBody Map<String, Object> param) {
+        return ecDetailService.findList("LineCt", param);
+    }
+    @RequestMapping("/saveListLineCt.do")
+    public Map<String, Object> saveListLineCt(@RequestBody Map<String, Object> param) {
+        return ecDetailService.saveList("LineCt", param);
+    }
+    @RequestMapping("/deleteListLineCt.do")
+    public Map<String, Object> deleteListLineCt(@RequestBody Map<String, Object> param) {
+        return ecDetailService.deleteList("LineCt", param);
+    }
+
     /* ═══ 투자비 - 기타투자비 ═══ */
     @RequestMapping("/findListOtherInvest.do")
     public List<Map<String, Object>> findListOtherInvest(@RequestBody Map<String, Object> param) {

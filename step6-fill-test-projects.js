@@ -271,13 +271,14 @@ async function insertEcData(p) {
     `, [T, p.ec, cc.cd]);
   }
 
-  // 12. EC BOM
+  // 12. EC BOM (COST_CD 포함 — 첫 번째 원가코드에 할당)
+  const defaultCostCd = p.costCodes[0].cd;
   for (let i = 0; i < p.bomParts.length; i++) {
     const b = p.bomParts[i];
     await client.query(`
-      INSERT INTO PCM_EC_BOM (TEN_ID, EC_PJT_CD, ITEM_CD, UP_ITEM_CD, LVL, ITEM_NM, SPEC, QTY, UNIT_PRICE, MAT_COST, NEW_PART_YN, RMK, STS, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, '', 'T', 'testuser', NOW(), 'testuser', NOW())
-    `, [T, p.ec, b.no, b.parent === 0 ? '' : p.bomParts[b.parent-1].no, b.lvl, b.nm, b.nm + ' SPEC', b.qty, b.price, b.qty * b.price, b.lvl === 1 ? 'Y' : 'N']);
+      INSERT INTO PCM_EC_BOM (TEN_ID, EC_PJT_CD, COST_CD, ITEM_CD, UP_ITEM_CD, LVL, ITEM_NM, SPEC, QTY, UNIT_PRICE, MAT_COST, NEW_PART_YN, RMK, STS, REGR_ID, REG_DTTM, MODR_ID, MOD_DTTM)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, '', 'T', 'testuser', NOW(), 'testuser', NOW())
+    `, [T, p.ec, defaultCostCd, b.no, b.parent === 0 ? '' : p.bomParts[b.parent-1].no, b.lvl, b.nm, b.nm + ' SPEC', b.qty, b.price, b.qty * b.price, b.lvl === 1 ? 'Y' : 'N']);
   }
 
   // 13. EC PL Stmt (5 years)

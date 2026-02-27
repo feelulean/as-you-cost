@@ -40,6 +40,13 @@
                  on-response="onFindPjtListResponse">
         </sc-ajax>
 
+        <!-- 원가코드 목록 조회 -->
+        <sc-ajax id="findCostCodeListAjax"
+                 url="/bp/cost/ec/detail/findListCostCode.do"
+                 body="{{costCodeSearchParam}}"
+                 on-response="onFindCostCodeListResponse">
+        </sc-ajax>
+
         <!-- ============================================================
              엑셀 업로드 (hidden file input)
              ============================================================ -->
@@ -71,16 +78,16 @@
         </sc-search-container>
 
         <!-- ============================================================
-             좌우 Split 레이아웃
+             3분할 레이아웃: 프로젝트(flex-2) | 원가코드(flex-1.5) | BOM(flex-6.5)
              ============================================================ -->
         <div class="hbox flex">
 
-            <!-- ========== 좌측: 프로젝트 목록 (flex-3) ========== -->
+            <!-- ========== 좌측: 프로젝트 목록 (flex-2) ========== -->
             <sc-grid id="pjtGrid"
                      data-provider="{{pjtList}}"
                      on-item-click="onProjectClick"
                      selection-mode="radio"
-                     class="flex-3"
+                     class="flex-2"
                      use-state="false">
                 <sc-grid-columns>
                     <sc-data-column data-field="pjtCd"
@@ -107,13 +114,33 @@
 
             <div class="hspace-10"></div>
 
-            <!-- ========== 우측: BOM 영역 (flex-7) ========== -->
-            <div class="vbox flex-7">
+            <!-- ========== 중간: 원가코드 목록 ========== -->
+            <sc-grid id="costCodeGrid"
+                     data-provider="{{costCodeList}}"
+                     on-item-click="_onCostCodeClick"
+                     selection-mode="radio"
+                     class="flex-2"
+                     use-state="false">
+                <sc-grid-columns>
+                    <sc-data-column data-field="costCd"
+                                    header-text="원가코드"
+                                    width="120"
+                                    text-align="center">
+                    </sc-data-column>
+                    <sc-data-column data-field="costGrpDesc"
+                                    header-text="원가그룹"
+                                    width="150">
+                    </sc-data-column>
+                </sc-grid-columns>
+            </sc-grid>
+
+            <div class="hspace-10"></div>
+
+            <!-- ========== 우측: BOM 영역 ========== -->
+            <div class="vbox flex-6">
 
         <!-- ============================================================
              BOM Tree Grid
-             - is-tree="true": 트리 그리드 활성화
-             - tree-field="itemNm": 품목명 컬럼에 트리 펼침/접힘 아이콘
              ============================================================ -->
         <sc-grid id="gridPanel"
                  data-provider="{{resultList}}"
@@ -204,11 +231,12 @@
             <sc-grid-fields>
                 <sc-grid-field data-field="upItemCd"></sc-grid-field>
                 <sc-grid-field data-field="ecPjtCd"></sc-grid-field>
+                <sc-grid-field data-field="costCd"></sc-grid-field>
             </sc-grid-fields>
         </sc-grid>
 
-            </div><!-- /우측 vbox flex-7 -->
-        </div><!-- /좌우 hbox flex -->
+            </div><!-- /우측 vbox -->
+        </div><!-- /3분할 hbox flex -->
     </template>
 
     <script>
@@ -231,6 +259,20 @@
                     type: Object,
                     value: function() { return {}; }
                 },
+                // 원가코드 목록
+                costCodeList: {
+                    type: Array,
+                    value: function() { return []; }
+                },
+                costCodeSearchParam: {
+                    type: Object,
+                    value: function() { return {}; }
+                },
+                // 선택된 원가코드
+                selectedCostCd: {
+                    type: String,
+                    value: ''
+                },
                 // 조회 파라미터
                 searchParam: {
                     type: Object,
@@ -252,9 +294,6 @@
                라이프사이클
                ============================================================== */
 
-            /**
-             * 화면 진입 시 파라미터 수신 (프로젝트 코드)
-             */
             attached: function() {
                 var param = UT.getParameter();
                 if (param && param.pjtCd) {
@@ -271,6 +310,8 @@
             onFindPjtList: function() {
                 this._initialPjtCd = null;
                 this.set('pjtInfo', {});
+                this.set('costCodeList', []);
+                this.set('selectedCostCd', '');
                 this.set('resultList', []);
                 this.$.findPjtListAjax.generateRequest();
             },
@@ -304,7 +345,6 @@
                     custNm: row.custNm || '',
                     sts:    row.sts || 'T'
                 });
-                this.set('searchParam', { ecPjtCd: row.pjtCd });
 
                 if (row.sts && row.sts !== 'T') {
                     this.$.gridPanel.editable = false;
@@ -314,6 +354,26 @@
                     this._readOnly = false;
                 }
 
+                // 원가코드 목록 로드
+                this.set('selectedCostCd', '');
+                this.set('resultList', []);
+                this.set('costCodeSearchParam', { ecPjtCd: row.pjtCd });
+                this.$.findCostCodeListAjax.generateRequest();
+            },
+
+            /* ==============================================================
+               원가코드 목록 조회/선택
+               ============================================================== */
+
+            onFindCostCodeListResponse: function(e) {
+                var list = e.detail.response || [];
+                this.set('costCodeList', list);
+            },
+
+            _onCostCodeClick: function(e) {
+                var row = e.detail.data;
+                if (!row || !row.costCd) return;
+                this.set('selectedCostCd', row.costCd);
                 this.onFindList();
             },
 
@@ -323,6 +383,8 @@
 
             onFindList: function() {
                 if (!this.pjtInfo || !this.pjtInfo.pjtCd) return;
+                if (!this.selectedCostCd) return;
+                this.set('searchParam', { ecPjtCd: this.pjtInfo.pjtCd, costCd: this.selectedCostCd });
                 this.$.findListAjax.generateRequest();
             },
 
@@ -333,27 +395,22 @@
             },
 
             /* ==============================================================
-               엑셀 업로드 — 핵심 로직
+               엑셀 업로드
                ============================================================== */
 
-            /**
-             * 엑셀업로드 버튼 클릭 → hidden file input 트리거
-             */
             onUploadExcel: function() {
                 if (this._readOnly) {
                     UT.alert('진행 중인 프로젝트의 BOM은 수정할 수 없습니다.');
+                    return;
+                }
+                if (!this.selectedCostCd) {
+                    UT.alert('원가코드를 먼저 선택해 주세요.');
                     return;
                 }
                 this.$.excelFileInput.value = '';
                 this.$.excelFileInput.click();
             },
 
-            /**
-             * 엑셀 파일 선택 후 파싱 처리
-             * - SheetJS(xlsx) 라이브러리로 워크시트를 JSON 배열로 변환
-             * - 엑셀 컬럼 매핑: A=품번, B=품목명, C=Level, D=수량, E=단가, F=규격, G=신규여부
-             * - Level 기반으로 상위품번(upItemCd)를 자동 산출하여 트리 구조를 구성
-             */
             _onExcelFileSelected: function(e) {
                 var me = this;
                 var file = e.target.files[0];
@@ -366,11 +423,10 @@
                     var sheet = workbook.Sheets[workbook.SheetNames[0]];
                     var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-                    // 헤더 행 스킵 (1행), 데이터는 2행부터
                     var flatList = [];
                     for (var i = 1; i < rows.length; i++) {
                         var row = rows[i];
-                        if (!row[0] && !row[1]) continue; // 빈 행 스킵
+                        if (!row[0] && !row[1]) continue;
 
                         var qty       = Number(row[3]) || 0;
                         var unitPrice = Number(row[4]) || 0;
@@ -381,18 +437,16 @@
                             lvl:        Number(row[2]) || 0,
                             qty:        qty,
                             unitPrice:  unitPrice,
-                            matCost:    qty * unitPrice,   // 실시간 계산
+                            matCost:    qty * unitPrice,
                             spec:       String(row[5] || ''),
                             newPartYn:  String(row[6] || 'N'),
                             upItemCd:   '',
-                            ecPjtCd:    me.pjtInfo.pjtCd
+                            ecPjtCd:    me.pjtInfo.pjtCd,
+                            costCd:     me.selectedCostCd
                         });
                     }
 
-                    // Level 기반 부모-자식 관계 산출
                     me._assignParentByLevel(flatList);
-
-                    // 트리 구조 변환 후 그리드 바인딩
                     var treeList = me._buildTreeFromFlatList(flatList);
                     me.set('resultList', treeList);
 
@@ -401,21 +455,7 @@
                 reader.readAsArrayBuffer(file);
             },
 
-            /**
-             * Level 기반 상위품번(upItemCd) 자동 산출
-             * - 현재 행의 Level보다 작은 가장 가까운 상위 행의 itemCd를 부모로 지정
-             * - Level 0(또는 1)은 최상위(root) 품목
-             *
-             * 예시: Level 순서가 0,1,2,2,1,2 인 경우
-             *   0 → root (upItemCd = '')
-             *   1 → parent는 직전 Level 0
-             *   2 → parent는 직전 Level 1
-             *   2 → parent는 직전 Level 1 (동일 부모)
-             *   1 → parent는 직전 Level 0
-             *   2 → parent는 직전 Level 1
-             */
             _assignParentByLevel: function(flatList) {
-                // 레벨별 최근 품번을 추적하는 스택
                 var levelStack = {};
 
                 for (var i = 0; i < flatList.length; i++) {
@@ -423,17 +463,13 @@
                     var lvl = item.lvl;
 
                     if (lvl <= 0) {
-                        // 최상위(root) 품목
                         item.upItemCd = '';
                     } else {
-                        // 직전 상위 레벨의 품번을 부모로 지정
                         item.upItemCd = levelStack[lvl - 1] || '';
                     }
 
-                    // 현재 레벨에 자신의 품번을 기록
                     levelStack[lvl] = item.itemCd;
 
-                    // 현재 레벨보다 하위 레벨 스택 초기화
                     var keys = Object.keys(levelStack);
                     for (var k = 0; k < keys.length; k++) {
                         if (Number(keys[k]) > lvl) {
@@ -443,25 +479,18 @@
                 }
             },
 
-            /**
-             * Flat List → Tree 구조 변환
-             * - upItemCd(상위품번)를 기준으로 children 배열을 구성
-             * - sc-grid is-tree="true"가 children 속성을 인식하여 트리 렌더링
-             */
             _buildTreeFromFlatList: function(flatList) {
                 if (!flatList || flatList.length === 0) return [];
 
                 var map = {};
                 var roots = [];
 
-                // 1단계: 모든 항목을 맵에 등록
                 for (var i = 0; i < flatList.length; i++) {
                     var item = flatList[i];
                     item.children = [];
                     map[item.itemCd] = item;
                 }
 
-                // 2단계: 부모-자식 관계 구성
                 for (var j = 0; j < flatList.length; j++) {
                     var node = flatList[j];
                     if (node.upItemCd && map[node.upItemCd]) {
@@ -475,13 +504,9 @@
             },
 
             /* ==============================================================
-               실시간 계산 — 수량 × 단가 = 재료비
+               실시간 계산 — 수량 x 단가 = 재료비
                ============================================================== */
 
-            /**
-             * 셀 값 변경 이벤트 핸들러
-             * - qty 또는 unitPrice가 변경되면 matCost를 자동 재계산
-             */
             _onCellValueChanged: function(e) {
                 var field = e.detail.dataField;
 
@@ -503,7 +528,7 @@
             onDownloadExcel: function() {
                 var grid = this.$.gridPanel;
                 grid.exportToExcel({
-                    fileName: 'BOM_' + (this.pjtInfo.pjtCd || 'export') + '.xlsx'
+                    fileName: 'BOM_' + (this.pjtInfo.pjtCd || '') + '_' + (this.selectedCostCd || 'export') + '.xlsx'
                 });
             },
 
@@ -511,13 +536,13 @@
                행 추가
                ============================================================== */
 
-            /**
-             * 선택된 행의 하위 품목으로 추가
-             * - 선택 행이 없으면 최상위(root)로 추가
-             */
             onAddRow: function() {
                 if (this._readOnly) {
                     UT.alert('진행 중인 프로젝트의 BOM은 수정할 수 없습니다.');
+                    return;
+                }
+                if (!this.selectedCostCd) {
+                    UT.alert('원가코드를 먼저 선택해 주세요.');
                     return;
                 }
                 var grid = this.$.gridPanel;
@@ -540,7 +565,8 @@
                     matCost:    0,
                     newPartYn:  'N',
                     spec:       '',
-                    ecPjtCd:    this.pjtInfo.pjtCd
+                    ecPjtCd:    this.pjtInfo.pjtCd,
+                    costCd:     this.selectedCostCd
                 });
             },
 
@@ -553,29 +579,32 @@
                     UT.alert('진행 중인 프로젝트의 BOM은 수정할 수 없습니다.');
                     return;
                 }
+                if (!this.selectedCostCd) {
+                    UT.alert('원가코드를 먼저 선택해 주세요.');
+                    return;
+                }
                 var grid = this.$.gridPanel;
                 var allRows = grid.getAllRows();
 
                 if (!allRows || allRows.length === 0) {
-                    UT.alert('MSG_COM_00006'); // 변경된 데이터가 없습니다.
+                    UT.alert('MSG_COM_00006');
                     return;
                 }
 
-                // 필수값 검증: 품번, 품목명
                 for (var i = 0; i < allRows.length; i++) {
                     if (!allRows[i].itemCd || !allRows[i].itemNm) {
-                        UT.alert('MSG_COM_00001'); // 필수 입력값을 확인하세요.
+                        UT.alert('MSG_COM_00001');
                         return;
                     }
                 }
 
-                // 트리를 Flat 리스트로 변환하여 저장
                 var flatList = this._flattenTree(allRows);
 
                 var me = this;
-                UT.confirm('MSG_COM_00002', function() { // 저장하시겠습니까?
+                UT.confirm('MSG_COM_00002', function() {
                     me.set('saveParam', {
                         ecPjtCd:  me.pjtInfo.pjtCd,
+                        costCd:   me.selectedCostCd,
                         bomList:  flatList
                     });
                     me.$.saveListAjax.generateRequest();
@@ -583,13 +612,10 @@
             },
 
             onSaveListResponse: function() {
-                UT.alert('MSG_COM_00003'); // 저장되었습니다.
+                UT.alert('MSG_COM_00003');
                 this.onFindList();
             },
 
-            /**
-             * Tree 구조 → Flat 리스트 변환 (저장용)
-             */
             _flattenTree: function(treeList) {
                 var result = [];
                 var me = this;
@@ -599,6 +625,7 @@
                         var node = list[i];
                         result.push({
                             ecPjtCd:    node.ecPjtCd || me.pjtInfo.pjtCd,
+                            costCd:     node.costCd || me.selectedCostCd,
                             itemCd:     node.itemCd,
                             itemNm:     node.itemNm,
                             lvl:        node.lvl,
@@ -632,14 +659,15 @@
                 var selectedRows = grid.getSelectedRows();
 
                 if (!selectedRows || selectedRows.length === 0) {
-                    UT.alert('MSG_COM_00007'); // 선택된 데이터가 없습니다.
+                    UT.alert('MSG_COM_00007');
                     return;
                 }
 
                 var me = this;
-                UT.confirm('MSG_COM_00004', function() { // 삭제하시겠습니까?
+                UT.confirm('MSG_COM_00004', function() {
                     me.set('deleteParam', {
                         ecPjtCd:    me.pjtInfo.pjtCd,
+                        costCd:     me.selectedCostCd,
                         deleteList: selectedRows
                     });
                     me.$.deleteListAjax.generateRequest();
@@ -647,7 +675,7 @@
             },
 
             onDeleteListResponse: function() {
-                UT.alert('MSG_COM_00005'); // 삭제되었습니다.
+                UT.alert('MSG_COM_00005');
                 this.onFindList();
             },
 
@@ -655,17 +683,18 @@
                재료비 집계
                ============================================================== */
 
-            /**
-             * 서버에서 재료비를 재집계하고 결과를 반영
-             */
             onCalculateCost: function() {
                 if (this._readOnly) {
                     UT.alert('진행 중인 프로젝트의 BOM은 수정할 수 없습니다.');
                     return;
                 }
+                if (!this.selectedCostCd) {
+                    UT.alert('원가코드를 먼저 선택해 주세요.');
+                    return;
+                }
                 var me = this;
                 UT.confirm('재료비를 집계하시겠습니까?', function() {
-                    me.set('calcParam', { ecPjtCd: me.pjtInfo.pjtCd });
+                    me.set('calcParam', { ecPjtCd: me.pjtInfo.pjtCd, costCd: me.selectedCostCd });
                     me.$.calculateCostAjax.generateRequest();
                 });
             },
@@ -679,13 +708,13 @@
                기존단가 가져오기 (I/F)
                ============================================================== */
 
-            /**
-             * 그리드에서 신규부품이 아닌(newPartYn == 'N') 항목의 품목코드를 추출하여
-             * 백엔드에 단가 연계 요청을 보낸다.
-             */
             onInterfacePrice: function() {
                 if (this._readOnly) {
                     UT.alert('진행 중인 프로젝트의 BOM은 수정할 수 없습니다.');
+                    return;
+                }
+                if (!this.selectedCostCd) {
+                    UT.alert('원가코드를 먼저 선택해 주세요.');
                     return;
                 }
                 var grid = this.$.gridPanel;
@@ -696,7 +725,6 @@
                     return;
                 }
 
-                // Flat 리스트 변환 후 신규부품이 아닌(N) 항목만 추출
                 var flatList = this._flattenTree(allRows);
                 var targetItems = [];
                 for (var i = 0; i < flatList.length; i++) {
@@ -714,6 +742,7 @@
                 UT.confirm(targetItems.length + '건의 기존 부품에 대해 단가를 가져오시겠습니까?', function() {
                     me.set('interfaceParam', {
                         ecPjtCd:    me.pjtInfo.pjtCd,
+                        costCd:     me.selectedCostCd,
                         itemCdList: targetItems
                     });
                     me.$.interfacePriceAjax.generateRequest();

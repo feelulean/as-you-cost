@@ -128,7 +128,7 @@ async function run() {
     // 2. EC P&L Statement (VIEW_TYPE='PJT', 5개년)
     // ============================================================
     for (let yr = 1; yr <= 5; yr++) {
-      const yearVal = String(2026 + yr - 1);
+      const yearVal = String(yr);
       await client.query(`
         INSERT INTO PCM_EC_PL_STMT (TEN_ID, EC_PJT_CD, VIEW_TYPE, VIEW_KEY, YEAR_VAL,
           SALES_AMT, MAT_COST, LABOR_COST, MFG_COST, TOTAL_MFG_COST, GROSS_PROFIT, SGA_COST, OPER_INCOME, OPER_MARGIN,

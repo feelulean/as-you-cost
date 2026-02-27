@@ -27,6 +27,7 @@ CREATE TABLE asyoucost.PCM_EC_BOM (
     -- ■ PK / 테넌트 ─────────────────────────────────
     TEN_ID          VARCHAR(18)     NOT NULL,       -- 테넌트 아이디
     EC_PJT_CD       VARCHAR(18)     NOT NULL,       -- 견적원가 프로젝트 코드
+    COST_CD         VARCHAR(20)     NOT NULL,       -- 원가코드
     ITEM_CD         VARCHAR(50)     NOT NULL,       -- 품번 (Part Number)
 
     -- ■ BOM 계층 구조 ─────────────────────────────
@@ -50,7 +51,7 @@ CREATE TABLE asyoucost.PCM_EC_BOM (
     MOD_DTTM        TIMESTAMPTZ,                    -- 수정 일시
 
     -- ■ PK 제약조건 ────────────────────────────────
-    CONSTRAINT PK_PCM_EC_BOM PRIMARY KEY (TEN_ID, EC_PJT_CD, ITEM_CD)
+    CONSTRAINT PK_PCM_EC_BOM PRIMARY KEY (TEN_ID, EC_PJT_CD, COST_CD, ITEM_CD)
 );
 
 -- ============================================================
@@ -59,11 +60,11 @@ CREATE TABLE asyoucost.PCM_EC_BOM (
 
 -- 상위품번 기반 자식 조회용
 CREATE INDEX IDX_PCM_EC_BOM_01
-    ON asyoucost.PCM_EC_BOM (TEN_ID, EC_PJT_CD, UP_ITEM_CD);
+    ON asyoucost.PCM_EC_BOM (TEN_ID, EC_PJT_CD, COST_CD, UP_ITEM_CD);
 
 -- 레벨 기반 조회용
 CREATE INDEX IDX_PCM_EC_BOM_02
-    ON asyoucost.PCM_EC_BOM (TEN_ID, EC_PJT_CD, LVL);
+    ON asyoucost.PCM_EC_BOM (TEN_ID, EC_PJT_CD, COST_CD, LVL);
 
 -- ============================================================
 -- 테이블 / 컬럼 코멘트
@@ -72,6 +73,7 @@ CREATE INDEX IDX_PCM_EC_BOM_02
 COMMENT ON TABLE  asyoucost.PCM_EC_BOM                  IS '견적BOM';
 COMMENT ON COLUMN asyoucost.PCM_EC_BOM.TEN_ID           IS '테넌트 아이디';
 COMMENT ON COLUMN asyoucost.PCM_EC_BOM.EC_PJT_CD        IS '견적원가 프로젝트 코드';
+COMMENT ON COLUMN asyoucost.PCM_EC_BOM.COST_CD          IS '원가코드';
 COMMENT ON COLUMN asyoucost.PCM_EC_BOM.ITEM_CD          IS '품번 (Part Number)';
 COMMENT ON COLUMN asyoucost.PCM_EC_BOM.UP_ITEM_CD       IS '상위품번 (NULL이면 최상위)';
 COMMENT ON COLUMN asyoucost.PCM_EC_BOM.LVL              IS '레벨 (0=최상위)';

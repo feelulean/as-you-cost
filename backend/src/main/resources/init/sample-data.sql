@@ -84,97 +84,97 @@ VALUES ('T001','EC20260006','제네시스 GV80 전동축 ASSY','PT','현대위�
 -- ============================================================
 
 -- ─── EC20260001: 운전석 시트 ASSY (15개 부품) ───
-INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
-('T001','EC20260001','SEAT-A01','',0,'운전석 시트 ASSY','IONIQ7 D/SEAT',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-F','SEAT-A01',1,'시트프레임 ASSY','STEEL 1.2t',1,0,0,'N','프레임 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-F01','SEAT-A01-F',2,'사이드프레임(L)','SPFC590 1.2t',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-F02','SEAT-A01-F',2,'사이드프레임(R)','SPFC590 1.2t',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-F03','SEAT-A01-F',2,'백프레임','SPFC440 1.0t',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-F04','SEAT-A01-F',2,'쿠션프레임','SPFC440 0.8t',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-C','SEAT-A01',1,'시트쿠션 ASSY','PU FOAM+COVER',1,0,0,'N','쿠션 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-C01','SEAT-A01-C',2,'쿠션패드','PU FOAM HR45',1,28000,28000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-C02','SEAT-A01-C',2,'쿠션커버(가죽)','NAPPA LEATHER',1,65000,65000,'Y','프리미엄 가죽','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-C03','SEAT-A01-C',2,'히팅패드','CARBON FIBER',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-H','SEAT-A01',1,'헤드레스트 ASSY','PU+LEATHER',1,42000,42000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-R','SEAT-A01',1,'시트레일 ASSY','POWER RAIL',1,0,0,'N','레일 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-R01','SEAT-A01-R',2,'어퍼레일','SAPH440 1.6t',2,18000,36000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-R02','SEAT-A01-R',2,'로워레일','SAPH440 2.0t',2,15000,30000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260001','SEAT-A01-M','SEAT-A01',1,'파워모터','DC MOTOR 12V',4,25000,100000,'N','4-WAY','T','testuser',NOW(),'testuser',NOW());
+INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,COST_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
+('T001','EC20260001','COST01','SEAT-A01','',0,'운전석 시트 ASSY','IONIQ7 D/SEAT',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-F','SEAT-A01',1,'시트프레임 ASSY','STEEL 1.2t',1,0,0,'N','프레임 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-F01','SEAT-A01-F',2,'사이드프레임(L)','SPFC590 1.2t',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-F02','SEAT-A01-F',2,'사이드프레임(R)','SPFC590 1.2t',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-F03','SEAT-A01-F',2,'백프레임','SPFC440 1.0t',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-F04','SEAT-A01-F',2,'쿠션프레임','SPFC440 0.8t',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-C','SEAT-A01',1,'시트쿠션 ASSY','PU FOAM+COVER',1,0,0,'N','쿠션 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-C01','SEAT-A01-C',2,'쿠션패드','PU FOAM HR45',1,28000,28000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-C02','SEAT-A01-C',2,'쿠션커버(가죽)','NAPPA LEATHER',1,65000,65000,'Y','프리미엄 가죽','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-C03','SEAT-A01-C',2,'히팅패드','CARBON FIBER',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-H','SEAT-A01',1,'헤드레스트 ASSY','PU+LEATHER',1,42000,42000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-R','SEAT-A01',1,'시트레일 ASSY','POWER RAIL',1,0,0,'N','레일 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-R01','SEAT-A01-R',2,'어퍼레일','SAPH440 1.6t',2,18000,36000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-R02','SEAT-A01-R',2,'로워레일','SAPH440 2.0t',2,15000,30000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260001','COST01','SEAT-A01-M','SEAT-A01',1,'파워모터','DC MOTOR 12V',4,25000,100000,'N','4-WAY','T','testuser',NOW(),'testuser',NOW());
 
 -- ─── EC20260002: EV9 2열시트 ASSY (13개 부품) ───
-INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
-('T001','EC20260002','SEAT-B01','',0,'2열시트 ASSY','EV9 2ND ROW',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-F','SEAT-B01',1,'벤치프레임 ASSY','STEEL 60/40',1,0,0,'N','프레임 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-F01','SEAT-B01-F',2,'좌측프레임','SPFC440 1.2t',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-F02','SEAT-B01-F',2,'우측프레임','SPFC440 1.2t',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-F03','SEAT-B01-F',2,'센터힌지','SUS304',1,22000,22000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-F04','SEAT-B01-F',2,'리클라이너','RECLINER MODULE',2,28000,56000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-C','SEAT-B01',1,'시트쿠션 ASSY','PU FOAM+FABRIC',1,0,0,'N','쿠션 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-C01','SEAT-B01-C',2,'쿠션패드(3인)','PU FOAM HR40',1,42000,42000,'N','3인용','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-C02','SEAT-B01-C',2,'쿠션커버(패브릭)','POLY FABRIC',1,48000,48000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-B','SEAT-B01',1,'백레스트 ASSY','BACK REST',1,0,0,'N','등받이 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-B01','SEAT-B01-B',2,'백패드','PU FOAM HR35',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-B02','SEAT-B01-B',2,'백커버(패브릭)','POLY FABRIC',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260002','SEAT-B01-H','SEAT-B01',1,'헤드레스트','PU+FABRIC',3,28000,84000,'N','3EA','T','testuser',NOW(),'testuser',NOW());
+INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,COST_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
+('T001','EC20260002','COST01','SEAT-B01','',0,'2열시트 ASSY','EV9 2ND ROW',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-F','SEAT-B01',1,'벤치프레임 ASSY','STEEL 60/40',1,0,0,'N','프레임 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-F01','SEAT-B01-F',2,'좌측프레임','SPFC440 1.2t',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-F02','SEAT-B01-F',2,'우측프레임','SPFC440 1.2t',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-F03','SEAT-B01-F',2,'센터힌지','SUS304',1,22000,22000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-F04','SEAT-B01-F',2,'리클라이너','RECLINER MODULE',2,28000,56000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-C','SEAT-B01',1,'시트쿠션 ASSY','PU FOAM+FABRIC',1,0,0,'N','쿠션 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-C01','SEAT-B01-C',2,'쿠션패드(3인)','PU FOAM HR40',1,42000,42000,'N','3인용','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-C02','SEAT-B01-C',2,'쿠션커버(패브릭)','POLY FABRIC',1,48000,48000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-B','SEAT-B01',1,'백레스트 ASSY','BACK REST',1,0,0,'N','등받이 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-B01','SEAT-B01-B',2,'백패드','PU FOAM HR35',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-B02','SEAT-B01-B',2,'백커버(패브릭)','POLY FABRIC',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260002','COST01','SEAT-B01-H','SEAT-B01',1,'헤드레스트','PU+FABRIC',3,28000,84000,'N','3EA','T','testuser',NOW(),'testuser',NOW());
 
 -- ─── EC20260003: GV90 파워시트 모듈 (12개 부품) ───
-INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
-('T001','EC20260003','SEAT-C01','',0,'파워시트 모듈','GV90 POWER SEAT',1,0,0,'Y','신규 개발','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-E','SEAT-C01',1,'시트ECU','MCU 32bit ARM',1,85000,85000,'Y','신규 ECU','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-M','SEAT-C01',1,'모터모듈 ASSY','DC MOTOR SET',1,0,0,'N','모터 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-M01','SEAT-C01-M',2,'전후모터','DC 12V 10W',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-M02','SEAT-C01-M',2,'리클라인모터','DC 12V 15W',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-M03','SEAT-C01-M',2,'높낮이모터','DC 12V 10W',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-M04','SEAT-C01-M',2,'틸트모터','DC 12V 8W',1,28000,28000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-M05','SEAT-C01-M',2,'럼바서포트모터','DC 12V 5W',1,25000,25000,'Y','신규부품','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-S','SEAT-C01',1,'위치센서 ASSY','SENSOR SET',1,0,0,'N','센서 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-S01','SEAT-C01-S',2,'홀센서','HALL EFFECT',5,8000,40000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-S02','SEAT-C01-S',2,'포텐셔미터','10K LINEAR',2,12000,24000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260003','SEAT-C01-W','SEAT-C01',1,'와이어하네스','14P CONNECTOR',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW());
+INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,COST_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
+('T001','EC20260003','COST01','SEAT-C01','',0,'파워시트 모듈','GV90 POWER SEAT',1,0,0,'Y','신규 개발','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-E','SEAT-C01',1,'시트ECU','MCU 32bit ARM',1,85000,85000,'Y','신규 ECU','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-M','SEAT-C01',1,'모터모듈 ASSY','DC MOTOR SET',1,0,0,'N','모터 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-M01','SEAT-C01-M',2,'전후모터','DC 12V 10W',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-M02','SEAT-C01-M',2,'리클라인모터','DC 12V 15W',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-M03','SEAT-C01-M',2,'높낮이모터','DC 12V 10W',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-M04','SEAT-C01-M',2,'틸트모터','DC 12V 8W',1,28000,28000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-M05','SEAT-C01-M',2,'럼바서포트모터','DC 12V 5W',1,25000,25000,'Y','신규부품','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-S','SEAT-C01',1,'위치센서 ASSY','SENSOR SET',1,0,0,'N','센서 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-S01','SEAT-C01-S',2,'홀센서','HALL EFFECT',5,8000,40000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-S02','SEAT-C01-S',2,'포텐셔미터','10K LINEAR',2,12000,24000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260003','COST01','SEAT-C01-W','SEAT-C01',1,'와이어하네스','14P CONNECTOR',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW());
 
 -- ─── EC20260004: 투싼 NX5 등속조인트 ASSY (12개 부품) ───
-INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
-('T001','EC20260004','PT-A01','',0,'등속조인트 ASSY','NX5 CVJ',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-O','PT-A01',1,'아우터레이스 ASSY','SCM420H',1,0,0,'N','아우터 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-O01','PT-A01-O',2,'아우터레이스(단조)','SCM420H FORGED',1,28000,28000,'N','열간단조','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-O02','PT-A01-O',2,'아우터레이스(가공)','CNC MACHINING',1,15000,15000,'N','CNC가공','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-I','PT-A01',1,'인너레이스','SCM420H',1,22000,22000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-K','PT-A01',1,'케이지','SCM415',1,18000,18000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-B','PT-A01',1,'볼','SUJ2 φ18',6,3500,21000,'N','6EA/SET','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-G','PT-A01',1,'그리스','CV GREASE 80g',1,5000,5000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-BT','PT-A01',1,'부트 ASSY','TPE BOOT',1,0,0,'N','부트 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-BT01','PT-A01-BT',2,'부트(고무)','TPE φ85',1,12000,12000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-BT02','PT-A01-BT',2,'부트밴드(대)','SUS304 φ85',1,3000,3000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260004','PT-A01-BT03','PT-A01-BT',2,'부트밴드(소)','SUS304 φ30',1,2500,2500,'N','','T','testuser',NOW(),'testuser',NOW());
+INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,COST_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
+('T001','EC20260004','COST01','PT-A01','',0,'등속조인트 ASSY','NX5 CVJ',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-O','PT-A01',1,'아우터레이스 ASSY','SCM420H',1,0,0,'N','아우터 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-O01','PT-A01-O',2,'아우터레이스(단조)','SCM420H FORGED',1,28000,28000,'N','열간단조','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-O02','PT-A01-O',2,'아우터레이스(가공)','CNC MACHINING',1,15000,15000,'N','CNC가공','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-I','PT-A01',1,'인너레이스','SCM420H',1,22000,22000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-K','PT-A01',1,'케이지','SCM415',1,18000,18000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-B','PT-A01',1,'볼','SUJ2 φ18',6,3500,21000,'N','6EA/SET','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-G','PT-A01',1,'그리스','CV GREASE 80g',1,5000,5000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-BT','PT-A01',1,'부트 ASSY','TPE BOOT',1,0,0,'N','부트 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-BT01','PT-A01-BT',2,'부트(고무)','TPE φ85',1,12000,12000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-BT02','PT-A01-BT',2,'부트밴드(대)','SUS304 φ85',1,3000,3000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260004','COST01','PT-A01-BT03','PT-A01-BT',2,'부트밴드(소)','SUS304 φ30',1,2500,2500,'N','','T','testuser',NOW(),'testuser',NOW());
 
 -- ─── EC20260005: 쏘렌토 MQ5 드라이브샤프트 ASSY (10개 부품) ───
-INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
-('T001','EC20260005','PT-B01','',0,'드라이브샤프트 ASSY','MQ5 D/SHAFT',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-S','PT-B01',1,'샤프트바','STKM13A φ28',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-F','PT-B01',1,'고정조인트 ASSY','BJ TYPE',1,0,0,'N','고정측 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-F01','PT-B01-F',2,'BJ 아우터레이스','SCM420H',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-F02','PT-B01-F',2,'BJ 인너레이스','SCM420H',1,24000,24000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-F03','PT-B01-F',2,'BJ 케이지+볼','SCM415+SUJ2',1,25000,25000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-P','PT-B01',1,'슬라이딩조인트 ASSY','TJ TYPE',1,0,0,'N','슬라이딩측 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-P01','PT-B01-P',2,'TJ 아우터레이스','SCM420H',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-P02','PT-B01-P',2,'TJ 트리포드','SCM420H',1,28000,28000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260005','PT-B01-BT','PT-B01',1,'부트SET','TPE BOOT×2',2,15000,30000,'N','IN/OUT','T','testuser',NOW(),'testuser',NOW());
+INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,COST_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
+('T001','EC20260005','COST01','PT-B01','',0,'드라이브샤프트 ASSY','MQ5 D/SHAFT',1,0,0,'N','최상위 ASSY','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-S','PT-B01',1,'샤프트바','STKM13A φ28',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-F','PT-B01',1,'고정조인트 ASSY','BJ TYPE',1,0,0,'N','고정측 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-F01','PT-B01-F',2,'BJ 아우터레이스','SCM420H',1,32000,32000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-F02','PT-B01-F',2,'BJ 인너레이스','SCM420H',1,24000,24000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-F03','PT-B01-F',2,'BJ 케이지+볼','SCM415+SUJ2',1,25000,25000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-P','PT-B01',1,'슬라이딩조인트 ASSY','TJ TYPE',1,0,0,'N','슬라이딩측 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-P01','PT-B01-P',2,'TJ 아우터레이스','SCM420H',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-P02','PT-B01-P',2,'TJ 트리포드','SCM420H',1,28000,28000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260005','COST01','PT-B01-BT','PT-B01',1,'부트SET','TPE BOOT×2',2,15000,30000,'N','IN/OUT','T','testuser',NOW(),'testuser',NOW());
 
 -- ─── EC20260006: GV80 전동축 ASSY (13개 부품) ───
-INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
-('T001','EC20260006','PT-C01','',0,'전동축 ASSY','GV80 E-AXLE',1,0,0,'Y','신규 개발','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-M','PT-C01',1,'전동모터 ASSY','BLDC 50kW',1,0,0,'Y','모터 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-M01','PT-C01-M',2,'BLDC모터','50kW 400V',1,185000,185000,'Y','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-M02','PT-C01-M',2,'모터하우징','ADC12 다이캐스팅',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-M03','PT-C01-M',2,'로터+스테이터','전기강판 35A300',1,120000,120000,'Y','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-G','PT-C01',1,'감속기어 ASSY','PLANETARY',1,0,0,'N','기어 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-G01','PT-C01-G',2,'유성기어SET','SCM420H',1,95000,95000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-G02','PT-C01-G',2,'기어하우징','ADC12',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-G03','PT-C01-G',2,'베어링','6206ZZ',4,12000,48000,'N','','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-D','PT-C01',1,'드라이브샤프트','STKM13A',2,42000,84000,'N','L/R','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-E','PT-C01',1,'제어모듈 ASSY','MCU+INVERTER',1,0,0,'Y','전장 서브모듈','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-E01','PT-C01-E',2,'인버터PCB','SiC MOSFET',1,125000,125000,'Y','SiC 적용','T','testuser',NOW(),'testuser',NOW()),
-('T001','EC20260006','PT-C01-E02','PT-C01-E',2,'커넥터하네스','HV 고압커넥터',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW());
+INSERT INTO PCM_EC_BOM (TEN_ID,EC_PJT_CD,COST_CD,ITEM_CD,UP_ITEM_CD,LVL,ITEM_NM,SPEC,QTY,UNIT_PRICE,MAT_COST,NEW_PART_YN,RMK,STS,REGR_ID,REG_DTTM,MODR_ID,MOD_DTTM) VALUES
+('T001','EC20260006','COST01','PT-C01','',0,'전동축 ASSY','GV80 E-AXLE',1,0,0,'Y','신규 개발','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-M','PT-C01',1,'전동모터 ASSY','BLDC 50kW',1,0,0,'Y','모터 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-M01','PT-C01-M',2,'BLDC모터','50kW 400V',1,185000,185000,'Y','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-M02','PT-C01-M',2,'모터하우징','ADC12 다이캐스팅',1,45000,45000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-M03','PT-C01-M',2,'로터+스테이터','전기강판 35A300',1,120000,120000,'Y','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-G','PT-C01',1,'감속기어 ASSY','PLANETARY',1,0,0,'N','기어 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-G01','PT-C01-G',2,'유성기어SET','SCM420H',1,95000,95000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-G02','PT-C01-G',2,'기어하우징','ADC12',1,38000,38000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-G03','PT-C01-G',2,'베어링','6206ZZ',4,12000,48000,'N','','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-D','PT-C01',1,'드라이브샤프트','STKM13A',2,42000,84000,'N','L/R','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-E','PT-C01',1,'제어모듈 ASSY','MCU+INVERTER',1,0,0,'Y','전장 서브모듈','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-E01','PT-C01-E',2,'인버터PCB','SiC MOSFET',1,125000,125000,'Y','SiC 적용','T','testuser',NOW(),'testuser',NOW()),
+('T001','EC20260006','COST01','PT-C01-E02','PT-C01-E',2,'커넥터하네스','HV 고압커넥터',1,35000,35000,'N','','T','testuser',NOW(),'testuser',NOW());
 
 
 -- ============================================================

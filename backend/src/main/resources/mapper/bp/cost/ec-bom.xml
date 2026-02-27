@@ -19,6 +19,7 @@
             -- Anchor: 최상위 품목 (UP_ITEM_CD IS NULL 또는 빈 문자열)
             SELECT  B.TEN_ID        AS tenId
                   , B.EC_PJT_CD     AS ecPjtCd
+                  , B.COST_CD       AS costCd
                   , B.ITEM_CD       AS itemCd
                   , B.UP_ITEM_CD    AS upItemCd
                   , B.LVL           AS lvl
@@ -33,6 +34,7 @@
               FROM  PCM_EC_BOM B
              WHERE  B.TEN_ID    = #{g.tenant}
                AND  B.EC_PJT_CD = #{p.ecPjtCd}
+               AND  B.COST_CD   = #{p.costCd}
                AND  (B.UP_ITEM_CD IS NULL OR B.UP_ITEM_CD = '')
 
             UNION ALL
@@ -40,6 +42,7 @@
             -- Recursive: 자식 품목 탐색
             SELECT  C.TEN_ID        AS tenId
                   , C.EC_PJT_CD     AS ecPjtCd
+                  , C.COST_CD       AS costCd
                   , C.ITEM_CD       AS itemCd
                   , C.UP_ITEM_CD    AS upItemCd
                   , C.LVL           AS lvl
@@ -55,9 +58,11 @@
              INNER  JOIN bom_tree T
                 ON  C.TEN_ID     = T.tenId
                AND  C.EC_PJT_CD  = T.ecPjtCd
+               AND  C.COST_CD    = T.costCd
                AND  C.UP_ITEM_CD = T.itemCd
         )
-        SELECT  tenId AS "tenId", ecPjtCd AS "ecPjtCd", itemCd AS "itemCd"
+        SELECT  tenId AS "tenId", ecPjtCd AS "ecPjtCd", costCd AS "costCd"
+              , itemCd AS "itemCd"
               , upItemCd AS "upItemCd", lvl AS "lvl"
               , itemNm AS "itemNm", spec AS "spec", qty AS "qty"
               , unitPrice AS "unitPrice", matCost AS "matCost"
@@ -73,6 +78,7 @@
         INSERT INTO PCM_EC_BOM (
             TEN_ID
           , EC_PJT_CD
+          , COST_CD
           , ITEM_CD
           , UP_ITEM_CD
           , LVL
@@ -91,6 +97,7 @@
         ) VALUES (
             #{g.tenant}
           , #{p.ecPjtCd}
+          , #{p.costCd}
           , #{p.itemCd}
           , #{p.upItemCd}
           , #{p.lvl}
@@ -116,6 +123,7 @@
         DELETE FROM PCM_EC_BOM
          WHERE  TEN_ID     = #{g.tenant}
            AND  EC_PJT_CD  = #{p.ecPjtCd}
+           AND  COST_CD    = #{p.costCd}
     </delete>
 
     <!-- ============================================================
@@ -126,12 +134,14 @@
         DELETE FROM PCM_EC_BOM
          WHERE  TEN_ID    = #{g.tenant}
            AND  EC_PJT_CD = #{p.ecPjtCd}
+           AND  COST_CD   = #{p.costCd}
            AND  ITEM_CD IN (
                 WITH RECURSIVE del_tree AS (
                     SELECT ITEM_CD
                       FROM PCM_EC_BOM
                      WHERE TEN_ID    = #{g.tenant}
                        AND EC_PJT_CD = #{p.ecPjtCd}
+                       AND COST_CD   = #{p.costCd}
                        AND ITEM_CD   = #{p.itemCd}
 
                     UNION ALL
@@ -141,6 +151,7 @@
                      INNER JOIN del_tree D ON C.UP_ITEM_CD = D.ITEM_CD
                      WHERE C.TEN_ID    = #{g.tenant}
                        AND C.EC_PJT_CD = #{p.ecPjtCd}
+                       AND C.COST_CD   = #{p.costCd}
                 )
                 SELECT ITEM_CD FROM del_tree
            )
@@ -156,6 +167,7 @@
               , MOD_DTTM = #{g.now}
          WHERE  TEN_ID    = #{g.tenant}
            AND  EC_PJT_CD = #{p.ecPjtCd}
+           AND  COST_CD   = #{p.costCd}
     </update>
 
     <!-- ============================================================
@@ -170,16 +182,19 @@
                                FROM PCM_EC_BOM C
                               WHERE C.TEN_ID     = P.TEN_ID
                                 AND C.EC_PJT_CD  = P.EC_PJT_CD
+                                AND C.COST_CD    = P.COST_CD
                                 AND C.UP_ITEM_CD = P.ITEM_CD
                            ), 0)
               , MODR_ID  = #{g.username}
               , MOD_DTTM = #{g.now}
          WHERE  P.TEN_ID    = #{g.tenant}
            AND  P.EC_PJT_CD = #{p.ecPjtCd}
+           AND  P.COST_CD   = #{p.costCd}
            AND  EXISTS (
                 SELECT 1 FROM PCM_EC_BOM C2
                  WHERE C2.TEN_ID     = P.TEN_ID
                    AND C2.EC_PJT_CD  = P.EC_PJT_CD
+                   AND C2.COST_CD    = P.COST_CD
                    AND C2.UP_ITEM_CD = P.ITEM_CD
            )
     </update>
@@ -192,6 +207,7 @@
           FROM  PCM_EC_BOM B
          WHERE  B.TEN_ID    = #{g.tenant}
            AND  B.EC_PJT_CD = #{p.ecPjtCd}
+           AND  B.COST_CD   = #{p.costCd}
            AND  (B.UP_ITEM_CD IS NULL OR B.UP_ITEM_CD = '')
     </select>
 
@@ -213,6 +229,7 @@
                 ) AS V (item_cd, new_price)
          WHERE  B.TEN_ID    = #{g.tenant}
            AND  B.EC_PJT_CD = #{p.ecPjtCd}
+           AND  B.COST_CD   = #{p.costCd}
            AND  B.ITEM_CD   = V.item_cd
     </update>
 

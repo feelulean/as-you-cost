@@ -30,7 +30,7 @@ public class EcBomService {
      * - WITH RECURSIVE CTE를 사용하여 Level 순서대로 정렬된 Flat List를 반환
      * - 프론트엔드에서 upItemCd 기반으로 트리 구조를 구성한다.
      *
-     * @param param ecPjtCd: 견적 프로젝트 코드
+     * @param param ecPjtCd + costCd: 견적 프로젝트 코드 + 원가코드
      * @return BOM 목록 (계층 순서)
      */
     public List<Map<String, Object>> findListEcBom(Map<String, Object> param) {
@@ -49,17 +49,20 @@ public class EcBomService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> saveListEcBom(Map<String, Object> param) {
         String ecPjtCd = (String) param.get("ecPjtCd");
+        String costCd  = (String) param.get("costCd");
         List<Map<String, Object>> bomList = (List<Map<String, Object>>) param.get("bomList");
         Map<String, Object> resultMap = new HashMap<>();
 
-        // 1단계: 기존 BOM 전체 삭제
+        // 1단계: 해당 원가코드의 기존 BOM 삭제
         Map<String, Object> deleteParam = new HashMap<>();
         deleteParam.put("ecPjtCd", ecPjtCd);
+        deleteParam.put("costCd", costCd);
         ecBomRepository.deleteEcBomByPjt(deleteParam);
 
         // 2단계: 신규 BOM 전체 등록 (재료비 서버 재계산)
         for (Map<String, Object> row : bomList) {
             row.put("ecPjtCd", ecPjtCd);
+            row.put("costCd", costCd);
 
             // 수량 × 단가 = 재료비 (서버 측 정합성 보장)
             BigDecimal qty       = toBigDecimal(row.get("qty"));
@@ -85,10 +88,12 @@ public class EcBomService {
     @Transactional
     @SuppressWarnings("unchecked")
     public Map<String, Object> deleteListEcBom(Map<String, Object> param) {
+        String costCd = (String) param.get("costCd");
         List<Map<String, Object>> deleteList = (List<Map<String, Object>>) param.get("deleteList");
         Map<String, Object> resultMap = new HashMap<>();
 
         for (Map<String, Object> row : deleteList) {
+            row.put("costCd", costCd);
             // 하위 품목 재귀 삭제
             ecBomRepository.deleteEcBomWithChildren(row);
         }
@@ -141,6 +146,7 @@ public class EcBomService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> interfaceUnitPrices(Map<String, Object> param) {
         String ecPjtCd = (String) param.get("ecPjtCd");
+        String costCd  = (String) param.get("costCd");
         List<String> itemCdList = (List<String>) param.get("itemCdList");
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -168,6 +174,7 @@ public class EcBomService {
         // 2단계: DB 일괄 업데이트 (단가 + 재료비 재산출)
         Map<String, Object> updateParam = new HashMap<>();
         updateParam.put("ecPjtCd", ecPjtCd);
+        updateParam.put("costCd", costCd);
         updateParam.put("priceList", priceList);
         ecBomRepository.updateBatchEcBomPrice(updateParam);
 
