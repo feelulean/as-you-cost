@@ -141,28 +141,26 @@
                         </sc-combobox-field>
 
                         <!-- 원가그룹 선택 (유형=GRP일 때 표시) -->
-                        <template is="dom-if" if="{{_isViewType(plParam.viewType, 'GRP')}}">
-                            <span class="filter-label">원가그룹</span>
-                            <sc-combobox-field value="{{plParam.costGrpCd}}"
-                                              items="{{codes.costGrpList}}"
-                                              display-field="label"
-                                              value-field="data"
-                                              width="160"
-                                              placeholder="원가그룹 선택">
-                            </sc-combobox-field>
-                        </template>
+                        <span class="filter-label" hidden$="{{_hideForViewType(plParam.viewType, 'GRP')}}">원가그룹</span>
+                        <sc-combobox-field value="{{plParam.costGrpCd}}"
+                                          items="{{codes.costGrpList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          width="160"
+                                          placeholder="원가그룹 선택"
+                                          hidden$="{{_hideForViewType(plParam.viewType, 'GRP')}}">
+                        </sc-combobox-field>
 
                         <!-- 원가코드 선택 (유형=CODE일 때 표시) -->
-                        <template is="dom-if" if="{{_isViewType(plParam.viewType, 'CODE')}}">
-                            <span class="filter-label">원가코드</span>
-                            <sc-combobox-field value="{{plParam.costCd}}"
-                                              items="{{codes.costCodeList}}"
-                                              display-field="label"
-                                              value-field="data"
-                                              width="160"
-                                              placeholder="원가코드 선택">
-                            </sc-combobox-field>
-                        </template>
+                        <span class="filter-label" hidden$="{{_hideForViewType(plParam.viewType, 'CODE')}}">원가코드</span>
+                        <sc-combobox-field value="{{plParam.costCd}}"
+                                          items="{{codes.costCodeList}}"
+                                          display-field="label"
+                                          value-field="data"
+                                          width="160"
+                                          placeholder="원가코드 선택"
+                                          hidden$="{{_hideForViewType(plParam.viewType, 'CODE')}}">
+                        </sc-combobox-field>
 
                         <span class="filter-label">기준</span>
                         <sc-combobox-field value="{{plParam.basisType}}"
@@ -580,6 +578,10 @@
 
             _isViewType: function(viewType, target) {
                 return viewType === target;
+            },
+
+            _hideForViewType: function(viewType, target) {
+                return viewType !== target;
             },
 
             _clearDetail: function() {
