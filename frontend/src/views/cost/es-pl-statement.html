@@ -367,6 +367,15 @@
                     UT.alert('좌측 그리드에서 프로젝트를 선택해 주세요.');
                     return;
                 }
+                var vt = this.plParam.viewType;
+                if (vt === 'GRP' && !this.plParam.costGrpCd) {
+                    UT.alert('원가그룹을 선택해 주세요.');
+                    return;
+                }
+                if (vt === 'CODE' && !this.plParam.costCd) {
+                    UT.alert('원가코드를 선택해 주세요.');
+                    return;
+                }
                 this._loadPlStmt();
             },
 
@@ -520,9 +529,11 @@
                 var list = e.detail.response || [];
                 var items = [];
                 for (var i = 0; i < list.length; i++) {
+                    var desc = list[i].costGrpDesc;
+                    var grp  = list[i].costGrp;
                     items.push({
-                        label: list[i].costGrpDesc || list[i].costGrp,
-                        data:  list[i].costGrp
+                        label: desc ? grp + ' - ' + desc : grp,
+                        data:  grp
                     });
                 }
                 this.set('codes.costGrpList', items);
@@ -537,8 +548,10 @@
                 var list = e.detail.response || [];
                 var items = [];
                 for (var i = 0; i < list.length; i++) {
+                    var grpLabel = list[i].costGrpDesc || list[i].costGrp || '';
+                    var codeLabel = list[i].costCd;
                     items.push({
-                        label: list[i].costCd,
+                        label: grpLabel ? codeLabel + ' (' + grpLabel + ')' : codeLabel,
                         data:  list[i].costCd
                     });
                 }
@@ -553,6 +566,16 @@
                 this.set('plParam.costGrpCd', '');
                 this.set('plParam.costCd', '');
                 this.set('plParam.basisType', 'UNIT');
+
+                // 유형 변경 시 원가그룹/원가코드 목록 재로딩 (데이터 확보)
+                if (this.selectedPjtCd) {
+                    if (this.plParam.viewType === 'GRP' && (!this.codes.costGrpList || this.codes.costGrpList.length === 0)) {
+                        this._loadCostGrpList();
+                    }
+                    if (this.plParam.viewType === 'CODE' && (!this.codes.costCodeList || this.codes.costCodeList.length === 0)) {
+                        this._loadCostCodeList();
+                    }
+                }
             },
 
             _isViewType: function(viewType, target) {
