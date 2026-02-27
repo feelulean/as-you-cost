@@ -136,7 +136,8 @@
                                           items="{{codes.viewTypeList}}"
                                           display-field="label"
                                           value-field="data"
-                                          width="140">
+                                          width="140"
+                                          on-value-changed="_onViewTypeSelect">
                         </sc-combobox-field>
 
                         <!-- 원가그룹 선택 (유형=GRP일 때 표시) -->
@@ -322,9 +323,7 @@
                 }
             },
 
-            observers: [
-                '_onViewTypeChanged(viewType)'
-            ],
+            /* observer 제거 — on-value-changed 이벤트로 처리 */
 
             attached: function() {
                 var me = this;
@@ -567,8 +566,10 @@
                유형 변경 핸들러
                ============================================================== */
 
-            _onViewTypeChanged: function(vt) {
-                if (!this.$ || !this.$.grpLabel) return;
+            _onViewTypeSelect: function(e) {
+                var vt = e.detail.value;
+                console.log('[es-pl] viewType changed:', vt);
+                if (!vt || !this.$ || !this.$.grpLabel) return;
 
                 this.set('plParam.costGrpCd', '');
                 this.set('plParam.costCd', '');
